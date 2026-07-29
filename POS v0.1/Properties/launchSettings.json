@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "POS v0.1": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}

@@ -1,0 +1,130 @@
+<Window x:Class="POS_v0_1.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:POS_v0_1"
+        xmlns:viewModels="clr-namespace:POS_v0_1.ViewModels"
+        xmlns:views="clr-namespace:POS_v0_1.Views"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="600" Width="1000">
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type viewModels:SalesHistoryViewModel}">
+            <views:SalesHistoryView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:ProductsViewModel}">
+            <views:ProductsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:CreateProductViewModel}">
+            <views:CreateProductView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:OpenCashViewModel}">
+            <views:OpenCashView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:PosViewModel}">
+            <views:PosView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:CategoriesViewModel}">
+            <views:CategoriesView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:CreateCategoryViewModel}">
+            <views:CreateCategoryView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:LowStockViewModel}">
+            <views:LowStockView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:ProductDetailViewModel}">
+            <views:ProductDetailView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:RestockViewModel}">
+            <views:RestockView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:ProvidersViewModel}">
+            <views:ProvidersView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:CreateProviderViewModel}">
+            <views:CreateProviderView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:PurchasesViewModel}">
+            <views:PurchasesView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:CreatePurchaseViewModel}">
+            <views:CreatePurchaseView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:QuickCreateProductViewModel}">
+            <views:QuickCreateProductView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:TopupHistoryViewModel}">
+            <views:TopupHistoryView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:CreateTopupViewModel}">
+            <views:CreateTopupView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:RepairListViewModel}">
+            <views:RepairListView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:CreateRepairViewModel}">
+            <views:CreateRepairView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:RepairCategoriesViewModel}">
+            <views:RepairCategoriesView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:RepairTypesViewModel}">
+            <views:RepairTypesView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:PlaceholderViewModel}">
+            <Grid>
+                <TextBlock Text="{Binding Title}" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Gray"/>
+            </Grid>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <ScrollViewer Grid.Column="0" Background="#f0f0f0" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="5">
+                <TextBlock Text="POS SYSTEM" FontSize="20" FontWeight="Bold" Margin="10,10" HorizontalAlignment="Center"/>
+
+                <TextBlock Text="VENTAS" Margin="10,10,10,5" FontWeight="SemiBold" Foreground="#666"/>
+                <Button Content="Nueva Venta (POS)" Margin="2" Padding="8" Command="{Binding ShowPosCommand}"/>
+                <Button Content="Historial Ventas" Margin="2" Padding="8" Command="{Binding ShowSalesHistoryCommand}"/>
+                <Button Content="Recargas" Margin="2" Padding="8" Command="{Binding ShowTopupsCommand}"/>
+
+                <TextBlock Text="INVENTARIO" Margin="10,15,10,5" FontWeight="SemiBold" Foreground="#666"/>
+                <Button Content="Productos" Margin="2" Padding="8" Command="{Binding ShowProductManagementCommand}"/>
+                <Button Content="Categorías" Margin="2" Padding="8" Command="{Binding ShowCategoriesCommand}"/>
+                <Button Content="Stock Bajo" Margin="2" Padding="8" Command="{Binding ShowLowStockCommand}"/>
+                <Button Content="Proveedores" Margin="2" Padding="8" Command="{Binding ShowProvidersCommand}"/>
+                <Button Content="Compras" Margin="2" Padding="8" Command="{Binding ShowPurchasesCommand}"/>
+
+                <TextBlock Text="REPARACIONES" Margin="10,15,10,5" FontWeight="SemiBold" Foreground="#666"/>
+                <Button Content="Reparaciones" Margin="2" Padding="8" Command="{Binding ShowRepairsCommand}"/>
+                <Button Content="Categorías Rep." Margin="2" Padding="8" Command="{Binding ShowRepairCategoriesCommand}"/>
+                <Button Content="Tipos Rep." Margin="2" Padding="8" Command="{Binding ShowRepairTypesCommand}"/>
+
+                <TextBlock Text="TESORERÍA" Margin="10,15,10,5" FontWeight="SemiBold" Foreground="#666"/>
+                <Button Content="Caja (Abrir/Cerrar)" Margin="2" Padding="8" Command="{Binding ShowOpenCashCommand}"/>
+                <Button Content="Conteo Billetes" Margin="2" Padding="8" Command="{Binding ShowCashCountCommand}"/>
+                <Button Content="Gastos/Ingresos" Margin="2" Padding="8" Command="{Binding ShowExpensesIncomesCommand}"/>
+                <Button Content="Banco" Margin="2" Padding="8" Command="{Binding ShowBankCommand}"/>
+
+                <TextBlock Text="ADMIN" Margin="10,15,10,5" FontWeight="SemiBold" Foreground="#666"/>
+                <Button Content="Clientes" Margin="2" Padding="8" Command="{Binding ShowClientsCommand}"/>
+                <Button Content="Reportes" Margin="2" Padding="8" Command="{Binding ShowReportsCommand}"/>
+                <Button Content="Usuarios / Roles" Margin="2" Padding="8" Command="{Binding ShowUsersRolesCommand}"/>
+                <Button Content="Configuración" Margin="2" Padding="8" Command="{Binding ShowConfigurationCommand}"/>
+
+                <Separator Margin="0,20"/>
+
+                <TextBlock Text="Estado de Caja:" Margin="10,0" FontWeight="Bold"/>
+                <TextBlock Text="{Binding Session.IsOpen, Converter={StaticResource BoolToStatusConverter}}" Margin="10,5" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <ContentControl Grid.Column="1" Content="{Binding CurrentView}"/>
+    </Grid>
+</Window>

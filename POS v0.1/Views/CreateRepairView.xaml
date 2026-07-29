@@ -1,0 +1,138 @@
+<UserControl x:Class="POS_v0_1.Views.CreateRepairView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="1100">
+    <Grid Background="#f8f9fa">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="White" Padding="15" Margin="0,0,0,10">
+            <Grid>
+                <TextBlock Text="Registrar Orden de Reparación" FontSize="20" FontWeight="Bold"/>
+                <Button Content="← Volver" HorizontalAlignment="Right" Padding="15,5"
+                        Command="{Binding BackCommand}" Background="White" BorderBrush="#ced4da"/>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="30">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left Column: Customer Data -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="DATOS DEL CLIENTE" FontWeight="SemiBold" Foreground="#6c757d" Margin="0,0,0,15"/>
+
+                        <TextBlock Text="Cliente (Opcional)" Margin="0,0,0,5"/>
+                        <ComboBox Margin="0,0,0,10" Padding="8" SelectedIndex="0">
+                            <ComboBoxItem Content="Consumidor Final (Ingresar datos manuales)"/>
+                        </ComboBox>
+
+                        <TextBlock Text="Nombre del Cliente *" Margin="0,0,0,5"/>
+                        <TextBox Margin="0,0,0,15" Padding="8" Text="{Binding ClientName, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Text="Teléfono de Contacto *" Margin="0,0,0,5"/>
+                        <TextBox Margin="0,0,0,15" Padding="8" Text="{Binding ClientPhone, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+
+                    <!-- Right Column: Device Data -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="DATOS DEL DISPOSITIVO" FontWeight="SemiBold" Foreground="#6c757d" Margin="0,0,0,15"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Marca *" Margin="0,0,0,5"/>
+                                <TextBox Padding="8" Text="{Binding DeviceBrand, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Modelo *" Margin="0,0,0,5"/>
+                                <TextBox Padding="8" Text="{Binding DeviceModel, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="IMEI / Serie" Margin="0,15,0,5"/>
+                        <TextBox Margin="0,0,0,15" Padding="8" Text="{Binding IMEI, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                </Grid>
+
+                <Separator Margin="0,20" Background="#dee2e6"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left Column: Repair Details -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="DETALLE DE REPARACIÓN" FontWeight="SemiBold" Foreground="#6c757d" Margin="0,0,0,15"/>
+
+                        <TextBlock Text="Categoría de Falla" Margin="0,0,0,5"/>
+                        <ComboBox Margin="0,0,0,15" Padding="8" ItemsSource="{Binding Categories}" SelectedItem="{Binding FailureCategory}"/>
+
+                        <TextBlock Text="Problema Reportado por el Cliente *" Margin="0,0,0,5"/>
+                        <TextBox Margin="0,0,0,15" Padding="8" Height="100" TextWrapping="Wrap" AcceptsReturn="True"
+                                 VerticalContentAlignment="Top" Text="{Binding ReportedFailure, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+
+                    <!-- Right Column: Budget -->
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="PRESUPUESTO INICIAL" FontWeight="SemiBold" Foreground="#6c757d" Margin="0,0,0,15"/>
+
+                        <TextBlock Text="Costo Estimado (C$) *" Margin="0,0,0,5"/>
+                        <Border BorderBrush="#dee2e6" BorderThickness="1" CornerRadius="4">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="C$" VerticalAlignment="Center" Margin="10,0" Foreground="#6c757d"/>
+                                <TextBox Grid.Column="1" Padding="8" BorderThickness="0" TextAlignment="Right" FontSize="16" FontWeight="Bold" Foreground="#0d6efd"
+                                         Text="{Binding Total, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+                        </Border>
+                        <TextBlock Text="Si no hay presupuesto aún, puede dejarlo en 0 y actualizarlo luego." FontSize="11" Foreground="#6c757d" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer Actions -->
+        <Border Grid.Row="2" Background="White" Padding="20" BorderBrush="#dee2e6" BorderThickness="0,1,0,0">
+            <Button Content="💾 Generar Orden de Reparación" HorizontalAlignment="Right" Padding="30,12"
+                    Background="#0d6efd" Foreground="White" FontWeight="Bold" BorderThickness="0"
+                    Command="{Binding SaveCommand}">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Border>
+    </Grid>
+</UserControl>

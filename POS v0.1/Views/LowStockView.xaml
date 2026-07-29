@@ -1,0 +1,118 @@
+<UserControl x:Class="POS_v0_1.Views.LowStockView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="1000" Background="#f8f9fa">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Padding="15" Background="White" CornerRadius="8" Margin="0,0,0,20">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="1" Color="#EEEEEE"/>
+            </Border.Effect>
+            <Grid>
+                <TextBlock Text="Alertas de Stock Bajo" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <ComboBox Width="150" SelectedIndex="0">
+                        <ComboBoxItem Content="Administrador"/>
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Title and Back Action -->
+        <Grid Grid.Row="1" Margin="0,0,0,15">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="⚠" Foreground="#dc3545" FontSize="24" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                <TextBlock Text="Productos con Stock Bajo" FontSize="22" FontWeight="Bold" Foreground="#dc3545" VerticalAlignment="Center"/>
+            </StackPanel>
+            <Button Content="← Volver al Inventario" HorizontalAlignment="Right" Padding="15,8"
+                    Background="White" BorderBrush="#ced4da" BorderThickness="1"
+                    Command="{Binding BackCommand}">
+                <Button.Resources>
+                    <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                </Button.Resources>
+            </Button>
+        </Grid>
+
+        <!-- Warning Box -->
+        <Border Grid.Row="2" Background="#fff3cd" BorderBrush="#ffeeba" BorderThickness="1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="ⓘ" Foreground="#856404" FontWeight="Bold" Margin="0,0,10,0"/>
+                <TextBlock Text="Los siguientes productos han alcanzado o están por debajo de su cantidad mínima requerida. Se recomienda reabastecer pronto." Foreground="#856404"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Data Table -->
+        <DataGrid Grid.Row="3" ItemsSource="{Binding LowStockProducts}" AutoGenerateColumns="False"
+                  Background="Transparent" BorderThickness="0" CanUserAddRows="False"
+                  HeadersVisibility="Column" GridLinesVisibility="Horizontal" RowHeight="60">
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="Padding" Value="10,5"/>
+                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                    <Setter Property="BorderBrush" Value="#EEEEEE"/>
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="Producto" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel VerticalAlignment="Center" Margin="10,0">
+                                <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding Barcode, TargetNullValue='Sin código'}" Foreground="Gray" FontSize="11"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTextColumn Header="Categoría" Binding="{Binding Category}" Width="150"/>
+
+                <DataGridTemplateColumn Header="Stock Actual" Width="150">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="#dc3545" Width="35" Height="35" CornerRadius="17.5" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                <TextBlock Text="{Binding Stock}" Foreground="White" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTextColumn Header="Stock Mínimo" Binding="{Binding MinStock}" Width="150"/>
+
+                <DataGridTextColumn Header="Ubicación" Binding="{Binding Location, TargetNullValue='No definida'}" Width="*"/>
+
+                <DataGridTemplateColumn Header="Acciones" Width="180">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="🛒 Reabastecer" Background="#198754" Foreground="White" Margin="2" Padding="10,5" BorderThickness="0"
+                                        Command="{Binding DataContext.RestockCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
+                                    <Button.Resources>
+                                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="3"/></Style>
+                                    </Button.Resources>
+                                </Button>
+                                <Button Content="👁" Margin="2" Padding="8,5" Background="White" BorderBrush="#0dcaf0" Foreground="#0dcaf0"
+                                        Command="{Binding DataContext.ViewDetailCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
+                                    <Button.Resources>
+                                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="3"/></Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

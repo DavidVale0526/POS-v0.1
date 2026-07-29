@@ -1,0 +1,170 @@
+<UserControl x:Class="POS_v0_1.Views.SalesHistoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1100">
+    <Grid Background="#f8f9fa">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="White" Padding="15" Margin="0,0,0,10">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="5" ShadowDepth="1" Color="#EEEEEE"/>
+            </Border.Effect>
+            <Grid>
+                <TextBlock Text="Historial de Ventas" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <ComboBox Width="150" SelectedIndex="0">
+                        <ComboBoxItem Content="Administrador"/>
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="20">
+                <!-- Title and New Sale Button -->
+                <Grid Margin="0,0,0,20">
+                    <TextBlock Text="Historial de Ventas" FontSize="22" FontWeight="Bold" Foreground="#333"/>
+                    <Button Content="🛒 Nueva Venta (POS)" HorizontalAlignment="Right"
+                            Background="#007bff" Foreground="White" Padding="15,8"
+                            BorderThickness="0" FontWeight="SemiBold"
+                            Command="{Binding ShowPosCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+
+                <!-- Summary Cards -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,25">
+                    <Border Background="#0d6efd" Width="200" Height="80" CornerRadius="8" Padding="15" Margin="0,0,15,0">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="VENDIDO" Foreground="White" FontSize="12" Opacity="0.8"/>
+                            <TextBlock FontWeight="Bold" FontSize="18" Foreground="White">
+                                <Run Text="C$ " /><Run Text="{Binding TotalSold, Mode=OneWay, StringFormat=\{0:N2\}}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="#0dcaf0" Width="200" Height="80" CornerRadius="8" Padding="15">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="TRANSACCIONES" Foreground="White" FontSize="12" Opacity="0.8"/>
+                            <TextBlock Text="{Binding TransactionCount, Mode=OneWay}" FontWeight="Bold" FontSize="18" Foreground="White"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Filters -->
+                <Border Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15" BorderBrush="#dee2e6" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" Margin="0,0,10,0" Padding="10,8"
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 BorderBrush="#dee2e6"/>
+                        <DatePicker Grid.Column="1" Margin="0,0,10,0" Padding="5"
+                                    SelectedDate="{Binding SelectedDate}"
+                                    VerticalContentAlignment="Center" BorderBrush="#dee2e6"/>
+                        <Button Grid.Column="2" Content="🔍 Filtrar" Padding="30,8"
+                                Background="#6c757d" Foreground="White" BorderThickness="0"
+                                Command="{Binding FilterCommand}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Sales Table -->
+                <Border Background="White" CornerRadius="8" BorderBrush="#dee2e6" BorderThickness="1">
+                    <StackPanel>
+                        <!-- Table Header -->
+                        <Border Background="#f8f9fa" Padding="10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="100"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Ticket" FontWeight="Bold"/>
+                                <TextBlock Grid.Column="1" Text="Fecha" FontWeight="Bold"/>
+                                <TextBlock Grid.Column="2" Text="Cliente" FontWeight="Bold"/>
+                                <TextBlock Grid.Column="3" Text="Vendedor" FontWeight="Bold"/>
+                                <TextBlock Grid.Column="4" Text="Método" FontWeight="Bold"/>
+                                <TextBlock Grid.Column="5" Text="Total" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="6" Text="Acciones" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- List Items -->
+                        <ItemsControl ItemsSource="{Binding FilteredSales}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#eee" BorderThickness="0,1,0,0" Padding="10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="150"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="100"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Id, StringFormat='#\{0:D5\}'}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Date, StringFormat='\{0:dd/MM/yyyy HH:mm\}'}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding CustomerName}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" Text="Administrador" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="4" Text="Efectivo" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="5" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                <Run Text="C$ " /><Run Text="{Binding Total, StringFormat=N2}" />
+                                            </TextBlock>
+                                            <Button Grid.Column="6" Content="Ver" Padding="10,2" Background="White" BorderBrush="#007bff" Foreground="#007bff"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Empty State -->
+                        <Grid Margin="40" Visibility="{Binding FilteredSales.Count, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}">
+                            <TextBlock Text="No se han registrado ventas." HorizontalAlignment="Center" Foreground="#adb5bd" FontSize="16"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

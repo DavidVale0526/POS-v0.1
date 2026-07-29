@@ -1,0 +1,12 @@
+<Application x:Class="POS_v0_1.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:POS_v0_1.Converters"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <converters:VisConverter x:Key="VisConverter"/>
+            <converters:BoolToStatusConverter x:Key="BoolToStatusConverter"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

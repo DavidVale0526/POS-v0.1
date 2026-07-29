@@ -1,0 +1,66 @@
+<UserControl x:Class="POS_v0_1.Views.PurchasesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="1000">
+    <Grid Background="White" Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Padding="15" Background="#f8f9fa" CornerRadius="8" Margin="0,0,0,20">
+            <Grid>
+                <TextBlock Text="Compras a Proveedores" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <TextBlock Text="👤 Administrador" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Historial Header -->
+        <DockPanel Grid.Row="1" Margin="0,0,0,15">
+            <TextBlock Text="Historial de Compras" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
+            <Button Content="🛒 Registrar Compra" HorizontalAlignment="Right" Padding="15,8"
+                    Background="#007bff" Foreground="White" BorderThickness="0"
+                    Command="{Binding ShowCreatePurchaseCommand}">
+                <Button.Resources>
+                    <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                </Button.Resources>
+            </Button>
+        </DockPanel>
+
+        <!-- DataGrid -->
+        <DataGrid Grid.Row="2" ItemsSource="{Binding Purchases}" AutoGenerateColumns="False"
+                  CanUserAddRows="False" IsReadOnly="True" Background="Transparent" BorderThickness="1" BorderBrush="#dee2e6"
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#eee" HeadersVisibility="Column" RowHeight="45">
+            <DataGrid.ColumnHeaderStyle>
+                <Style TargetType="DataGridColumnHeader">
+                    <Setter Property="Background" Value="#f8f9fa"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                    <Setter Property="Padding" Value="10,10"/>
+                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                    <Setter Property="BorderBrush" Value="#dee2e6"/>
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Fecha" Binding="{Binding Date, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="150"/>
+                <DataGridTextColumn Header="Proveedor" Binding="{Binding ProviderName}" Width="*"/>
+                <DataGridTextColumn Header="Factura" Binding="{Binding InvoiceNumber}" Width="150"/>
+                <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=C2}" Width="120"/>
+                <DataGridTextColumn Header="Registrado por" Binding="{Binding RegisteredBy}" Width="150"/>
+                <DataGridTemplateColumn Header="Acciones" Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="👁" HorizontalAlignment="Center" Padding="5,2" Background="Transparent" BorderThickness="0"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>
