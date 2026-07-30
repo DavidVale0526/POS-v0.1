@@ -1,0 +1,90 @@
+<UserControl x:Class="POS_v0_1.Views.ReportSalesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="1000">
+    <Grid Margin="0,20,0,0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.5*"/>
+            <ColumnDefinition Width="20"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Top 10 Productos -->
+        <Border Grid.Column="0" Background="White" CornerRadius="8" BorderBrush="#dee2e6" BorderThickness="1">
+            <StackPanel>
+                <Border Background="#f8f9fa" Padding="15" CornerRadius="8,8,0,0">
+                    <TextBlock Text="TOP 10 PRODUCTOS MÁS VENDIDOS" FontWeight="SemiBold" FontSize="12" Foreground="#666"/>
+                </Border>
+                <DataGrid ItemsSource="{Binding Summary.TopProducts}" AutoGenerateColumns="False" IsReadOnly="True"
+                          Background="Transparent" BorderThickness="0" RowHeaderWidth="0" GridLinesVisibility="None">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Producto" Binding="{Binding Name}" Width="*"/>
+                        <DataGridTextColumn Header="Cant." Binding="{Binding Quantity}" Width="80">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Ventas C$" Binding="{Binding TotalSales, StringFormat='\{0:N2\}'}" Width="120">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Margin" Value="0,0,10,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <Grid Margin="20" Visibility="{Binding Summary.TopProducts.Count, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}">
+                    <TextBlock Text="No hay datos en este período." HorizontalAlignment="Center" Foreground="#adb5bd"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Derecha: Clientes y Vendedores -->
+        <StackPanel Grid.Column="2">
+            <!-- Top 5 Clientes -->
+            <Border Background="White" CornerRadius="8" BorderBrush="#dee2e6" BorderThickness="1" Margin="0,0,0,20">
+                <StackPanel>
+                    <Border Background="#f8f9fa" Padding="15" CornerRadius="8,8,0,0">
+                        <TextBlock Text="TOP 5 CLIENTES FRECUENTES" FontWeight="SemiBold" FontSize="12" Foreground="#666"/>
+                    </Border>
+                    <DataGrid ItemsSource="{Binding Summary.TopClients}" AutoGenerateColumns="False" IsReadOnly="True"
+                              Background="Transparent" BorderThickness="0" RowHeaderWidth="0" GridLinesVisibility="None" MaxHeight="200">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Cliente" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Total C$" Binding="{Binding TotalSales, StringFormat='\{0:N2\}'}" Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="Margin" Value="0,0,10,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid Margin="20" Visibility="{Binding Summary.TopClients.Count, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}">
+                        <TextBlock Text="No hay compras registradas a nombre de clientes." HorizontalAlignment="Center" Foreground="#adb5bd" FontSize="12"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Rendimiento Vendedores -->
+            <Border Background="White" CornerRadius="8" BorderBrush="#dee2e6" BorderThickness="1">
+                <StackPanel>
+                    <Border Background="#f8f9fa" Padding="15" CornerRadius="8,8,0,0">
+                        <TextBlock Text="RENDIMIENTO DE VENDEDORES" FontWeight="SemiBold" FontSize="12" Foreground="#666"/>
+                    </Border>
+                    <TextBlock Text="Próximamente..." HorizontalAlignment="Center" Margin="20" Foreground="#adb5bd"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,0 +1,45 @@
+<UserControl x:Class="POS_v0_1.Views.ReportInventoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="1000">
+    <StackPanel Margin="0,20,0,0">
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+            <TextBlock Text="📦" FontSize="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
+            <TextBlock Text="Valorización Actual de Inventario" FontSize="18" FontWeight="SemiBold" Foreground="#0d6efd" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <TextBlock Text="Muestra el dinero invertido en todos los productos físicos que están actualmente en la tienda (Stock > 0)."
+                   Foreground="#666" Margin="0,0,0,25"/>
+
+        <Border Background="White" CornerRadius="8" BorderBrush="#dee2e6" BorderThickness="1" Padding="30">
+            <UniformGrid Columns="3">
+                <!-- Costo de Inversion -->
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="COSTO DE INVERSIÓN" FontSize="11" FontWeight="SemiBold" Foreground="#666" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding Summary.Inventory.InvestmentCost, StringFormat='C$ \{0:N2\}'}"
+                               FontSize="26" FontWeight="Bold" Foreground="#dc3545" HorizontalAlignment="Center" Margin="0,10"/>
+                    <TextBlock Text="Dinero invertido al precio de compra" FontSize="10" Foreground="#666" HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Valor de Venta -->
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="VALOR DE VENTA (PROYECCIÓN)" FontSize="11" FontWeight="SemiBold" Foreground="#666" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding Summary.Inventory.ProjectedSalesValue, StringFormat='C$ \{0:N2\}'}"
+                               FontSize="26" FontWeight="Bold" Foreground="#0d6efd" HorizontalAlignment="Center" Margin="0,10"/>
+                    <TextBlock Text="Dinero esperado si se vende todo el stock" FontSize="10" Foreground="#666" HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Utilidad Potencial -->
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Text="UTILIDAD POTENCIAL BRUTA" FontSize="11" FontWeight="SemiBold" Foreground="#666" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding Summary.Inventory.PotentialGrossProfit, StringFormat='C$ \{0:N2\}'}"
+                               FontSize="26" FontWeight="Bold" Foreground="#198754" HorizontalAlignment="Center" Margin="0,10"/>
+                    <TextBlock Text="Ganancia latente en vitrina" FontSize="10" Foreground="#666" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </UniformGrid>
+        </Border>
+    </StackPanel>
+</UserControl>

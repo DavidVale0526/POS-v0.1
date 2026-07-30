@@ -1,0 +1,134 @@
+<UserControl x:Class="POS_v0_1.Views.ClientListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="1100">
+    <Grid Background="#f8f9fa">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="White" Padding="15" Margin="0,0,0,10">
+            <Grid>
+                <TextBlock Text="Clientes" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <ComboBox Width="150" SelectedIndex="0">
+                        <ComboBoxItem Content="Administrador"/>
+                    </ComboBox>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="20">
+                <!-- Title and New Client Button -->
+                <Grid Margin="0,0,0,20">
+                    <TextBlock Text="Clientes" FontSize="22" FontWeight="Bold" Foreground="#333"/>
+                    <Button Content="+ Nuevo Cliente" HorizontalAlignment="Right"
+                            Background="#0d6efd" Foreground="White" Padding="15,8"
+                            BorderThickness="0" FontWeight="SemiBold"
+                            Command="{Binding ShowCreateClientCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+
+                <!-- Search Bar -->
+                <Grid Margin="0,0,0,20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="150"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             Padding="10,8" VerticalContentAlignment="Center"
+                             Tag="Buscar por nombre, teléfono o email..."/>
+
+                    <Button Grid.Column="1" Content="🔍 Buscar" Margin="10,0,0,0"
+                            Background="#6c757d" Foreground="White" BorderThickness="0"
+                            Command="{Binding SearchCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+
+                <!-- Table -->
+                <Border Background="White" CornerRadius="8" BorderBrush="#dee2e6" BorderThickness="1">
+                    <StackPanel>
+                        <!-- Table Header -->
+                        <Border Background="#f8f9fa" Padding="15,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="3*"/>
+                                    <ColumnDefinition Width="100"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Nombre" FontWeight="Bold"/>
+                                <TextBlock Grid.Column="1" Text="Contacto" FontWeight="Bold"/>
+                                <TextBlock Grid.Column="2" Text="Dirección" FontWeight="Bold"/>
+                                <TextBlock Grid.Column="3" Text="Acciones" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Items -->
+                        <ItemsControl ItemsSource="{Binding FilteredClients}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#eee" BorderThickness="0,1,0,0" Padding="15,10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="2*"/>
+                                                <ColumnDefinition Width="2*"/>
+                                                <ColumnDefinition Width="3*"/>
+                                                <ColumnDefinition Width="100"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding ContactSummary}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding Address}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Content="✏️" Background="Transparent" BorderThickness="0" Margin="0,0,5,0"/>
+                                                <Button Content="🗑️" Background="Transparent" BorderThickness="0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Empty State -->
+                        <Grid Margin="40" Visibility="{Binding FilteredClients.Count, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}">
+                            <TextBlock Text="No se encontraron clientes." HorizontalAlignment="Center" Foreground="#adb5bd" FontSize="16"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
