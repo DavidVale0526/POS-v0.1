@@ -22,6 +22,42 @@ namespace POS_v0_1.Models
 
         public decimal TotalNetProfit => TotalGrossIncome - TotalOutflows;
         public decimal ActualCashInHand { get; set; }
+
+        // Nuevos campos para pestañas detalladas
+        public List<FinancialSourceSummary> FinancialSummaries { get; set; } = new List<FinancialSourceSummary>();
+        public InventoryValuation Inventory { get; set; } = new InventoryValuation();
+        public List<RankedItem> TopProducts { get; set; } = new List<RankedItem>();
+        public List<RankedItem> TopClients { get; set; } = new List<RankedItem>();
+        public List<ServiceReportItem> TopupReport { get; set; } = new List<ServiceReportItem>();
+    }
+
+    public class FinancialSourceSummary
+    {
+        public string Source { get; set; }
+        public string Type { get; set; }
+        public decimal Total { get; set; }
+    }
+
+    public class InventoryValuation
+    {
+        public decimal InvestmentCost { get; set; }
+        public decimal ProjectedSalesValue { get; set; }
+        public decimal PotentialGrossProfit => ProjectedSalesValue - InvestmentCost;
+    }
+
+    public class RankedItem
+    {
+        public string Name { get; set; }
+        public int Quantity { get; set; }
+        public decimal TotalSales { get; set; }
+    }
+
+    public class ServiceReportItem
+    {
+        public string Operator { get; set; }
+        public int TicketCount { get; set; }
+        public decimal TotalAmount { get; set; }
+        public decimal TotalProfit { get; set; }
     }
 
     public class ReportPeriod

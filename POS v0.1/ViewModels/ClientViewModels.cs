@@ -112,7 +112,6 @@ namespace POS_v0_1.ViewModels
 
                 var client = new Client
                 {
-                    Id = _main.Clients.Any() ? _main.Clients.Max(c => c.Id) + 1 : 1,
                     Name = this.Name,
                     Phone = this.Phone,
                     Email = this.Email,
@@ -120,6 +119,8 @@ namespace POS_v0_1.ViewModels
                     Notes = this.Notes
                 };
 
+                _main.Db.Clients.Add(client);
+                _main.Db.SaveChanges();
                 _main.Clients.Add(client);
                 _main.CurrentView = new ClientListViewModel(_main);
             });

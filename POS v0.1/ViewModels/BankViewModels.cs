@@ -88,17 +88,18 @@ namespace POS_v0_1.ViewModels
 
                 var transaction = new BankTransaction
                 {
-                    Id = _main.BankTransactions.Any() ? _main.BankTransactions.Max(t => t.Id) + 1 : 1,
                     Date = this.Date,
                     Type = this.Type,
                     Bank = this.Bank,
                     Reference = this.Reference,
                     Amount = this.Amount,
                     BalanceAfter = newBalance,
-                    RegisteredBy = "Administrador",
+                    RegisteredBy = _main.CurrentUser?.Name ?? "Sistema",
                     Notes = this.Notes
                 };
 
+                _main.Db.BankTransactions.Add(transaction);
+                _main.Db.SaveChanges();
                 _main.BankTransactions.Add(transaction);
                 _main.CurrentView = new BankHistoryViewModel(_main);
             });

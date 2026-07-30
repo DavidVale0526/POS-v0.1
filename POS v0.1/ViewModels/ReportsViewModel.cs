@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
@@ -66,38 +67,76 @@ namespace POS_v0_1.ViewModels
             }
 
             var sales = _main.Sales.Where(s => s.Date >= start && s.Date <= end).ToList();
-            var topups = _main.Topups.Where(t => t.Date >= start && t.Date <= end).ToList();
-            var repairs = _main.Repairs.Where(r => r.CreatedAt >= start && r.CreatedAt <= end).ToList(); // Simplificado
+            var topups = _main.Topups.Where(t => t.DateTime >= start && t.DateTime <= end).ToList();
+            var repairs = _main.Repairs.Where(r => r.EntryDate >= start && r.EntryDate <= end).ToList();
             var movements = _main.FinancialMovements.Where(m => m.Date >= start && m.Date <= end).ToList();
 
             var summary = new BusinessSummary();
 
-            // Ventas Brutas
+            // 1. Resumen General
             summary.GrossSales = sales.Sum(s => s.Total);
             summary.PosSalesIncome = summary.GrossSales;
-
-            // Costo de productos (Simulado por ahora como un % o buscando en el modelo si existiera)
-            // En una app real, el modelo SaleItem tendria el CostPrice al momento de la venta.
-            summary.CostOfGoodsSold = sales.Sum(s => s.Total * 0.7m); // Estimacion 70% costo
-
-            // Recargas
+            summary.CostOfGoodsSold = sales.Sum(s => s.Total * 0.7m);
             summary.TopupFlow = topups.Sum(t => t.Amount);
-            summary.TopupIncome = topups.Sum(t => t.Amount); // O comision si se separa
-
-            // Reparaciones
+            summary.TopupIncome = topups.Sum(t => t.Amount);
             var deliveredRepairs = repairs.Where(r => r.Status == "Entregado");
-            summary.DeliveredRepairsTotal = deliveredRepairs.Sum(r => r.Price);
+            summary.DeliveredRepairsTotal = deliveredRepairs.Sum(r => r.Total);
             summary.RepairIncome = summary.DeliveredRepairsTotal;
-
-            // Otros ingresos y gastos (Tesorería)
             summary.OtherExtraIncome = movements.Where(m => m.Type == "Ingreso").Sum(m => m.Amount);
             summary.ExpensesAndOutflows = movements.Where(m => m.Type == "Gasto").Sum(m => m.Amount);
-
-            // Utilidad Operativa Real (Ventas - Costo + Recargas + Reparaciones)
             summary.RealOperatingProfit = (summary.GrossSales - summary.CostOfGoodsSold) + (summary.TopupFlow * 0.05m) + summary.RepairIncome;
-
-            // Caja Real
             summary.ActualCashInHand = (summary.TotalGrossIncome - summary.ExpensesAndOutflows);
+
+            // 2. Finanzas por Fuente
+            summary.FinancialSummaries = movements
+                .GroupBy(m => new { m.Source, m.Type })
+                .Select(g => new FinancialSourceSummary
+                {
+                    Source = g.Key.Source,
+                    Type = g.Key.Type,
+                    Total = g.Sum(m => m.Amount)
+                }).ToList();
+
+            // 3. Valorización de Inventario (Estado Actual)
+            summary.Inventory = new InventoryValuation
+            {
+                InvestmentCost = _main.Products.Where(p => p.Stock > 0).Sum(p => p.PurchasePrice * p.Stock),
+                ProjectedSalesValue = _main.Products.Where(p => p.Stock > 0).Sum(p => p.Price * p.Stock)
+            };
+
+            // 4. Ventas y Clientes
+            summary.TopProducts = sales.SelectMany(s => s.Items)
+                .GroupBy(i => i.ProductName)
+                .Select(g => new RankedItem
+                {
+                    Name = g.Key,
+                    Quantity = g.Sum(i => i.Quantity),
+                    TotalSales = g.Sum(i => i.Subtotal)
+                })
+                .OrderByDescending(x => x.TotalSales)
+                .Take(10).ToList();
+
+            summary.TopClients = sales
+                .GroupBy(s => s.CustomerName)
+                .Select(g => new RankedItem
+                {
+                    Name = g.Key,
+                    Quantity = g.Count(),
+                    TotalSales = g.Sum(s => s.Total)
+                })
+                .OrderByDescending(x => x.TotalSales)
+                .Take(5).ToList();
+
+            // 5. Servicios (Recargas)
+            summary.TopupReport = topups
+                .GroupBy(t => t.Company)
+                .Select(g => new ServiceReportItem
+                {
+                    Operator = g.Key,
+                    TicketCount = g.Count(),
+                    TotalAmount = g.Sum(t => t.Amount),
+                    TotalProfit = g.Sum(t => t.Profit)
+                }).ToList();
 
             Summary = summary;
         }

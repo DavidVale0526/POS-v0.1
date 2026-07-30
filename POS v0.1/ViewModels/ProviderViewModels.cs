@@ -46,6 +46,9 @@ namespace POS_v0_1.ViewModels
                 if (o is Provider provider)
                 {
                     _main.Providers.Remove(provider);
+                    var dbProvider = _main.Db.Providers.Find(provider.Id);
+                    if (dbProvider != null) _main.Db.Providers.Remove(dbProvider);
+                    _main.Db.SaveChanges();
                     ApplyFilter();
                 }
             });
@@ -122,10 +125,8 @@ namespace POS_v0_1.ViewModels
 
                 if (_editingProvider == null)
                 {
-                    int nextId = _main.Providers.Any() ? _main.Providers.Max(p => p.Id) + 1 : 1;
-                    _main.Providers.Add(new Provider
+                    var newProvider = new Provider
                     {
-                        Id = nextId,
                         Name = Name,
                         ContactName = ContactName,
                         Phone = Phone,
@@ -133,7 +134,10 @@ namespace POS_v0_1.ViewModels
                         Address = Address,
                         City = City,
                         Description = Description
-                    });
+                    };
+                    _main.Db.Providers.Add(newProvider);
+                    _main.Db.SaveChanges();
+                    _main.Providers.Add(newProvider);
                 }
                 else
                 {
@@ -144,6 +148,7 @@ namespace POS_v0_1.ViewModels
                     _editingProvider.Address = Address;
                     _editingProvider.City = City;
                     _editingProvider.Description = Description;
+                    _main.Db.SaveChanges();
                 }
                 _main.CurrentView = new ProvidersViewModel(_main);
             });

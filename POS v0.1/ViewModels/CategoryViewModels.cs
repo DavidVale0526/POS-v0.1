@@ -23,7 +23,13 @@ namespace POS_v0_1.ViewModels
 
             DeleteCategoryCommand = new RelayCommand(o =>
             {
-                if (o is Category cat) _main.Categories.Remove(cat);
+                if (o is Category cat)
+                {
+                    _main.Categories.Remove(cat);
+                    var dbCat = _main.Db.Categories.Find(cat.Id);
+                    if (dbCat != null) _main.Db.Categories.Remove(dbCat);
+                    _main.Db.SaveChanges();
+                }
             });
 
             EditCategoryCommand = new RelayCommand(o =>
@@ -66,19 +72,21 @@ namespace POS_v0_1.ViewModels
 
                 if (_editingCategory == null)
                 {
-                    int nextId = _main.Categories.Any() ? _main.Categories.Max(c => c.Id) + 1 : 1;
-                    _main.Categories.Add(new Category
+                    var newCat = new Category
                     {
-                        Id = nextId,
                         Name = Name,
                         Description = Description,
                         ProductCount = 0
-                    });
+                    };
+                    _main.Db.Categories.Add(newCat);
+                    _main.Db.SaveChanges();
+                    _main.Categories.Add(newCat);
                 }
                 else
                 {
                     _editingCategory.Name = Name;
                     _editingCategory.Description = Description;
+                    _main.Db.SaveChanges();
                 }
                 _main.CurrentView = new CategoriesViewModel(_main);
             });

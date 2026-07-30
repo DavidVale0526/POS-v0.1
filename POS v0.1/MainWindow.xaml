@@ -72,6 +72,45 @@
         <DataTemplate DataType="{x:Type viewModels:RepairTypesViewModel}">
             <views:RepairTypesView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:FinancialMovementsViewModel}">
+            <views:FinancialMovementsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:FinancialSourcesViewModel}">
+            <views:FinancialSourcesView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:CreateFinancialMovementViewModel}">
+            <views:CreateFinancialMovementView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:CashCountHistoryViewModel}">
+            <views:CashCountHistoryView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:NewCashCountViewModel}">
+            <views:NewCashCountView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:BankHistoryViewModel}">
+            <views:BankHistoryView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:NewBankTransactionViewModel}">
+            <views:NewBankTransactionView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:ClientListViewModel}">
+            <views:ClientListView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:CreateClientViewModel}">
+            <views:CreateClientView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:UserManagementViewModel}">
+            <views:UserManagementView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:CreateUserViewModel}">
+            <views:CreateUserView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:ReportsViewModel}">
+            <views:ReportsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:LoginViewModel}">
+            <views:LoginView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type viewModels:PlaceholderViewModel}">
             <Grid>
                 <TextBlock Text="{Binding Title}" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Gray"/>
@@ -81,11 +120,12 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <ScrollViewer Grid.Column="0" Background="#f0f0f0" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Column="0" Background="#f0f0f0" VerticalScrollBarVisibility="Auto" Width="200"
+                      Visibility="{Binding IsAuthenticated, Converter={StaticResource VisConverter}}">
             <StackPanel Margin="5">
                 <TextBlock Text="POS SYSTEM" FontSize="20" FontWeight="Bold" Margin="10,10" HorizontalAlignment="Center"/>
 
@@ -122,6 +162,31 @@
 
                 <TextBlock Text="Estado de Caja:" Margin="10,0" FontWeight="Bold"/>
                 <TextBlock Text="{Binding Session.IsOpen, Converter={StaticResource BoolToStatusConverter}}" Margin="10,5" HorizontalAlignment="Center"/>
+
+                <Separator Margin="0,10"/>
+                <StackPanel Margin="10,5">
+                    <TextBlock Text="Usuario:" FontSize="10" Foreground="#666"/>
+                    <TextBlock Text="{Binding CurrentUser.Name}" FontWeight="SemiBold" FontSize="12"/>
+                    <TextBlock Text="{Binding CurrentUser.Role}" FontSize="10" Foreground="#0d6efd"/>
+                </StackPanel>
+
+                <Button Content="🚪 Cerrar Sesión" Margin="10,10" Padding="8"
+                        Background="#dc3545" Foreground="White" BorderThickness="0"
+                        Command="{Binding LogoutCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
             </StackPanel>
         </ScrollViewer>
 

@@ -73,11 +73,18 @@ namespace POS_v0_1.ViewModels
             {
                 if (o is Product prod)
                 {
-                    var cat = _main.Categories.FirstOrDefault(c => c.Name == prod.Category);
-                    if (cat != null) cat.ProductCount--;
+                    var result = System.Windows.MessageBox.Show($"¿Desea eliminar {prod.Name}?", "Confirmar", System.Windows.MessageBoxButton.YesNo);
+                    if (result == System.Windows.MessageBoxResult.Yes)
+                    {
+                        var cat = _main.Categories.FirstOrDefault(c => c.Name == prod.Category);
+                        if (cat != null) cat.ProductCount--;
 
-                    _main.Products.Remove(prod);
-                    ApplyFilters();
+                        _main.Products.Remove(prod);
+                        var dbProd = _main.Db.Products.Find(prod.Id);
+                        if (dbProd != null) _main.Db.Products.Remove(dbProd);
+                        _main.Db.SaveChanges();
+                        ApplyFilters();
+                    }
                 }
             });
 
@@ -294,10 +301,8 @@ namespace POS_v0_1.ViewModels
 
                 if (_editingProduct == null)
                 {
-                    int nextId = _main.Products.Any() ? _main.Products.Max(p => p.Id) + 1 : 1;
-                    _main.Products.Add(new Product
+                    var newProd = new Product
                     {
-                        Id = nextId,
                         Name = Name,
                         Barcode = Barcode,
                         SKU = SKU,
@@ -310,7 +315,10 @@ namespace POS_v0_1.ViewModels
                         Provider = Provider,
                         Status = SelectedStatus,
                         Category = SelectedCategory.Name
-                    });
+                    };
+                    _main.Db.Products.Add(newProd);
+                    _main.Db.SaveChanges();
+                    _main.Products.Add(newProd);
                     SelectedCategory.ProductCount++;
                 }
                 else
@@ -334,6 +342,8 @@ namespace POS_v0_1.ViewModels
                     _editingProduct.Provider = Provider;
                     _editingProduct.Status = SelectedStatus;
                     _editingProduct.Category = SelectedCategory.Name;
+
+                    _main.Db.SaveChanges();
                 }
                 _main.CurrentView = new ProductsViewModel(_main);
             });

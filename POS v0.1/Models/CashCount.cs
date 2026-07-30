@@ -16,6 +16,7 @@ namespace POS_v0_1.Models
 
     public class CashDenomination
     {
+        public int Id { get; set; }
         public string Name { get; set; }
         public decimal Value { get; set; }
         public int Quantity { get; set; }

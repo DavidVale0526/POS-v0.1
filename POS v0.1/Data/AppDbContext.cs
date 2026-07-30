@@ -30,11 +30,27 @@ namespace POS_v0_1.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configure relationships or seed data if needed
+            // Configurar Llaves Primarias para entidades anidadas
+            modelBuilder.Entity<SaleItem>().HasKey(si => si.Id);
+            modelBuilder.Entity<PurchaseDetail>().HasKey(pd => pd.Id);
+            modelBuilder.Entity<CashDenomination>().HasKey(cd => cd.Id);
+            modelBuilder.Entity<CashSession>().HasKey(cs => cs.Id);
+
+            // Configurar relaciones
             modelBuilder.Entity<Sale>()
                 .HasMany(s => s.Items)
                 .WithOne()
                 .HasForeignKey("SaleId");
+
+            modelBuilder.Entity<Purchase>()
+                .HasMany(p => p.Items)
+                .WithOne()
+                .HasForeignKey("PurchaseId");
+
+            modelBuilder.Entity<CashCount>()
+                .HasMany(c => c.Details)
+                .WithOne()
+                .HasForeignKey("CashCountId");
         }
     }
 }

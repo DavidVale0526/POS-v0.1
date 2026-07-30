@@ -66,9 +66,8 @@ namespace POS_v0_1.ViewModels
             {
                 var count = new CashCount
                 {
-                    Id = _main.CashCounts.Any() ? _main.CashCounts.Max(c => c.Id) + 1 : 1,
                     DateTime = DateTime.Now,
-                    PerformedBy = "Administrador",
+                    PerformedBy = _main.CurrentUser?.Name ?? "Sistema",
                     TotalCalculated = this.TotalCalculated,
                     Notes = this.Notes,
                     Details = Denominations.Select(d => new CashDenomination
@@ -79,6 +78,8 @@ namespace POS_v0_1.ViewModels
                     }).ToList()
                 };
 
+                _main.Db.CashCounts.Add(count);
+                _main.Db.SaveChanges();
                 _main.CashCounts.Add(count);
                 _main.CurrentView = new CashCountHistoryViewModel(_main);
             });

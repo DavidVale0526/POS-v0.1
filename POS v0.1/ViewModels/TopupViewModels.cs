@@ -129,7 +129,6 @@ namespace POS_v0_1.ViewModels
 
                 var topup = new Topup
                 {
-                    Id = _main.Topups.Any() ? _main.Topups.Max(t => t.Id) + 1 : 1,
                     DateTime = DateTime.Now,
                     Company = SelectedCompany,
                     PhoneNumber = PhoneNumber,
@@ -138,6 +137,8 @@ namespace POS_v0_1.ViewModels
                     Notes = Notes
                 };
 
+                _main.Db.Topups.Add(topup);
+                _main.Db.SaveChanges();
                 _main.Topups.Add(topup);
                 _main.CurrentView = new TopupHistoryViewModel(_main);
             });

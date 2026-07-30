@@ -122,23 +122,25 @@ namespace POS_v0_1.ViewModels
 
                 var purchase = new Purchase
                 {
-                    Id = _main.Purchases.Any() ? _main.Purchases.Max(p => p.Id) + 1 : 1,
                     Date = PurchaseDate,
                     ProviderName = SelectedProvider.Name,
                     InvoiceNumber = InvoiceNumber,
                     Notes = Notes,
-                    Total = Total
+                    Total = Total,
+                    Items = new ObservableCollection<PurchaseDetail>(Items)
                 };
 
                 foreach (var item in Items)
                 {
-                    purchase.Items.Add(item);
-                    var product = _main.Products.FirstOrDefault(p => p.Id == item.ProductId);
+                    var product = _main.Db.Products.FirstOrDefault(p => p.Id == item.ProductId);
                     if (product != null)
                     {
                         product.Stock += item.Quantity;
                     }
                 }
+
+                _main.Db.Purchases.Add(purchase);
+                _main.Db.SaveChanges();
 
                 _main.Purchases.Add(purchase);
                 _main.CurrentView = new PurchasesViewModel(_main);
@@ -193,7 +195,6 @@ namespace POS_v0_1.ViewModels
 
                 var newProduct = new Product
                 {
-                    Id = _main.Products.Any() ? _main.Products.Max(p => p.Id) + 1 : 1,
                     Name = Name,
                     Category = SelectedCategory.Name,
                     PurchasePrice = PurchasePrice,
@@ -203,6 +204,11 @@ namespace POS_v0_1.ViewModels
                     Location = Location,
                     Status = "Activo"
                 };
+
+                _main.Db.Products.Add(newProduct);
+                var dbCat = _main.Db.Categories.FirstOrDefault(c => c.Name == SelectedCategory.Name);
+                if (dbCat != null) dbCat.ProductCount++;
+                _main.Db.SaveChanges();
 
                 _main.Products.Add(newProduct);
                 SelectedCategory.ProductCount++;

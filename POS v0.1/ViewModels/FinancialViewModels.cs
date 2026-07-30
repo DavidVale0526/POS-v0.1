@@ -88,12 +88,14 @@ namespace POS_v0_1.ViewModels
             SaveCommand = new RelayCommand(o =>
             {
                 if (string.IsNullOrWhiteSpace(NewName)) return;
-                Sources.Add(new FinancialSource
+                var source = new FinancialSource
                 {
-                    Id = Sources.Any() ? Sources.Max(s => s.Id) + 1 : 1,
                     Name = NewName,
                     Description = NewDescription
-                });
+                };
+                _main.Db.FinancialSources.Add(source);
+                _main.Db.SaveChanges();
+                Sources.Add(source);
                 NewName = string.Empty;
                 NewDescription = string.Empty;
             });
@@ -135,16 +137,20 @@ namespace POS_v0_1.ViewModels
 
                 var move = new FinancialMovement
                 {
-                    Id = _main.FinancialMovements.Any() ? _main.FinancialMovements.Max(m => m.Id) + 1 : 1,
                     Date = Date,
                     Type = Type,
                     Concept = Concept,
                     Source = SelectedSource.Name,
                     Amount = Amount,
-                    RegisteredBy = "Administrador",
+                    RegisteredBy = _main.CurrentUser?.Name ?? "Sistema",
                     Reference = Reference,
                     Notes = Notes
                 };
+
+                _main.Db.FinancialMovements.Add(move);
+                var dbSource = _main.Db.FinancialSources.Find(SelectedSource.Id);
+                if (dbSource != null) dbSource.MovementCount++;
+                _main.Db.SaveChanges();
 
                 _main.FinancialMovements.Add(move);
                 SelectedSource.MovementCount++;

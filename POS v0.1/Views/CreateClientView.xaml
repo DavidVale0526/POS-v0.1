@@ -5,77 +5,199 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="1100">
-    <Grid Background="#f8f9fa">
+
+    <UserControl.Resources>
+        <!-- Paleta de Colores Moderna -->
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#2563EB"/>
+        <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#1D4ED8"/>
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#F8FAFC"/>
+        <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#0F172A"/>
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#475569"/>
+        <SolidColorBrush x:Key="BorderColorBrush" Color="#E2E8F0"/>
+
+        <!-- Sombra Suave para la Tarjeta -->
+        <DropShadowEffect x:Key="CardShadow" BlurRadius="20" ShadowDepth="4" Direction="270" Color="#000000" Opacity="0.04"/>
+
+        <!-- Estilo para Etiquetas de Formulario -->
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+
+        <!-- Estilo Moderno para Inputs (TextBox) -->
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="12,10"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColorBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#94A3B8"/>
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                                <Setter TargetName="border" Property="BorderThickness" Value="1.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Estilo Botón Secundario (Volver) -->
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColorBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#F1F5F9"/>
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Estilo Botón Primario (Guardar) -->
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="20,12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource PrimaryHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1E40AF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{StaticResource BackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="White" Padding="15" Margin="0,0,0,10">
+        <Border Grid.Row="0" Background="White" Padding="25,16" BorderBrush="{StaticResource BorderColorBrush}" BorderThickness="0,0,0,1">
             <Grid>
-                <TextBlock Text="Nuevo Cliente" FontSize="20" FontWeight="Bold"/>
-                <Button Content="← Volver" HorizontalAlignment="Right" Padding="15,5"
-                        Command="{Binding BackCommand}" Background="White" BorderBrush="#ced4da"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="👤" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Nuevo Cliente" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <Button Content="← Volver" HorizontalAlignment="Right"
+                        Command="{Binding BackCommand}" 
+                        Style="{StaticResource SecondaryButtonStyle}"/>
             </Grid>
         </Border>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <Border Background="White" CornerRadius="8" Margin="30,10" MaxWidth="600" HorizontalAlignment="Center"
-                    BorderBrush="#dee2e6" BorderThickness="1" Padding="30">
+        <!-- Form Center Scroll -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,10,0,0">
+            <Border Background="{StaticResource CardBackgroundBrush}" 
+                    CornerRadius="12" 
+                    Margin="20,20,20,40" 
+                    MaxWidth="650" 
+                    HorizontalAlignment="Center"
+                    BorderBrush="{StaticResource BorderColorBrush}" 
+                    BorderThickness="1" 
+                    Padding="35"
+                    Effect="{StaticResource CardShadow}">
                 <StackPanel>
+                    <!-- Header Interno del Formulario -->
+                    <TextBlock Text="Información del Cliente" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
+                    <TextBlock Text="Ingresa los datos para registrar un nuevo cliente en el sistema." FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,25"/>
+
                     <!-- Name -->
-                    <TextBlock Text="Nombre del Cliente *" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
-                    <TextBox Padding="10" FontSize="14" Margin="0,0,0,20"
-                             Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+                    <StackPanel Margin="0,0,0,18">
+                        <TextBlock Style="{StaticResource FieldLabelStyle}">
+                            <Run Text="Nombre del Cliente"/>
+                            <Run Text=" *" Foreground="#EF4444"/>
+                        </TextBlock>
+                        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
 
                     <!-- Phone and Email Row -->
-                    <Grid Margin="0,0,0,20">
+                    <Grid Margin="0,0,0,18">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="16"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Teléfono" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
-                            <TextBox Padding="10" Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="Teléfono" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="Correo Electrónico" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
-                            <TextBox Padding="10" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Text="Correo Electrónico" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
                     </Grid>
 
                     <!-- Address -->
-                    <TextBlock Text="Dirección Física" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
-                    <TextBox Padding="10" Height="80" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top"
-                             Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,20"/>
+                    <StackPanel Margin="0,0,0,18">
+                        <TextBlock Text="Dirección Física" Style="{StaticResource FieldLabelStyle}"/>
+                        <TextBox Height="80" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top"
+                                 Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
 
                     <!-- Notes -->
-                    <TextBlock Text="Notas Adicionales" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
-                    <TextBox Padding="10" Height="80" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top"
-                             Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,30"/>
+                    <StackPanel Margin="0,0,0,28">
+                        <TextBlock Text="Notas Adicionales" Style="{StaticResource FieldLabelStyle}"/>
+                        <TextBox Height="80" TextWrapping="Wrap" AcceptsReturn="True" VerticalContentAlignment="Top"
+                                 Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
 
                     <!-- Action Button -->
-                    <Button Content="💾 Guardar Cliente" Background="#0d6efd" Foreground="White" Padding="30,12"
-                            FontWeight="Bold" HorizontalAlignment="Stretch" BorderThickness="0"
-                            Command="{Binding SaveCommand}">
-                        <Button.Style>
-                            <Style TargetType="Button">
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="{TemplateBinding Background}" CornerRadius="5">
-                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
-                        </Button.Style>
-                    </Button>
+                    <Button Content="💾 Guardar Cliente" 
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding SaveCommand}"/>
                 </StackPanel>
             </Border>
         </ScrollViewer>

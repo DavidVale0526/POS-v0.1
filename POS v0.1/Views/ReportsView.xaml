@@ -91,14 +91,6 @@
                     </Grid>
                 </Border>
 
-                <!-- Results Info -->
-                <TextBlock Margin="0,0,0,15" FontSize="16" Foreground="#333">
-                    <Run Text="Resultados del: " FontWeight="SemiBold"/>
-                    <Run Text="{Binding ReferenceDate, StringFormat='\{0:dd/MM/yyyy\}'}"/>
-                    <Run Text=" al " FontWeight="SemiBold"/>
-                    <Run Text="{Binding ReferenceDate, StringFormat='\{0:dd/MM/yyyy\}'}"/>
-                </TextBlock>
-
                 <!-- Tabs Content -->
                 <TabControl Background="Transparent" BorderThickness="0">
                     <TabControl.Resources>
@@ -123,20 +115,25 @@
                         </Style>
                     </TabControl.Resources>
 
-                    <TabItem>
-                        <TabItem.Header>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="🏠" Margin="0,0,5,0"/>
-                                <TextBlock Text="Resumen" FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </TabItem.Header>
+                    <TabItem Header="🏠 Resumen">
                         <local:ReportSummaryView DataContext="{Binding}"/>
                     </TabItem>
 
-                    <TabItem Header="📄 Finanzas y Utilidad"/>
-                    <TabItem Header="📦 Inventario"/>
-                    <TabItem Header="🛒 Ventas y Clientes"/>
-                    <TabItem Header="🔧 Servicios"/>
+                    <TabItem Header="💳 Finanzas y Utilidad">
+                         <local:ReportFinanceView DataContext="{Binding}"/>
+                    </TabItem>
+
+                    <TabItem Header="📦 Inventario">
+                        <local:ReportInventoryView DataContext="{Binding}"/>
+                    </TabItem>
+
+                    <TabItem Header="🛒 Ventas y Clientes">
+                        <local:ReportSalesView DataContext="{Binding}"/>
+                    </TabItem>
+
+                    <TabItem Header="🔧 Servicios">
+                        <local:ReportServicesView DataContext="{Binding}"/>
+                    </TabItem>
                 </TabControl>
             </StackPanel>
         </ScrollViewer>

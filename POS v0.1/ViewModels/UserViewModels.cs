@@ -28,6 +28,12 @@ namespace POS_v0_1.ViewModels
                     if (result == MessageBoxResult.Yes)
                     {
                         _main.Users.Remove(user);
+                        var dbUser = _main.Db.Users.Find(user.Id);
+                        if (dbUser != null)
+                        {
+                            _main.Db.Users.Remove(dbUser);
+                            _main.Db.SaveChanges();
+                        }
                     }
                 }
             });
@@ -90,7 +96,6 @@ namespace POS_v0_1.ViewModels
 
             var newUser = new User
             {
-                Id = _main.Users.Any() ? _main.Users.Max(u => u.Id) + 1 : 1,
                 Name = Name,
                 Email = Email,
                 Role = Role,
@@ -99,6 +104,8 @@ namespace POS_v0_1.ViewModels
                 RegistrationDate = DateTime.Now
             };
 
+            _main.Db.Users.Add(newUser);
+            _main.Db.SaveChanges();
             _main.Users.Add(newUser);
             _main.CurrentView = new UserManagementViewModel(_main);
         }

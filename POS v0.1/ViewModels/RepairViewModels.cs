@@ -59,6 +59,7 @@ namespace POS_v0_1.ViewModels
                 if (o is RepairOrder repair)
                 {
                     repair.Status = repair.Status == "Recibido" ? "Entregado" : "Recibido";
+                    _main.Db.SaveChanges();
                     ApplyFilter();
                 }
             });
@@ -123,7 +124,6 @@ namespace POS_v0_1.ViewModels
 
                 var repair = new RepairOrder
                 {
-                    Id = _main.Repairs.Any() ? _main.Repairs.Max(r => r.Id) + 1 : 1001,
                     EntryDate = DateTime.Now,
                     ClientName = string.IsNullOrWhiteSpace(ClientName) ? "Consumidor Final" : ClientName,
                     ClientPhone = ClientPhone,
@@ -136,6 +136,8 @@ namespace POS_v0_1.ViewModels
                     Status = "Recibido"
                 };
 
+                _main.Db.Repairs.Add(repair);
+                _main.Db.SaveChanges();
                 _main.Repairs.Add(repair);
                 _main.CurrentView = new RepairListViewModel(_main);
             });
@@ -177,11 +179,12 @@ namespace POS_v0_1.ViewModels
 
                 var category = new RepairCategory
                 {
-                    Id = Categories.Any() ? Categories.Max(c => c.Id) + 1 : 1,
                     Name = NewName,
                     Description = NewDescription
                 };
 
+                _main.Db.RepairCategories.Add(category);
+                _main.Db.SaveChanges();
                 Categories.Add(category);
                 NewName = string.Empty;
                 NewDescription = string.Empty;
@@ -239,7 +242,6 @@ namespace POS_v0_1.ViewModels
 
                 var type = new RepairType
                 {
-                    Id = Types.Any() ? Types.Max(t => t.Id) + 1 : 1,
                     CategoryId = SelectedCategory.Id,
                     CategoryName = SelectedCategory.Name,
                     Name = NewName,
@@ -247,6 +249,8 @@ namespace POS_v0_1.ViewModels
                     Description = NewDescription
                 };
 
+                _main.Db.RepairTypes.Add(type);
+                _main.Db.SaveChanges();
                 Types.Add(type);
                 NewName = string.Empty;
                 NewPrice = 0;

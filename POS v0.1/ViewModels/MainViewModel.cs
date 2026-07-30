@@ -3,6 +3,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using POS_v0_1.Models;
+using POS_v0_1.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace POS_v0_1.ViewModels
 {
@@ -15,6 +17,20 @@ namespace POS_v0_1.ViewModels
             set { _currentView = value; OnPropertyChanged(); }
         }
 
+        private bool _isAuthenticated;
+        public bool IsAuthenticated
+        {
+            get => _isAuthenticated;
+            set { _isAuthenticated = value; OnPropertyChanged(); }
+        }
+
+        private User _currentUser;
+        public User CurrentUser
+        {
+            get => _currentUser;
+            set { _currentUser = value; OnPropertyChanged(); }
+        }
+
         public ObservableCollection<Product> Products { get; set; } = new ObservableCollection<Product>();
         public ObservableCollection<Category> Categories { get; set; } = new ObservableCollection<Category>();
         public ObservableCollection<Provider> Providers { get; set; } = new ObservableCollection<Provider>();
@@ -24,6 +40,14 @@ namespace POS_v0_1.ViewModels
         public ObservableCollection<RepairOrder> Repairs { get; set; } = new ObservableCollection<RepairOrder>();
         public ObservableCollection<RepairCategory> RepairCategories { get; set; } = new ObservableCollection<RepairCategory>();
         public ObservableCollection<RepairType> RepairTypes { get; set; } = new ObservableCollection<RepairType>();
+        public ObservableCollection<FinancialMovement> FinancialMovements { get; set; } = new ObservableCollection<FinancialMovement>();
+        public ObservableCollection<FinancialSource> FinancialSources { get; set; } = new ObservableCollection<FinancialSource>();
+        public ObservableCollection<CashCount> CashCounts { get; set; } = new ObservableCollection<CashCount>();
+        public ObservableCollection<BankTransaction> BankTransactions { get; set; } = new ObservableCollection<BankTransaction>();
+        public ObservableCollection<Client> Clients { get; set; } = new ObservableCollection<Client>();
+        public ObservableCollection<User> Users { get; set; } = new ObservableCollection<User>();
+
+        public AppDbContext Db { get; } = new AppDbContext();
 
         private CashSession _session = new CashSession();
         public CashSession Session
@@ -51,6 +75,7 @@ namespace POS_v0_1.ViewModels
         public ICommand ShowReportsCommand { get; }
         public ICommand ShowUsersRolesCommand { get; }
         public ICommand ShowConfigurationCommand { get; }
+        public ICommand LogoutCommand { get; }
 
         public MainViewModel()
         {
@@ -72,35 +97,101 @@ namespace POS_v0_1.ViewModels
             ShowSalesHistoryCommand = new RelayCommand(o => CurrentView = new SalesHistoryViewModel(this));
             ShowTopupsCommand = new RelayCommand(o => CurrentView = new TopupHistoryViewModel(this));
             ShowRepairsCommand = new RelayCommand(o => CurrentView = new RepairListViewModel(this));
-            ShowClientsCommand = new RelayCommand(o => CurrentView = new PlaceholderViewModel("Clientes"));
+            ShowClientsCommand = new RelayCommand(o => CurrentView = new ClientListViewModel(this));
             ShowRepairCategoriesCommand = new RelayCommand(o => CurrentView = new RepairCategoriesViewModel(this));
             ShowRepairTypesCommand = new RelayCommand(o => CurrentView = new RepairTypesViewModel(this));
-            ShowCashCountCommand = new RelayCommand(o => CurrentView = new PlaceholderViewModel("Conteo de Billetes"));
-            ShowExpensesIncomesCommand = new RelayCommand(o => CurrentView = new PlaceholderViewModel("Gastos / Ingresos"));
-            ShowBankCommand = new RelayCommand(o => CurrentView = new PlaceholderViewModel("Banco"));
-            ShowReportsCommand = new RelayCommand(o => CurrentView = new PlaceholderViewModel("Reportes"));
-            ShowUsersRolesCommand = new RelayCommand(o => CurrentView = new PlaceholderViewModel("Usuarios / Roles"));
+            ShowCashCountCommand = new RelayCommand(o => CurrentView = new CashCountHistoryViewModel(this));
+            ShowExpensesIncomesCommand = new RelayCommand(o => CurrentView = new FinancialMovementsViewModel(this));
+            ShowBankCommand = new RelayCommand(o => CurrentView = new BankHistoryViewModel(this));
+            ShowReportsCommand = new RelayCommand(o =>
+            {
+                if (CurrentUser?.Role == "Administrador")
+                    CurrentView = new ReportsViewModel(this);
+                else
+                    System.Windows.MessageBox.Show("Acceso denegado. Se requiere rol de Administrador.", "Permisos", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Stop);
+            });
+            ShowUsersRolesCommand = new RelayCommand(o =>
+            {
+                if (CurrentUser?.Role == "Administrador")
+                    CurrentView = new UserManagementViewModel(this);
+                else
+                    System.Windows.MessageBox.Show("Acceso denegado. Se requiere rol de Administrador.", "Permisos", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Stop);
+            });
             ShowConfigurationCommand = new RelayCommand(o => CurrentView = new PlaceholderViewModel("Configuración"));
 
-            // Initial view
-            CurrentView = new OpenCashViewModel(this);
+            // Initialize Database
+            Db.Database.EnsureCreated();
+            LoadDataFromDatabase();
 
-            // Sample data
-            Categories.Add(new Category { Id = 1, Name = "Celulares", Description = "Dispositivos móviles", ProductCount = 0 });
-            Categories.Add(new Category { Id = 2, Name = "Accesorios", Description = "Cargadores, cables, fundas, etc.", ProductCount = 0 });
-            Categories.Add(new Category { Id = 3, Name = "Repuestos", Description = "Pantallas, baterías, etc.", ProductCount = 0 });
-
-            Products.Add(new Product { Id = 1, Name = "Samsung Galaxy S21", Barcode = "123456789", SKU = "SAM-S21", SellingPrice = 800, PurchasePrice = 600, Stock = 10, MinStock = 2, Category = "Celulares", Status = "Activo" });
-            Products.Add(new Product { Id = 2, Name = "Cargador Carga Rápida", Barcode = "987654321", SKU = "ACC-CHRG", SellingPrice = 25, PurchasePrice = 10, Stock = 50, MinStock = 10, Category = "Accesorios", Status = "Activo" });
-
-            Providers.Add(new Provider { Id = 1, Name = "TecnoDistribuidora", ContactName = "Juan Pérez", Phone = "555-0199", City = "CDMX" });
-            Providers.Add(new Provider { Id = 2, Name = "Global Phones", ContactName = "Maria García", Phone = "555-0288", City = "Guadalajara" });
-
-            foreach (var prod in Products)
+            LogoutCommand = new RelayCommand(o =>
             {
-                var cat = Categories.FirstOrDefault(c => c.Name == prod.Category);
-                if (cat != null) cat.ProductCount++;
+                IsAuthenticated = false;
+                CurrentUser = null;
+                CurrentView = new LoginViewModel(this);
+            });
+
+            // Initial view
+            IsAuthenticated = false;
+            CurrentView = new LoginViewModel(this);
+        }
+
+        private void LoadDataFromDatabase()
+        {
+            // Load Users
+            var dbUsers = Db.Users.ToList();
+            if (!dbUsers.Any())
+            {
+                // Seed default users if none exist
+                var admin = new User { Name = "Administrador", Email = "admin@admin.com", Password = "admin", Role = "Administrador", Pin = "1234" };
+                var seller = new User { Name = "Vendedor Juan", Email = "vendedor@admin.com", Password = "123", Role = "Vendedor", Pin = "4321" };
+                Db.Users.AddRange(admin, seller);
+                Db.SaveChanges();
+                dbUsers = Db.Users.ToList();
             }
+            foreach (var user in dbUsers) Users.Add(user);
+
+            // Load Categories
+            var dbCategories = Db.Categories.ToList();
+            if (!dbCategories.Any())
+            {
+                Db.Categories.Add(new Category { Name = "Celulares", Description = "Dispositivos móviles" });
+                Db.Categories.Add(new Category { Name = "Accesorios", Description = "Cargadores, cables, etc." });
+                Db.SaveChanges();
+                dbCategories = Db.Categories.ToList();
+            }
+            foreach (var cat in dbCategories) Categories.Add(cat);
+
+            // Load Products
+            foreach (var prod in Db.Products.ToList()) Products.Add(prod);
+
+            // Load Providers
+            foreach (var prov in Db.Providers.ToList()) Providers.Add(prov);
+
+            // Load Financial Sources
+            var dbSources = Db.FinancialSources.ToList();
+            if (!dbSources.Any())
+            {
+                Db.FinancialSources.Add(new FinancialSource { Name = "Caja", Description = "Dinero en caja" });
+                Db.FinancialSources.Add(new FinancialSource { Name = "Banco", Description = "Cuenta bancaria" });
+                Db.SaveChanges();
+                dbSources = Db.FinancialSources.ToList();
+            }
+            foreach (var source in dbSources) FinancialSources.Add(source);
+
+            // Load Other Data
+            foreach (var sale in Db.Sales.Include(s => s.Items).ToList()) Sales.Add(sale);
+            foreach (var client in Db.Clients.ToList()) Clients.Add(client);
+            foreach (var repair in Db.Repairs.ToList()) Repairs.Add(repair);
+            foreach (var topup in Db.Topups.ToList()) Topups.Add(topup);
+            foreach (var movement in Db.FinancialMovements.ToList()) FinancialMovements.Add(movement);
+            foreach (var count in Db.CashCounts.Include(c => c.Details).ToList()) CashCounts.Add(count);
+            foreach (var bank in Db.BankTransactions.ToList()) BankTransactions.Add(bank);
+            foreach (var purchase in Db.Purchases.Include(p => p.Items).ToList()) Purchases.Add(purchase);
+        }
+
+        public void SaveChanges()
+        {
+            Db.SaveChanges();
         }
     }
 
@@ -266,30 +357,32 @@ namespace POS_v0_1.ViewModels
             {
                 if (!Cart.Any()) return;
 
-                // Save sale record
+                // Save sale record to DB
                 var newSale = new Sale
                 {
-                    Id = _main.Sales.Count + 1,
                     Date = DateTime.Now,
                     Subtotal = Subtotal,
                     Discount = Discount,
                     Iva = Iva,
-                    Total = Total
+                    Total = Total,
+                    Items = new ObservableCollection<SaleItem>(Cart.Select(i => new SaleItem
+                    {
+                        ProductId = i.Product.Id,
+                        ProductName = i.Product.Name,
+                        Quantity = i.Quantity,
+                        UnitPrice = i.Product.SellingPrice
+                    }))
                 };
 
+                // Update stock in DB and memory
                 foreach (var item in Cart)
                 {
-                    newSale.Items.Add(new SaleItem
-                    {
-                        ProductId = item.Product.Id,
-                        ProductName = item.Product.Name,
-                        Quantity = item.Quantity,
-                        UnitPrice = item.Product.SellingPrice
-                    });
-
-                    var prod = _main.Products.FirstOrDefault(p => p.Id == item.Product.Id);
-                    if (prod != null) prod.Stock -= item.Quantity;
+                    var dbProd = _main.Db.Products.Find(item.Product.Id);
+                    if (dbProd != null) dbProd.Stock -= item.Quantity;
                 }
+
+                _main.Db.Sales.Add(newSale);
+                _main.Db.SaveChanges();
 
                 _main.Sales.Add(newSale);
                 _main.Session.CurrentBalance += Total;
@@ -300,6 +393,7 @@ namespace POS_v0_1.ViewModels
             {
                 _main.Session.IsOpen = false;
                 _main.Session.ClosingTime = DateTime.Now;
+                _main.Db.SaveChanges(); // Ensure session state is saved if it's tracked
                 _main.CurrentView = new OpenCashViewModel(_main);
             });
         }
