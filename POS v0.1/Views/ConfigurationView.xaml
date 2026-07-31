@@ -1,0 +1,108 @@
+<UserControl x:Class="POS_v0_1.Views.ConfigurationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="1100">
+    <Grid Background="#f8f9fa">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="White" Padding="20,15" Margin="0,0,0,10">
+            <TextBlock Text="Configuración Global" FontSize="20" FontWeight="Bold" Foreground="#333"/>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Border Background="White" CornerRadius="8" Margin="30,10" MaxWidth="900" HorizontalAlignment="Center"
+                    BorderBrush="#dee2e6" BorderThickness="1" Padding="30">
+                <StackPanel>
+                    <!-- Sección: Información del Negocio -->
+                    <TextBlock Text="INFORMACIÓN DEL NEGOCIO" FontWeight="Bold" Foreground="#666" Margin="0,0,0,20"/>
+
+                    <TextBlock Text="Nombre del Negocio *" Foreground="#333" Margin="0,0,0,5"/>
+                    <TextBox Text="{Binding BusinessName, UpdateSourceTrigger=PropertyChanged}" Padding="10" Margin="0,0,0,5"/>
+                    <TextBlock Text="Este nombre aparecerá en los tickets y reportes." FontSize="11" Foreground="Gray" Margin="0,0,0,20"/>
+
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Teléfono de Contacto" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding Phone}" Padding="10"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Correo Electrónico" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding Email}" Padding="10"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="Dirección Física" Margin="0,0,0,5"/>
+                    <TextBox Text="{Binding Address}" Padding="10" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,20"/>
+
+                    <TextBlock Text="Logo del Negocio" Margin="0,0,0,5"/>
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border BorderBrush="#dee2e6" BorderThickness="1" Padding="10">
+                            <TextBlock Text="{Binding LogoPath, TargetNullValue='No file chosen'}" VerticalAlignment="Center" Foreground="Gray"/>
+                        </Border>
+                        <Button Grid.Column="1" Content="Choose File" Command="{Binding ChooseLogoCommand}" Padding="15,5" BorderBrush="#dee2e6"/>
+                    </Grid>
+                    <TextBlock Text="Logo para el ticket (se recomienda imagen en blanco y negro o alto contraste)." FontSize="11" Foreground="Gray" Margin="0,-15,0,30"/>
+
+                    <!-- Sección: Configuraciones de Sistema -->
+                    <TextBlock Text="CONFIGURACIONES DE SISTEMA Y VENTAS" FontWeight="Bold" Foreground="#666" Margin="0,0,0,20"/>
+
+                    <Grid Margin="0,0,0,30">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Formato de Ticket (Impresora Térmica) *" Margin="0,0,0,5"/>
+                            <ComboBox SelectedValue="{Binding TicketFormat}" Padding="10">
+                                <ComboBoxItem Content="58 mm (Pequeña)" Tag="58mm" IsSelected="True"/>
+                                <ComboBoxItem Content="80 mm (Estándar)" Tag="80mm"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="Tasa de Impuesto (IVA %) *" Margin="0,0,0,5"/>
+                            <Grid>
+                                <TextBox Text="{Binding TaxRate}" Padding="10" TextAlignment="Right"/>
+                                <TextBlock Text="%" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,10,0" Foreground="Gray"/>
+                            </Grid>
+                            <TextBlock Text="Dejar en 0 si no se aplica IVA por defecto." FontSize="11" Foreground="Gray" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Sección: Mantenimiento -->
+                    <TextBlock Text="MANTENIMIENTO DE DATOS" FontWeight="Bold" Foreground="#666" Margin="0,0,0,10"/>
+                    <Grid Margin="0,0,0,40">
+                        <TextBlock Text="Exporta o restaura copias de seguridad de toda la base de datos del sistema." VerticalAlignment="Center"/>
+                        <Button HorizontalAlignment="Right" Command="{Binding ShowBackupCommand}" Background="White" BorderBrush="#dc3545" Foreground="#dc3545" Padding="15,8">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🗄️" Margin="0,0,5,0"/>
+                                <TextBlock Text="Gestionar Respaldos"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <Button Content="💾 Guardar Cambios" Background="#0d6efd" Foreground="White" Padding="30,12"
+                            FontWeight="Bold" HorizontalAlignment="Right" BorderThickness="0" Command="{Binding SaveCommand}"/>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
