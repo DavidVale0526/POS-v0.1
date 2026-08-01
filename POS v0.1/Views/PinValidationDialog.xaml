@@ -1,0 +1,15 @@
+<Window x:Class="POS_v0_1.Views.PinValidationDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Validar PIN" Height="250" Width="300"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize" WindowStyle="ToolWindow">
+    <Grid Margin="20">
+        <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="Ingrese su PIN de 4 dígitos" FontSize="16" HorizontalAlignment="Center" Margin="0,0,0,20"/>
+            <PasswordBox x:Name="PinBox" FontSize="24" HorizontalContentAlignment="Center" MaxLength="6"
+                         KeyDown="PinBox_KeyDown"/>
+            <Button Content="Validar" Margin="0,20,0,0" Padding="10" Click="Validate_Click"
+                    Background="#0d6efd" Foreground="White" FontWeight="Bold"/>
+        </StackPanel>
+    </Grid>
+</Window>
