@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Windows.Input;
 using Microsoft.Win32;
+using Microsoft.EntityFrameworkCore;
 
 namespace POS_v0_1.ViewModels
 {
@@ -30,6 +31,9 @@ namespace POS_v0_1.ViewModels
             {
                 try
                 {
+                    string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                    string targetDbPath = Path.Combine(baseDir, DbFileName);
+
                     var dialog = new SaveFileDialog
                     {
                         Filter = "SQLite Database|*.db",
@@ -38,7 +42,14 @@ namespace POS_v0_1.ViewModels
 
                     if (dialog.ShowDialog() == true)
                     {
-                        File.Copy(DbFileName, dialog.FileName, true);
+                        if (File.Exists(targetDbPath))
+                        {
+                            File.Copy(targetDbPath, dialog.FileName, true);
+                        }
+                        else
+                        {
+                            File.Copy(DbFileName, dialog.FileName, true);
+                        }
                         System.Windows.MessageBox.Show("Copia de seguridad generada con éxito.", "Respaldo", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                     }
                 }
@@ -63,17 +74,54 @@ namespace POS_v0_1.ViewModels
                 {
                     try
                     {
-                        // Cerramos la conexión a la base de datos si fuera necesario (aunque SQLite suele permitir el reemplazo del archivo si no hay handles abiertos)
-                        // Para asegurar, cerramos la aplicación después del reemplazo.
+                        // Rutas absolutas para evitar confusiones de directorios
+                        string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                        string targetDbPath = Path.Combine(baseDir, DbFileName);
+                        string walPath = targetDbPath + "-wal";
+                        string shmPath = targetDbPath + "-shm";
 
-                        File.Copy(SelectedFilePath, DbFileName, true);
+                        // 1. Forzar cierre de conexiones de Entity Framework y liberar el pool de SQLite
+                        try
+                        {
+                            _main.Db?.Database.CloseConnection();
+                            _main.Db?.Dispose();
+                            // Limpiar los pools de conexiones para soltar los archivos físicos
+                            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+                        }
+                        catch { }
 
-                        System.Windows.MessageBox.Show("Base de datos restaurada. La aplicación se cerrará ahora.", "Restauración Exitosa");
+                        // 2. Forzar recolección de basura para soltar handles pendientes de SQLite
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
+
+                        // 3. Copiar PRIMERO el archivo de respaldo seleccionado sobre la base de datos principal.
+                        File.Copy(SelectedFilePath, targetDbPath, true);
+
+                        // 4. Intentar eliminar los archivos auxiliares IGNORANDO por completo cualquier excepción si siguen bloqueados
+                        try
+                        {
+                            if (File.Exists(walPath)) File.Delete(walPath);
+                        }
+                        catch
+                        {
+                            // Ignorar error si el archivo está en uso por otro handle secundario de SQLite
+                        }
+
+                        try
+                        {
+                            if (File.Exists(shmPath)) File.Delete(shmPath);
+                        }
+                        catch
+                        {
+                            // Ignorar error
+                        }
+
+                        System.Windows.MessageBox.Show("Base de datos restaurada correctamente. La aplicación se cerrará ahora.", "Restauración Exitosa", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                         System.Windows.Application.Current.Shutdown();
                     }
                     catch (Exception ex)
                     {
-                        System.Windows.MessageBox.Show($"Error al restaurar: {ex.Message}");
+                        System.Windows.MessageBox.Show($"Error al restaurar: {ex.Message}", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                     }
                 }
             });
