@@ -32,6 +32,13 @@ namespace POS_v0_1.ViewModels
             {
                 if (o is User user)
                 {
+                    // Bloquear auto-eliminación
+                    if (_main.CurrentUser != null && user.Id == _main.CurrentUser.Id)
+                    {
+                        MessageBox.Show("No puedes eliminar al usuario que tiene la sesión activa.", "Acción no permitida", MessageBoxButton.OK, MessageBoxImage.Stop);
+                        return;
+                    }
+
                     var result = MessageBox.Show($"¿Está seguro de eliminar al usuario {user.Name}?", "Confirmar", MessageBoxButton.YesNo, MessageBoxImage.Warning);
                     if (result == MessageBoxResult.Yes)
                     {
@@ -105,15 +112,44 @@ namespace POS_v0_1.ViewModels
                 return;
             }
 
-            if (!string.IsNullOrEmpty(Password) && Password != ConfirmPassword)
+            // Validación de Email
+            if (!string.IsNullOrWhiteSpace(Email))
             {
-                MessageBox.Show("Las contraseñas no coinciden.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (!Email.Contains("@") || !Email.Contains("."))
+                {
+                    MessageBox.Show("El formato del correo electrónico no es válido.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (_main.Users.Any(u => u.Email == Email && u.Id != (_editingUser?.Id ?? -1)))
+                {
+                    MessageBox.Show("Este correo electrónico ya está registrado por otro usuario.", "Duplicado", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+            }
+
+            // Validación de PIN Único
+            if (string.IsNullOrEmpty(Pin))
+            {
+                MessageBox.Show("El PIN es obligatorio para el acceso.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            if (!string.IsNullOrEmpty(Pin) && (Pin.Length < 4 || Pin.Length > 6 || !Pin.All(char.IsDigit)))
+            if (Pin.Length < 4 || Pin.Length > 6 || !Pin.All(char.IsDigit))
             {
                 MessageBox.Show("El PIN debe ser de 4 a 6 dígitos numéricos.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (_main.Users.Any(u => u.Pin == Pin && u.Id != (_editingUser?.Id ?? -1)))
+            {
+                MessageBox.Show("Este PIN ya está en uso por otro usuario.", "Duplicado", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(Password) && Password != ConfirmPassword)
+            {
+                MessageBox.Show("Las contraseñas no coinciden.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 

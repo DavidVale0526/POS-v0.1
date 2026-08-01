@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using POS_v0_1.Models;
 
@@ -45,11 +46,23 @@ namespace POS_v0_1.ViewModels
             {
                 if (o is Provider provider)
                 {
-                    _main.Providers.Remove(provider);
-                    var dbProvider = _main.Db.Providers.Find(provider.Id);
-                    if (dbProvider != null) _main.Db.Providers.Remove(dbProvider);
-                    _main.Db.SaveChanges();
-                    ApplyFilter();
+                    // Bloqueo 6: Proveedor con compras asociadas
+                    bool hasPurchases = _main.Purchases.Any(p => p.ProviderId == provider.Id);
+                    if (hasPurchases)
+                    {
+                        MessageBox.Show($"No se puede eliminar el proveedor '{provider.Name}' porque tiene compras asociadas.", "Restricción de Integridad", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    var res = MessageBox.Show($"¿Desea eliminar al proveedor {provider.Name}?", "Confirmar", MessageBoxButton.YesNo);
+                    if (res == MessageBoxResult.Yes)
+                    {
+                        _main.Providers.Remove(provider);
+                        var dbProvider = _main.Db.Providers.Find(provider.Id);
+                        if (dbProvider != null) _main.Db.Providers.Remove(dbProvider);
+                        _main.Db.SaveChanges();
+                        ApplyFilter();
+                    }
                 }
             });
         }

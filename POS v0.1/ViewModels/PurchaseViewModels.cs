@@ -278,10 +278,19 @@ namespace POS_v0_1.ViewModels
                     {
                         product.Stock += item.Quantity;
                         product.PurchasePrice = item.UnitPrice;
+
+                        // Sincronización 4.5: Actualizar en memoria global
+                        var memProd = _main.Products.FirstOrDefault(p => p.Id == item.ProductId);
+                        if (memProd != null)
+                        {
+                            memProd.Stock = product.Stock;
+                            memProd.PurchasePrice = product.PurchasePrice;
+                        }
                     }
                 }
 
-                if (SelectedFinancialSource != null && Total > 0)
+                // Si hubo productos creados rápidamente, asegurar que sus IDs estén vinculados
+                _main.Db.SaveChanges();
                 {
                     var movement = new FinancialMovement
                     {

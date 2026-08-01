@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace POS_v0_1.Models
@@ -19,7 +18,7 @@ namespace POS_v0_1.Models
         public string Status { get; set; } = "Recibida"; // Pendiente, Recibida, Parcial
         public string? RegisteredBy { get; set; } = "Usuario";
         public string? Notes { get; set; }
-        public ObservableCollection<PurchaseDetail> Items { get; set; } = new ObservableCollection<PurchaseDetail>();
+        public virtual ICollection<PurchaseDetail> Items { get; set; } = new List<PurchaseDetail>();
     }
 
     public class PurchaseDetail : System.ComponentModel.INotifyPropertyChanged

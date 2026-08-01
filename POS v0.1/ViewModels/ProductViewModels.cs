@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using POS_v0_1.Models;
 
@@ -217,7 +218,15 @@ namespace POS_v0_1.ViewModels
                 if (QuantityToAdd > 0)
                 {
                     Product.Stock += QuantityToAdd;
-                    _main.Db.SaveChanges();
+
+                    // Sincronización 4.5: Guardar en DB inmediatamente
+                    var dbProd = _main.Db.Products.Find(Product.Id);
+                    if (dbProd != null)
+                    {
+                        dbProd.Stock = Product.Stock;
+                        _main.Db.SaveChanges();
+                    }
+
                     _main.CurrentView = new LowStockViewModel(_main);
                 }
             });
@@ -298,6 +307,37 @@ namespace POS_v0_1.ViewModels
             SaveCommand = new RelayCommand(o =>
             {
                 if (string.IsNullOrWhiteSpace(Name) || SelectedCategory == null) return;
+
+                // Validación de Precios
+                if (SellingPrice <= 0)
+                {
+                    MessageBox.Show("El precio de venta debe ser mayor a 0.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (SellingPrice < PurchasePrice)
+                {
+                    var res = MessageBox.Show("El precio de venta es menor al costo de compra. ¿Desea continuar con pérdida?", "Aviso de Rentabilidad", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                    if (res == MessageBoxResult.No) return;
+                }
+
+                // Validación de Unicidad (Nombre y Barcode)
+                bool nameExists = _main.Products.Any(p => p.Name.Equals(Name, StringComparison.OrdinalIgnoreCase) && p.Id != (_editingProduct?.Id ?? -1));
+                if (nameExists)
+                {
+                    MessageBox.Show("Ya existe un producto con este nombre.", "Duplicado", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(Barcode))
+                {
+                    bool barcodeExists = _main.Products.Any(p => p.Barcode == Barcode && p.Id != (_editingProduct?.Id ?? -1));
+                    if (barcodeExists)
+                    {
+                        MessageBox.Show("El código de barras ya está registrado en otro producto.", "Duplicado", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                }
 
                 if (_editingProduct == null)
                 {

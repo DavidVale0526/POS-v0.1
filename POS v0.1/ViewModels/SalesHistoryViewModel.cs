@@ -110,7 +110,8 @@ namespace POS_v0_1.ViewModels
                                 if (dbProd != null)
                                 {
                                     dbProd.Stock += item.Quantity;
-                                    // Actualizar en memoria si el producto está cargado
+
+                                    // Sincronización 4.5: Actualizar en memoria global para UI instantánea
                                     var memProd = _main.Products.FirstOrDefault(p => p.Id == item.ProductId);
                                     if (memProd != null) memProd.Stock = dbProd.Stock;
                                 }

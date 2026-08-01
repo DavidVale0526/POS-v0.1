@@ -1,5 +1,5 @@
 using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 
 namespace POS_v0_1.Models
 {
@@ -19,7 +19,7 @@ namespace POS_v0_1.Models
         public decimal ChangeAmount { get; set; }
         public bool IsCancelled { get; set; }
         public string? CancellationReason { get; set; }
-        public ObservableCollection<SaleItem> Items { get; set; } = new ObservableCollection<SaleItem>();
+        public virtual ICollection<SaleItem> Items { get; set; } = new List<SaleItem>();
     }
 
     public class SaleItem

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using POS_v0_1.Models;
 using POS_v0_1.Data;
@@ -440,7 +441,17 @@ namespace POS_v0_1.ViewModels
 
             OpenCommand = new RelayCommand(o =>
             {
-                if (OpeningAmount < 0) return;
+                if (OpeningAmount < 0)
+                {
+                    System.Windows.MessageBox.Show("El monto de apertura no puede ser negativo.", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (OpeningAmount == 0)
+                {
+                    var res = System.Windows.MessageBox.Show("¿Está seguro de abrir la caja con saldo 0?", "Aviso", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+                    if (res == System.Windows.MessageBoxResult.No) return;
+                }
 
                 var newSession = new CashSession
                 {
@@ -610,6 +621,14 @@ namespace POS_v0_1.ViewModels
             get => _discount;
             set
             {
+                // Validación para evitar total negativo
+                decimal tempDiscountValue = IsPercentageDiscount ? (Subtotal * (value / 100m)) : value;
+                if (Subtotal - tempDiscountValue < 0)
+                {
+                    System.Windows.MessageBox.Show("El descuento no puede ser mayor al subtotal.", "Validación", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
+
                 _discount = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(Iva));
@@ -841,8 +860,13 @@ namespace POS_v0_1.ViewModels
                     if (dbProd != null)
                     {
                         dbProd.Stock -= item.Quantity;
-                        // Actualizar en memoria para la UI
-                        item.Product.Stock = dbProd.Stock;
+
+                        // Sincronización 4.5: Actualizar instancia en memoria global
+                        var memProd = _main.Products.FirstOrDefault(p => p.Id == item.Product.Id);
+                        if (memProd != null) memProd.Stock = dbProd.Stock;
+
+                        // Asegurar que la instancia del carrito también esté al día (por si acaso)
+                        if (item.Product != memProd) item.Product.Stock = dbProd.Stock;
                     }
                 }
 
@@ -897,40 +921,36 @@ namespace POS_v0_1.ViewModels
         {
             if (prod == null) return;
 
+            // Validación de Estado
+            if (prod.Status != "Activo")
+            {
+                System.Windows.MessageBox.Show("No se puede vender un producto inactivo.", "Estado no permitido", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
             // Validación de stock
             if (prod.Stock <= 0)
             {
-                System.Windows.MessageBox.Show("Producto agotado.", "Aviso", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                System.Windows.MessageBox.Show("Producto sin existencias en inventario.", "Sin Stock", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return;
             }
 
             var existing = Cart.FirstOrDefault(i => i.Product.Id == prod.Id);
             if (existing != null)
             {
-                if (prod.Stock > existing.Quantity)
+                if (existing.Quantity + quantity > prod.Stock)
                 {
-                    existing.Quantity += quantity;
+                    System.Windows.MessageBox.Show("No hay suficiente stock para aumentar la cantidad.", "Límite alcanzado", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
                 }
-                else
-                {
-                    System.Windows.MessageBox.Show($"No hay suficiente stock. Disponible: {prod.Stock}", "Aviso", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
-                }
+                existing.Quantity += quantity;
             }
             else
             {
-                var newItem = new CartItem { Product = prod, Quantity = quantity };
-                newItem.PropertyChanged += (s, e) => {
-                    if (e.PropertyName == nameof(CartItem.Subtotal))
-                    {
-                        OnPropertyChanged(nameof(Subtotal));
-                        OnPropertyChanged(nameof(Iva));
-                        OnPropertyChanged(nameof(Total));
-                    }
-                };
-                Cart.Add(newItem);
+                Cart.Add(new CartItem(prod) { Quantity = quantity });
             }
+
             OnPropertyChanged(nameof(Subtotal));
-            OnPropertyChanged(nameof(Iva));
             OnPropertyChanged(nameof(Total));
         }
 

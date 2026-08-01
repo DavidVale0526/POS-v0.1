@@ -9,6 +9,12 @@ namespace POS_v0_1.Models
         private decimal _discount;
         public Product Product { get; set; }
 
+        public CartItem() { }
+        public CartItem(Product product)
+        {
+            Product = product;
+        }
+
         public int Quantity
         {
             get => _quantity;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using POS_v0_1.Models;
 
@@ -25,10 +26,21 @@ namespace POS_v0_1.ViewModels
             {
                 if (o is Category cat)
                 {
-                    _main.Categories.Remove(cat);
-                    var dbCat = _main.Db.Categories.Find(cat.Id);
-                    if (dbCat != null) _main.Db.Categories.Remove(dbCat);
-                    _main.Db.SaveChanges();
+                    // Bloqueo 5: Categoría con productos
+                    if (cat.ProductCount > 0)
+                    {
+                        MessageBox.Show($"No se puede eliminar la categoría '{cat.Name}' porque tiene {cat.ProductCount} productos asociados.", "Restricción de Integridad", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    var res = MessageBox.Show($"¿Desea eliminar la categoría {cat.Name}?", "Confirmar", MessageBoxButton.YesNo);
+                    if (res == MessageBoxResult.Yes)
+                    {
+                        _main.Categories.Remove(cat);
+                        var dbCat = _main.Db.Categories.Find(cat.Id);
+                        if (dbCat != null) _main.Db.Categories.Remove(dbCat);
+                        _main.Db.SaveChanges();
+                    }
                 }
             });
 

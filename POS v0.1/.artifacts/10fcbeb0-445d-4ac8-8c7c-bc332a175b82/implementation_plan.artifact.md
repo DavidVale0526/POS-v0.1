@@ -1,67 +1,67 @@
-# Plan de Implementación: Integridad de Datos y Optimización
+# Plan de Implementación: Validaciones de Modelo y de Negocio
 
-Este plan aborda los hallazgos de la sección 4 de la auditoría, centrados en corregir relaciones débiles basadas en texto, agregar índices para mejorar el rendimiento y automatizar contadores desincronizados.
+Este plan aborda las faltas de validación en el modelo de datos y las reglas de negocio críticas identificadas en la auditoría, garantizando la integridad de los datos y previniendo estados inconsistentes.
 
 ## User Review Required
 
-> [!IMPORTANT]
-> **Migración de Datos**: Al cambiar relaciones de `string` a `int (FK)`, se ejecutará un script de migración automático al iniciar la app para vincular los registros existentes mediante sus nombres.
-> **Cambio de Propiedades**: Los nombres de algunas propiedades en los modelos cambiarán (ej. `Category` -> `CategoryId`), lo que requiere actualizar los ViewModels y las vistas XAML asociadas.
+> [!WARNING]
+> **Cambios en Reglas de Venta**: A partir de estos cambios, no se permitirá agregar productos sin stock o inactivos al carrito.
+> **Restricciones de Borrado**: No se podrán eliminar categorías o proveedores que tengan productos o compras asociadas (se deberá reasignar o eliminar los elementos vinculados primero).
+> **Unicidad de PIN**: Se bloqueará la creación de usuarios con PINes duplicados para evitar suplantaciones accidentales.
 
 ## Proposed Changes
 
-### 1. Modelos (Relaciones y Propiedades Calculadas)
-
-#### [MODIFY] [Category.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/Models/Category.cs)
-- Eliminar la persistencia de `ProductCount`.
-- Cambiar `ProductCount` a una propiedad calculada (usando LINQ o navegación).
-
-#### [MODIFY] [Product.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/Models/Product.cs)
-- Reemplazar `string Category` por `int CategoryId` y `Category Category`.
-- Reemplazar `string Provider` por `int? ProviderId` y `Provider Provider`.
-
-#### [MODIFY] [Purchase.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/Models/Purchase.cs)
-- Reemplazar `string ProviderName` por `int? ProviderId` y `Provider Provider`.
-
-#### [MODIFY] [FinancialModels.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/Models/FinancialModels.cs)
-- Reemplazar `string Source` por `int SourceId` y `FinancialSource FinancialSource`.
-
----
-
-### 2. Acceso a Datos (Índices y Configuración)
+### 1. Robustez del Modelo de Datos (DB level)
 
 #### [MODIFY] [AppDbContext.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/Data/AppDbContext.cs)
-- Agregar índices en `OnModelCreating` para:
-  - `Product.Barcode`
-  - `Product.SKU`
-  - `User.Email`
-  - `User.Pin`
-- Configurar las nuevas relaciones de Foreign Key.
+- Marcar los índices de `Product.Name`, `Product.Barcode`, `User.Email` y `User.Pin` como **Unique**.
 
 ---
 
-### 3. Lógica de Migración y Negocio
+### 2. Validaciones de Creación (ViewModels)
 
-#### [MODIFY] [MainViewModel.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/ViewModels/MainViewModel.cs)
-- Actualizar `ApplySchemaUpdates` para incluir los `ALTER TABLE` necesarios (agregar columnas de ID).
-- Implementar script de migración manual para poblar `CategoryId`, `ProviderId`, etc., buscando por nombre en las tablas maestras.
-- Actualizar la carga de datos inicial para incluir `.Include(...)` en las consultas de EF.
+#### [MODIFY] [ProductViewModels.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/ViewModels/ProductViewModels.cs)
+- En `SaveCommand`:
+  - Validar que `SellingPrice > 0`.
+  - Advertir o bloquear si `SellingPrice < PurchasePrice` (prevenir pérdida).
+  - Verificar unicidad de Nombre y Barcode antes de guardar (evitar excepción de DB).
+
+#### [MODIFY] [UserViewModels.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/ViewModels/UserViewModels.cs)
+- En `Save`:
+  - Validar formato de Email.
+  - Verificar que el PIN no esté en uso por otro usuario.
+- En `DeleteUserCommand`:
+  - Impedir que un usuario se elimine a sí mismo (usuario logueado).
 
 ---
 
-### 4. ViewModels y Vistas (Ajustes de Binding)
+### 3. Reglas de Negocio en el POS
 
-#### [MODIFY] Varios ViewModels y XAMLs
-- Actualizar las pantallas de creación y edición para que seleccionen objetos (IDs) en lugar de escribir nombres.
-- Ajustar bindings de `DataGrid` para navegar por las propiedades de objeto (ej. `Category.Name` en lugar de `Category`).
+#### [MODIFY] [MainViewModel.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/ViewModels/MainViewModel.cs) (PosViewModel)
+- En `AddProductToCart`:
+  - Validar que el producto esté en estado "Activo".
+  - Validar que el stock sea `> 0`.
+- En el setter de `Discount`:
+  - Asegurar que el descuento (monto o %) no resulte en un `Total < 0`.
+
+#### [MODIFY] [CashControlViewModel.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/ViewModels/CashControlViewModel.cs)
+- Validar un mínimo operativo en `OpeningBalance` (ej: no permitir abrir caja con montos negativos o absurdos si la lógica del negocio lo requiere).
+
+---
+
+### 4. Integridad Referencial en Borrados
+
+#### [MODIFY] [CategoryViewModels.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/ViewModels/CategoryViewModels.cs)
+- En el comando de eliminar: Bloquear si la categoría tiene productos vinculados (`ProductCount > 0`).
+
+#### [MODIFY] [ProviderViewModels.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/ViewModels/ProviderViewModels.cs)
+- En el comando de eliminar: Bloquear si el proveedor tiene compras registradas en el sistema.
 
 ## Verification Plan
 
-### Automated Tests
-- No hay suite de pruebas automáticas actual. Se verificará mediante la integridad de la DB post-migración.
-
 ### Manual Verification
-- **Validación de Migración**: Verificar que los productos existentes conserven su categoría y proveedor después del cambio de esquema.
-- **Rendimiento**: Confirmar que las búsquedas por código de barras en el POS sean instantáneas con el nuevo índice.
-- **Contadores**: Verificar que al eliminar un producto, el contador de la categoría se actualice correctamente en la vista de lista (al ser ahora calculado).
-- **Consistencia**: Cambiar el nombre de una categoría y verificar que todos los productos asociados sigan vinculados a ella.
+- **Unicidad**: Intentar crear dos productos con el mismo nombre y verificar el mensaje de error.
+- **Stock 0**: Intentar vender un producto con stock 0 desde el buscador del POS.
+- **Auto-eliminación**: Intentar eliminar el usuario con el que se inició sesión.
+- **Margen de ganancia**: Intentar guardar un producto con precio de venta menor al de compra y observar la validación.
+- **Borrado con dependencias**: Intentar borrar la categoría "Celulares" si tiene productos y verificar que se impida.

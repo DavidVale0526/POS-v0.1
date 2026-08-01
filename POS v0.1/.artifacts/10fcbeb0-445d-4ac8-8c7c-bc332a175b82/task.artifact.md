@@ -1,20 +1,17 @@
-# Tareas: Integridad de Datos y Optimización
+# Tareas: Validaciones de Modelo y de Negocio
 
-- [x] **Fase 1: Modelos y Base de Datos**
-    - [x] Actualizar `Category.cs` (propiedad calculada)
-    - [x] Actualizar `Product.cs` (CategoryId, ProviderId)
-    - [x] Actualizar `Purchase.cs` (ProviderId)
-    - [x] Actualizar `FinancialModels.cs` (SourceId)
-    - [x] Configurar índices y FKs en `AppDbContext.cs`
-- [x] **Fase 2: Migración y Lógica de Inicio**
-    - [x] Implementar `ALTER TABLE` en `MainViewModel.cs`
-    - [x] Implementar script de migración de texto a ID
-    - [x] Actualizar carga de datos con `.Include()`
-- [x] **Fase 3: ViewModels y Vistas**
-    - [x] Actualizar `ProductsViewModel` y `CreateProductViewModel`
-    - [x] Actualizar `PurchasesViewModel` y `CreatePurchaseViewModel`
-    - [x] Actualizar `FinancialMovementsViewModel`
-    - [x] Ajustar bindings en XAMLs (ProductsView, CreateProductView, FinancialMovementsView)
-- [x] **Fase 4: Verificación**
-    - [x] Limpiar y Recompilar
-    - [x] Verificar integridad de datos post-migración
+- [x] **Fase 1: Robustez en Base de Datos**
+    - [x] Marcar índices como Únicos en `AppDbContext.cs` (Name, Barcode, Email, Pin)
+- [x] **Fase 2: Validaciones de Productos**
+    - [x] Validar precios y unicidad en `CreateProductViewModel`
+    - [x] Validar Estado y Stock en `PosViewModel.AddProductToCart`
+- [x] **Fase 3: Validaciones de Usuarios**
+    - [x] Validar Email y PIN único en `CreateUserViewModel`
+    - [x] Bloquear auto-eliminación en `UserManagementViewModel`
+- [x] **Fase 4: Reglas Financieras y de Borrado**
+    - [x] Validar Total >= 0 en POS (Descuentos)
+    - [x] Bloquear borrado de Categorías con productos
+    - [x] Bloquear borrado de Proveedores con compras
+- [x] **Fase 5: Verificación Final**
+    - [x] Probar intentos de duplicados y bloqueos de borrado
+    - [x] Validar margen de ganancia en productos

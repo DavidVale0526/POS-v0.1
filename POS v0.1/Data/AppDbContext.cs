@@ -41,11 +41,12 @@ namespace POS_v0_1.Data
             modelBuilder.Entity<CashDenomination>().HasKey(cd => cd.Id);
             modelBuilder.Entity<CashSession>().HasKey(cs => cs.Id);
 
-            // 4.2 Índices de Base de Datos para Optimización
-            modelBuilder.Entity<Product>().HasIndex(p => p.Barcode);
-            modelBuilder.Entity<Product>().HasIndex(p => p.SKU);
-            modelBuilder.Entity<User>().HasIndex(u => u.Email);
-            modelBuilder.Entity<User>().HasIndex(u => u.Pin);
+            // 4.2 Índices de Base de Datos para Optimización e Integridad
+            modelBuilder.Entity<Product>().HasIndex(p => p.Name).IsUnique();
+            modelBuilder.Entity<Product>().HasIndex(p => p.Barcode).IsUnique();
+            modelBuilder.Entity<Product>().HasIndex(p => p.SKU).IsUnique();
+            modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
+            modelBuilder.Entity<User>().HasIndex(u => u.Pin).IsUnique();
 
             // Configurar relaciones y Foreign Keys (4.1)
             modelBuilder.Entity<Product>()
