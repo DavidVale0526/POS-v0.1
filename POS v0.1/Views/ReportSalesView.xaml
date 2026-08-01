@@ -80,9 +80,33 @@
             <Border Background="White" CornerRadius="8" BorderBrush="#dee2e6" BorderThickness="1">
                 <StackPanel>
                     <Border Background="#f8f9fa" Padding="15" CornerRadius="8,8,0,0">
-                        <TextBlock Text="RENDIMIENTO DE VENDEDORES" FontWeight="SemiBold" FontSize="12" Foreground="#666"/>
+                        <TextBlock Text="RENDIMIENTO DE VENDEDORES (POR PIN)" FontWeight="SemiBold" FontSize="12" Foreground="#666"/>
                     </Border>
-                    <TextBlock Text="Próximamente..." HorizontalAlignment="Center" Margin="20" Foreground="#adb5bd"/>
+                    <DataGrid ItemsSource="{Binding Summary.SalesBySeller}" AutoGenerateColumns="False" IsReadOnly="True"
+                              Background="Transparent" BorderThickness="0" RowHeaderWidth="0" GridLinesVisibility="None" MaxHeight="250">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Vendedor" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Ops." Binding="{Binding Quantity}" Width="50">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Total C$" Binding="{Binding TotalSales, StringFormat='\{0:N2\}'}" Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="Margin" Value="0,0,10,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid Margin="20" Visibility="{Binding Summary.SalesBySeller.Count, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}">
+                        <TextBlock Text="Sin datos de vendedores." HorizontalAlignment="Center" Foreground="#adb5bd" FontSize="12"/>
+                    </Grid>
                 </StackPanel>
             </Border>
         </StackPanel>

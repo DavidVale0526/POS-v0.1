@@ -5,6 +5,24 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="900">
+    <UserControl.Resources>
+        <Style x:Key="RoundedButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="15,10"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
     <Grid Background="#f8f9fa">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -27,11 +45,12 @@
         </Border>
 
         <ScrollViewer Grid.Row="1">
-            <StackPanel Padding="20">
+            <StackPanel Margin="20">
                 <TextBlock Text="Control de Caja" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
 
                 <!-- Current Session Card -->
-                <Border Background="White" BorderBrush="#dee2e6" BorderThickness="1" CornerRadius="8" Width="350" HorizontalAlignment="Left" Visibility="{Binding Session.IsOpen, Converter={StaticResource VisConverter}}">
+                <Border Background="White" BorderBrush="#dee2e6" BorderThickness="1" CornerRadius="8" Width="350" HorizontalAlignment="Left"
+                        Visibility="{Binding Session.IsOpen, Converter={StaticResource VisConverter}}">
                     <StackPanel>
                         <!-- Header Verde -->
                         <Border Background="#198754" CornerRadius="8,8,0,0" Padding="15,10">
@@ -41,7 +60,7 @@
                             </StackPanel>
                         </Border>
 
-                        <StackPanel Padding="20">
+                        <StackPanel Margin="20">
                             <Grid Margin="0,0,0,15">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -81,51 +100,37 @@
                             </Grid>
 
                             <Border Background="#f8f9fa" Margin="0,20,0,20" Padding="15,10" CornerRadius="5">
-                                <DockPanel>
-                                    <TextBlock Text="Saldo Teórico:" FontWeight="Bold" FontSize="16"/>
-                                    <TextBlock Text="{Binding Session.TheoreticalBalance, StringFormat='C$ {0:N2}'}" FontWeight="Bold" FontSize="16" HorizontalAlignment="Right"/>
-                                </DockPanel>
+                                <StackPanel>
+                                    <DockPanel>
+                                        <TextBlock Text="Saldo Teórico:" FontWeight="Bold" FontSize="16"/>
+                                        <TextBlock Text="{Binding Session.TheoreticalBalance, StringFormat='C$ {0:N2}'}" FontWeight="Bold" FontSize="16" HorizontalAlignment="Right"/>
+                                    </DockPanel>
+                                    <DockPanel Margin="0,5,0,0">
+                                        <TextBlock Text="Efectivo Contado:" FontWeight="Bold" FontSize="16"/>
+                                        <TextBlock Text="{Binding Session.ClosingBalance, StringFormat='C$ {0:N2}'}" FontWeight="Bold" FontSize="16" HorizontalAlignment="Right" Foreground="#198754"/>
+                                    </DockPanel>
+                                    <DockPanel Margin="0,5,0,0">
+                                        <TextBlock Text="Diferencia:" FontWeight="Bold" FontSize="16"/>
+                                        <TextBlock Text="{Binding Session.Difference, StringFormat='C$ {0:N2}'}" FontWeight="Bold" FontSize="16" HorizontalAlignment="Right" Foreground="{Binding Session.Difference, Converter={StaticResource DifferenceToBrushConverter}}"/>
+                                    </DockPanel>
+                                </StackPanel>
                             </Border>
 
-                            <Button Content="🔒 Cerrar Caja" Command="{Binding CloseCommand}" Background="#dc3545" Foreground="White" BorderThickness="0" Padding="15,10" FontWeight="Bold">
-                                <Button.Style>
-                                    <Style TargetType="Button">
-                                        <Setter Property="Template">
-                                            <Setter.Value>
-                                                <ControlTemplate TargetType="Button">
-                                                    <Border Background="{TemplateBinding Background}" CornerRadius="5">
-                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    </Border>
-                                                </ControlTemplate>
-                                            </Setter.Value>
-                                        </Setter>
-                                    </Style>
-                                </Button.Style>
-                            </Button>
+                            <Button Content="🔒 Cerrar Caja" Command="{Binding CloseCommand}"
+                                    Background="#dc3545" Style="{StaticResource RoundedButtonStyle}"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
 
-                <!-- Open Box Form (Visible only if session is closed) -->
-                <Border Background="White" BorderBrush="#dee2e6" BorderThickness="1" CornerRadius="8" Width="350" HorizontalAlignment="Left" Visibility="{Binding Session.IsOpen, Converter={StaticResource InvVisConverter}}">
-                    <StackPanel Padding="20">
+                <!-- Open Box Form -->
+                <Border Background="White" BorderBrush="#dee2e6" BorderThickness="1" CornerRadius="8" Width="350" HorizontalAlignment="Left"
+                        Visibility="{Binding Session.IsOpen, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}">
+                    <StackPanel Margin="20">
                         <TextBlock Text="Abrir Nueva Caja" FontSize="18" FontWeight="Bold" Margin="0,0,0,20"/>
                         <TextBlock Text="Fondo Inicial (Monto en efectivo):" Foreground="Gray" Margin="0,0,0,5"/>
                         <TextBox Text="{Binding OpeningAmount, UpdateSourceTrigger=PropertyChanged}" Padding="10" Margin="0,0,0,20"/>
-                        <Button Content="Abrir Caja" Command="{Binding OpenCommand}" Background="#0d6efd" Foreground="White" BorderThickness="0" Padding="15,10" FontWeight="Bold">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}" CornerRadius="5">
-                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Style>
-                                </Button.Style>
-                            </Button>
+                        <Button Content="Abrir Caja" Command="{Binding OpenCommand}"
+                                Background="#0d6efd" Style="{StaticResource RoundedButtonStyle}"/>
                     </StackPanel>
                 </Border>
 

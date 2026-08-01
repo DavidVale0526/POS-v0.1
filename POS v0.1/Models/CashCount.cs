@@ -10,7 +10,7 @@ namespace POS_v0_1.Models
         public string PerformedBy { get; set; }
         public decimal TotalCalculated { get; set; }
         public string LinkedToCash { get; set; } = "Caja General";
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
         public List<CashDenomination> Details { get; set; } = new List<CashDenomination>();
     }
 

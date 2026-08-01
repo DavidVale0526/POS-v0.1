@@ -20,7 +20,7 @@ namespace POS_v0_1.Models
         public string Source { get; set; }
         public decimal Amount { get; set; }
         public string RegisteredBy { get; set; }
-        public string Reference { get; set; }
-        public string Notes { get; set; }
+        public string? Reference { get; set; }
+        public string? Notes { get; set; }
     }
 }

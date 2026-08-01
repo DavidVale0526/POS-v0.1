@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows.Input;
 using POS_v0_1.Models;
 using POS_v0_1.Data;
+using POS_v0_1.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace POS_v0_1.ViewModels
@@ -31,6 +32,13 @@ namespace POS_v0_1.ViewModels
             set { _currentUser = value; OnPropertyChanged(); }
         }
 
+        private BusinessConfiguration _businessConfig;
+        public BusinessConfiguration BusinessConfig
+        {
+            get => _businessConfig;
+            set { _businessConfig = value; OnPropertyChanged(); }
+        }
+
         public ObservableCollection<Product> Products { get; set; } = new ObservableCollection<Product>();
         public ObservableCollection<Category> Categories { get; set; } = new ObservableCollection<Category>();
         public ObservableCollection<Provider> Providers { get; set; } = new ObservableCollection<Provider>();
@@ -46,10 +54,11 @@ namespace POS_v0_1.ViewModels
         public ObservableCollection<BankTransaction> BankTransactions { get; set; } = new ObservableCollection<BankTransaction>();
         public ObservableCollection<Client> Clients { get; set; } = new ObservableCollection<Client>();
         public ObservableCollection<User> Users { get; set; } = new ObservableCollection<User>();
+        public ObservableCollection<CashSession> CashSessions { get; set; } = new ObservableCollection<CashSession>();
 
         public AppDbContext Db { get; } = new AppDbContext();
 
-        private CashSession _session = new CashSession();
+        private CashSession _session;
         public CashSession Session
         {
             get => _session;
@@ -76,17 +85,19 @@ namespace POS_v0_1.ViewModels
         public ICommand ShowUsersRolesCommand { get; }
         public ICommand ShowConfigurationCommand { get; }
         public ICommand LogoutCommand { get; }
+        public ICommand SwitchUserCommand { get; }
 
         public MainViewModel()
         {
+            SwitchUserCommand = new RelayCommand(o => SwitchUser());
             ShowProductManagementCommand = new RelayCommand(o => CurrentView = new ProductsViewModel(this));
-            ShowOpenCashCommand = new RelayCommand(o => CurrentView = new OpenCashViewModel(this));
+            ShowOpenCashCommand = new RelayCommand(o => CurrentView = new CashControlViewModel(this));
             ShowPosCommand = new RelayCommand(o =>
             {
-                if (Session.IsOpen)
+                if (Session != null && Session.IsOpen)
                     CurrentView = new PosViewModel(this);
                 else
-                    CurrentView = new OpenCashViewModel(this);
+                    CurrentView = new CashControlViewModel(this);
             });
 
             // New Commands
@@ -103,24 +114,14 @@ namespace POS_v0_1.ViewModels
             ShowCashCountCommand = new RelayCommand(o => CurrentView = new CashCountHistoryViewModel(this));
             ShowExpensesIncomesCommand = new RelayCommand(o => CurrentView = new FinancialMovementsViewModel(this));
             ShowBankCommand = new RelayCommand(o => CurrentView = new BankHistoryViewModel(this));
-            ShowReportsCommand = new RelayCommand(o =>
-            {
-                if (CurrentUser?.Role == "Administrador")
-                    CurrentView = new ReportsViewModel(this);
-                else
-                    System.Windows.MessageBox.Show("Acceso denegado. Se requiere rol de Administrador.", "Permisos", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Stop);
-            });
-            ShowUsersRolesCommand = new RelayCommand(o =>
-            {
-                if (CurrentUser?.Role == "Administrador")
-                    CurrentView = new UserManagementViewModel(this);
-                else
-                    System.Windows.MessageBox.Show("Acceso denegado. Se requiere rol de Administrador.", "Permisos", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Stop);
-            });
-            ShowConfigurationCommand = new RelayCommand(o => CurrentView = new PlaceholderViewModel("Configuración"));
+            ShowReportsCommand = new RelayCommand(o => CurrentView = new ReportsViewModel(this));
+            ShowUsersRolesCommand = new RelayCommand(o => CurrentView = new UserManagementViewModel(this));
+            ShowConfigurationCommand = new RelayCommand(o => CurrentView = new ConfigurationViewModel(this));
 
             // Initialize Database
+            // Db.Database.EnsureDeleted(); // Comentado para evitar pérdida de datos en cada inicio
             Db.Database.EnsureCreated();
+
             LoadDataFromDatabase();
 
             LogoutCommand = new RelayCommand(o =>
@@ -131,8 +132,14 @@ namespace POS_v0_1.ViewModels
             });
 
             // Initial view
+            IsAuthenticated = true;
+            CurrentUser = Users.FirstOrDefault(u => u.Role == "Administrador");
+            CurrentView = new RepairListViewModel(this);
+
+            /* MODO PRODUCCIÓN:
             IsAuthenticated = false;
             CurrentView = new LoginViewModel(this);
+            */
         }
 
         private void LoadDataFromDatabase()
@@ -144,7 +151,8 @@ namespace POS_v0_1.ViewModels
                 // Seed default users if none exist
                 var admin = new User { Name = "Administrador", Email = "admin@admin.com", Password = "admin", Role = "Administrador", Pin = "1234" };
                 var seller = new User { Name = "Vendedor Juan", Email = "vendedor@admin.com", Password = "123", Role = "Vendedor", Pin = "4321" };
-                Db.Users.AddRange(admin, seller);
+                var miki = new User { Name = "Miki", Email = "miki@admin.com", Password = "miki", Role = "Vendedor", Pin = "7845" };
+                Db.Users.AddRange(admin, seller, miki);
                 Db.SaveChanges();
                 dbUsers = Db.Users.ToList();
             }
@@ -162,7 +170,23 @@ namespace POS_v0_1.ViewModels
             foreach (var cat in dbCategories) Categories.Add(cat);
 
             // Load Products
-            foreach (var prod in Db.Products.ToList()) Products.Add(prod);
+            var dbProducts = Db.Products.ToList();
+            if (!dbProducts.Any())
+            {
+                var category = Db.Categories.FirstOrDefault();
+                Db.Products.Add(new Product
+                {
+                    Name = "Producto de Prueba",
+                    SellingPrice = 100,
+                    PurchasePrice = 70,
+                    Stock = 50,
+                    Category = category?.Name ?? "Celulares",
+                    Barcode = "123456789"
+                });
+                Db.SaveChanges();
+                dbProducts = Db.Products.ToList();
+            }
+            foreach (var prod in dbProducts) Products.Add(prod);
 
             // Load Providers
             foreach (var prov in Db.Providers.ToList()) Providers.Add(prov);
@@ -187,11 +211,37 @@ namespace POS_v0_1.ViewModels
             foreach (var count in Db.CashCounts.Include(c => c.Details).ToList()) CashCounts.Add(count);
             foreach (var bank in Db.BankTransactions.ToList()) BankTransactions.Add(bank);
             foreach (var purchase in Db.Purchases.Include(p => p.Items).ToList()) Purchases.Add(purchase);
+            foreach (var sess in Db.CashSessions.ToList()) CashSessions.Add(sess);
+
+            // Set current active session if any
+            Session = CashSessions.FirstOrDefault(s => s.IsOpen);
+
+            // Load Business Configuration
+            BusinessConfig = Db.BusinessConfigs.FirstOrDefault() ?? new BusinessConfiguration();
         }
 
         public void SaveChanges()
         {
             Db.SaveChanges();
+        }
+
+        private void SwitchUser()
+        {
+            var pinDialog = new Views.PinValidationDialog();
+            if (pinDialog.ShowDialog() == true)
+            {
+                var user = Users.FirstOrDefault(u => u.Pin == pinDialog.Pin);
+                if (user != null)
+                {
+                    CurrentUser = user;
+                    // Forzar actualización de comandos si es necesario
+                    CommandManager.InvalidateRequerySuggested();
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show("PIN no reconocido.", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                }
+            }
         }
     }
 
@@ -229,6 +279,160 @@ namespace POS_v0_1.ViewModels
         }
     }
 
+    public class CashControlViewModel : BaseViewModel
+    {
+        private MainViewModel _main;
+        public CashSession Session => _main.Session;
+        public ObservableCollection<CashSession> History => _main.CashSessions;
+
+        private decimal _openingAmount;
+        public decimal OpeningAmount
+        {
+            get => _openingAmount;
+            set { _openingAmount = value; OnPropertyChanged(); }
+        }
+
+        public ICommand OpenCommand { get; }
+        public ICommand CloseCommand { get; }
+        public ICommand ViewDetailCommand { get; }
+
+        public CashControlViewModel(MainViewModel main)
+        {
+            _main = main;
+
+            OpenCommand = new RelayCommand(o =>
+            {
+                if (OpeningAmount < 0) return;
+
+                var newSession = new CashSession
+                {
+                    IsOpen = true,
+                    OpenedBy = _main.CurrentUser?.Name ?? "Admin",
+                    OpeningTime = DateTime.Now,
+                    OpeningBalance = OpeningAmount
+                };
+
+                _main.Db.CashSessions.Add(newSession);
+                _main.Db.SaveChanges();
+
+                _main.CashSessions.Add(newSession);
+                _main.Session = newSession;
+                _main.CurrentView = new PosViewModel(_main);
+            });
+
+            CloseCommand = new RelayCommand(o =>
+            {
+                if (Session == null) return;
+
+                // VALIDACIÓN RBAC: Solo Admin puede cerrar caja
+                var pinDialog = new Views.PinValidationDialog();
+                if (pinDialog.ShowDialog() == true)
+                {
+                    var user = _main.Users.FirstOrDefault(u => u.Pin == pinDialog.Pin);
+                    if (user == null || user.Role != "Administrador")
+                    {
+                        System.Windows.MessageBox.Show("Acceso denegado. Se requiere PIN de Administrador para cerrar la caja.", "Seguridad", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Stop);
+                        return;
+                    }
+
+                    var result = System.Windows.MessageBox.Show("¿Está seguro de cerrar la caja?", "Confirmar Cierre", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+                    if (result != System.Windows.MessageBoxResult.Yes) return;
+
+                    var currentSession = this.Session;
+                    if (currentSession == null) return;
+
+                    // Open the cash count view to perform a physical count before finalizing close.
+                    _main.CurrentView = new NewCashCountViewModel(_main, savedCount =>
+                    {
+                        try
+                        {
+                            currentSession.ClosingTime = DateTime.Now;
+                            currentSession.ClosingBalance = savedCount.TotalCalculated;
+                            currentSession.IsOpen = false;
+                            currentSession.ClosedBy = user.Name; // Registrar quién cerró
+
+                            _main.Db.SaveChanges();
+                            _main.Session = null;
+                            OnPropertyChanged(nameof(Session));
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Windows.MessageBox.Show($"Error al cerrar sesión: {ex.Message}");
+                        }
+                    });
+                }
+            });
+
+            ViewDetailCommand = new RelayCommand(o =>
+            {
+                if (o is CashSession sess)
+                {
+                    _main.CurrentView = new CashSessionDetailViewModel(_main, sess);
+                }
+            });
+
+            RefreshTotals();
+        }
+
+        private void RefreshTotals()
+        {
+            if (Session == null || !Session.IsOpen) return;
+
+            // Calculate totals from collections since opening time
+            var startTime = Session.OpeningTime;
+
+            Session.SalesTotal = _main.Sales.Where(s => s.Date >= startTime).Sum(s => s.Total);
+            Session.TopupsTotal = _main.Topups.Where(t => t.DateTime >= startTime).Sum(t => t.Amount);
+            Session.RepairsTotal = _main.Repairs.Where(r => r.EntryDate >= startTime).Sum(r => r.Total);
+
+            var movements = _main.FinancialMovements.Where(m => m.Date >= startTime).ToList();
+            Session.IncomesTotal = movements.Where(m => m.Type == "Ingreso").Sum(m => m.Amount);
+            Session.ExpensesTotal = movements.Where(m => m.Type == "Gasto").Sum(m => m.Amount);
+
+            OnPropertyChanged(nameof(Session));
+        }
+    }
+
+    public class CashSessionDetailViewModel : BaseViewModel
+    {
+        private MainViewModel _main;
+        public CashSession Session { get; }
+        public Models.CashCount CashCount { get; private set; }
+        public decimal TotalPhysical => CashCount?.TotalCalculated ?? 0m;
+        public ICommand BackCommand { get; }
+
+        public CashSessionDetailViewModel(MainViewModel main, CashSession session)
+        {
+            _main = main;
+            Session = session;
+            BackCommand = new RelayCommand(o => _main.CurrentView = new CashControlViewModel(_main));
+
+            // Try to load a cash count performed during or closest to this session
+            try
+            {
+                CashCount = _main.Db.CashCounts
+                    .Include(c => c.Details)
+                    .Where(c => c.DateTime >= Session.OpeningTime && (Session.ClosingTime == null || c.DateTime <= Session.ClosingTime.Value))
+                    .OrderByDescending(c => c.DateTime)
+                    .FirstOrDefault();
+
+                // If none found in the session range, take the most recent overall
+                if (CashCount == null)
+                {
+                    CashCount = _main.Db.CashCounts
+                        .Include(c => c.Details)
+                        .OrderByDescending(c => c.DateTime)
+                        .FirstOrDefault();
+                }
+            }
+            catch
+            {
+                // ignore DB errors for display purposes
+                CashCount = null;
+            }
+        }
+    }
+
     public class OpenCashViewModel : BaseViewModel
     {
         private MainViewModel _main;
@@ -244,7 +448,6 @@ namespace POS_v0_1.ViewModels
                 {
                     IsOpen = true,
                     OpeningBalance = Amount,
-                    CurrentBalance = Amount,
                     OpeningTime = DateTime.Now
                 };
                 _main.CurrentView = new PosViewModel(_main);
@@ -255,6 +458,7 @@ namespace POS_v0_1.ViewModels
     public class PosViewModel : BaseViewModel
     {
         private MainViewModel _main;
+        private decimal _taxRate;
         public ObservableCollection<Product> Products => _main.Products;
         public ObservableCollection<CartItem> Cart { get; } = new ObservableCollection<CartItem>();
 
@@ -278,17 +482,48 @@ namespace POS_v0_1.ViewModels
         public decimal Discount
         {
             get => _discount;
-            set { _discount = value; OnPropertyChanged(); OnPropertyChanged(nameof(Total)); }
+            set
+            {
+                _discount = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(Iva));
+                OnPropertyChanged(nameof(Total));
+            }
         }
 
-        public decimal Iva => 0; // Assuming 0% as per image for now
+        public decimal Iva => Math.Round((Subtotal - Discount) * (_taxRate / 100m), 2);
         public decimal Total => Subtotal - Discount + Iva;
+
+        private string _sellerPin;
+        public string SellerPin
+        {
+            get => _sellerPin;
+            set
+            {
+                _sellerPin = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(SellerNamePreview));
+            }
+        }
+
+        public string SellerNamePreview
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(SellerPin))
+                    return _main.CurrentUser?.Name ?? "Administrador";
+
+                var seller = _main.Users.FirstOrDefault(u => u.Pin?.Trim() == SellerPin.Trim());
+                return seller?.Name ?? _main.CurrentUser?.Name ?? "Administrador";
+            }
+        }
 
         public CashSession Session => _main.Session;
 
         public ICommand AddToCartCommand { get; }
         public ICommand RemoveItemCommand { get; }
         public ICommand IncreaseQuantityCommand { get; }
+        public ICommand HandleScannedBarcodeCommand { get; }
         public ICommand DecreaseQuantityCommand { get; }
         public ICommand ClearCartCommand { get; }
         public ICommand SellCommand { get; }
@@ -297,32 +532,15 @@ namespace POS_v0_1.ViewModels
         public PosViewModel(MainViewModel main)
         {
             _main = main;
-            FilteredProducts = new ObservableCollection<Product>(_main.Products);
 
+            // Cargar tasa de impuesto desde configuración
+            var config = _main.Db.BusinessConfigs.FirstOrDefault();
+            _taxRate = config?.TaxRate ?? 0m;
+
+            FilteredProducts = new ObservableCollection<Product>(_main.Products);
             AddToCartCommand = new RelayCommand(p =>
             {
-                if (p is Product prod)
-                {
-                    var existing = Cart.FirstOrDefault(i => i.Product.Id == prod.Id);
-                    if (existing != null)
-                    {
-                        existing.Quantity++;
-                    }
-                    else
-                    {
-                        var newItem = new CartItem { Product = prod, Quantity = 1 };
-                        newItem.PropertyChanged += (s, e) => {
-                            if (e.PropertyName == nameof(CartItem.Subtotal))
-                            {
-                                OnPropertyChanged(nameof(Subtotal));
-                                OnPropertyChanged(nameof(Total));
-                            }
-                        };
-                        Cart.Add(newItem);
-                    }
-                    OnPropertyChanged(nameof(Subtotal));
-                    OnPropertyChanged(nameof(Total));
-                }
+                if (p is Product prod) AddProductToCart(prod);
             });
 
             RemoveItemCommand = new RelayCommand(o =>
@@ -335,9 +553,20 @@ namespace POS_v0_1.ViewModels
                 }
             });
 
+
+
             IncreaseQuantityCommand = new RelayCommand(o =>
             {
                 if (o is CartItem item) item.Quantity++;
+            });
+
+            // Expose a command that can be used by the view to process a scanned barcode string
+            HandleScannedBarcodeCommand = new RelayCommand(o =>
+            {
+                if (o is string code)
+                {
+                    HandleBarcodeScan(code.Trim());
+                }
             });
 
             DecreaseQuantityCommand = new RelayCommand(o =>
@@ -357,10 +586,19 @@ namespace POS_v0_1.ViewModels
             {
                 if (!Cart.Any()) return;
 
+                // Volver a la búsqueda por el PIN del cuadro de texto (sin diálogo)
+                var pinActual = SellerPin?.Trim();
+                var seller = _main.Users.FirstOrDefault(u => u.Pin == pinActual);
+
+                string nombreFinal = seller?.Name ?? _main.CurrentUser?.Name ?? "Administrador";
+                string pinFinal = seller?.Pin ?? _main.CurrentUser?.Pin ?? "0000";
+
                 // Save sale record to DB
                 var newSale = new Sale
                 {
                     Date = DateTime.Now,
+                    SellerPin = pinFinal,
+                    SellerName = nombreFinal,
                     Subtotal = Subtotal,
                     Discount = Discount,
                     Iva = Iva,
@@ -384,8 +622,20 @@ namespace POS_v0_1.ViewModels
                 _main.Db.Sales.Add(newSale);
                 _main.Db.SaveChanges();
 
+                // Imprimir Ticket automáticamente después de guardar
+                try
+                {
+                    var printer = new TicketPrinter();
+                    printer.PrintSaleTicket(newSale);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("Error de impresión: " + ex.Message);
+                }
+
                 _main.Sales.Add(newSale);
-                _main.Session.CurrentBalance += Total;
+                _main.Session.SalesTotal += Total;
+                SellerPin = string.Empty;
                 ClearCartCommand.Execute(null);
             });
 
@@ -394,7 +644,9 @@ namespace POS_v0_1.ViewModels
                 _main.Session.IsOpen = false;
                 _main.Session.ClosingTime = DateTime.Now;
                 _main.Db.SaveChanges(); // Ensure session state is saved if it's tracked
-                _main.CurrentView = new OpenCashViewModel(_main);
+                // After closing cash, go to the dedicated CashControlView which persists sessions and is the
+                // canonical place for opening/closing cash sessions and viewing history.
+                _main.CurrentView = new CashControlViewModel(_main);
             });
         }
 
@@ -406,6 +658,60 @@ namespace POS_v0_1.ViewModels
                 FilteredProducts = new ObservableCollection<Product>(_main.Products.Where(p =>
                     p.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                     (p.Barcode != null && p.Barcode.Contains(SearchText))));
+        }
+
+        // Add product to cart (used by click and barcode)
+        public void AddProductToCart(Product prod, int quantity = 1)
+        {
+            if (prod == null) return;
+            var existing = Cart.FirstOrDefault(i => i.Product.Id == prod.Id);
+            if (existing != null)
+            {
+                existing.Quantity += quantity;
+            }
+            else
+            {
+                var newItem = new CartItem { Product = prod, Quantity = quantity };
+                newItem.PropertyChanged += (s, e) => {
+                    if (e.PropertyName == nameof(CartItem.Subtotal))
+                    {
+                        OnPropertyChanged(nameof(Subtotal));
+                        OnPropertyChanged(nameof(Iva));
+                        OnPropertyChanged(nameof(Total));
+                    }
+                };
+                Cart.Add(newItem);
+            }
+            OnPropertyChanged(nameof(Subtotal));
+            OnPropertyChanged(nameof(Iva));
+            OnPropertyChanged(nameof(Total));
+        }
+
+        // Handle a scanned barcode string
+        public void HandleBarcodeScan(string code)
+        {
+            if (string.IsNullOrWhiteSpace(code)) return;
+            // Try exact barcode match first
+            var prod = _main.Products.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.Barcode) && p.Barcode.Trim() == code);
+            // Fallback: try contains or by name
+            if (prod == null)
+            {
+                prod = _main.Products.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.Barcode) && p.Barcode.Trim().Contains(code));
+            }
+            if (prod == null)
+            {
+                // Optionally, try by numeric code as barcode stored without leading zeros
+                prod = _main.Products.FirstOrDefault(p => p.Barcode != null && p.Barcode.Trim().Equals(code, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (prod != null)
+            {
+                AddProductToCart(prod, 1);
+            }
+            else
+            {
+                // No product found: optionally notify user -- for now do nothing
+            }
         }
     }
 }

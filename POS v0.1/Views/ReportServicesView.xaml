@@ -52,13 +52,95 @@
             </StackPanel>
         </Border>
 
-        <!-- Taller (Reparaciones) - Próximamente -->
+        <!-- Taller (Reparaciones) -->
         <Border Background="White" CornerRadius="8" BorderBrush="#dee2e6" BorderThickness="1" Margin="0,20,0,0">
              <StackPanel>
                 <Border Background="#f8f9fa" Padding="15" CornerRadius="8,8,0,0">
                     <TextBlock Text="RESUMEN DE TALLER" FontWeight="SemiBold" FontSize="12" Foreground="#666"/>
                 </Border>
-                <TextBlock Text="Próximamente desglose por técnico y categoría..." HorizontalAlignment="Center" Margin="20" Foreground="#adb5bd"/>
+                <DataGrid ItemsSource="{Binding Summary.RepairsByTechnician}" AutoGenerateColumns="False" IsReadOnly="True"
+                          Background="Transparent" BorderThickness="0" RowHeaderWidth="0" GridLinesVisibility="None">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Técnico" Binding="{Binding Operator}" Width="*"/>
+                        <DataGridTemplateColumn Header="Órdenes" Width="150">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="#6f42c1" CornerRadius="10" Width="20" Height="20" HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding TicketCount}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10" FontWeight="Bold"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Monto Bruto C$" Binding="{Binding TotalAmount, StringFormat='C$ \{0:N2\}'}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Margin" Value="0,0,10,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Ingreso Real C$" Binding="{Binding TotalProfit, StringFormat='C$ \{0:N2\}'}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Foreground" Value="#198754"/>
+                                    <Setter Property="Margin" Value="0,0,10,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <Grid Margin="20" Visibility="{Binding Summary.RepairsByTechnician.Count, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}">
+                    <TextBlock Text="No hay reparaciones registradas en este periodo." HorizontalAlignment="Center" Foreground="#adb5bd"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Ingreso de Equipos (Por Receptor) -->
+        <Border Background="White" CornerRadius="8" BorderBrush="#dee2e6" BorderThickness="1" Margin="0,20,0,0">
+            <StackPanel>
+                <Border Background="#f8f9fa" Padding="15" CornerRadius="8,8,0,0">
+                    <TextBlock Text="RECEPCIÓN DE EQUIPOS (Por Usuario/PIN)" FontWeight="SemiBold" FontSize="12" Foreground="#666"/>
+                </Border>
+                <DataGrid ItemsSource="{Binding Summary.RepairsByReceiver}" AutoGenerateColumns="False" IsReadOnly="True"
+                          Background="Transparent" BorderThickness="0" RowHeaderWidth="0" GridLinesVisibility="None">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Recibido Por" Binding="{Binding Operator}" Width="*"/>
+                        <DataGridTemplateColumn Header="Ingresos" Width="150">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="#fd7e14" CornerRadius="10" Width="20" Height="20" HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding TicketCount}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="10" FontWeight="Bold"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Monto Estimado C$" Binding="{Binding TotalAmount, StringFormat='C$ \{0:N2\}'}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Margin" Value="0,0,10,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Recaudado C$" Binding="{Binding TotalProfit, StringFormat='C$ \{0:N2\}'}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Foreground" Value="#198754"/>
+                                    <Setter Property="Margin" Value="0,0,10,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <Grid Margin="20" Visibility="{Binding Summary.RepairsByReceiver.Count, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}">
+                    <TextBlock Text="No hay ingresos registrados." HorizontalAlignment="Center" Foreground="#adb5bd"/>
+                </Grid>
             </StackPanel>
         </Border>
     </StackPanel>

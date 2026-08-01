@@ -22,13 +22,19 @@ namespace POS_v0_1.Models
 
         public decimal TotalNetProfit => TotalGrossIncome - TotalOutflows;
         public decimal ActualCashInHand { get; set; }
+        public bool IsSessionOpen { get; set; }
+        public string CashTitleText { get; set; } = "Efectivo en Caja (Real)";
+        public string CashStatusText { get; set; } = "Dinero físico que debe haber";
 
         // Nuevos campos para pestañas detalladas
         public List<FinancialSourceSummary> FinancialSummaries { get; set; } = new List<FinancialSourceSummary>();
         public InventoryValuation Inventory { get; set; } = new InventoryValuation();
         public List<RankedItem> TopProducts { get; set; } = new List<RankedItem>();
         public List<RankedItem> TopClients { get; set; } = new List<RankedItem>();
+        public List<RankedItem> SalesBySeller { get; set; } = new List<RankedItem>();
         public List<ServiceReportItem> TopupReport { get; set; } = new List<ServiceReportItem>();
+        public List<ServiceReportItem> RepairsByTechnician { get; set; } = new List<ServiceReportItem>();
+        public List<ServiceReportItem> RepairsByReceiver { get; set; } = new List<ServiceReportItem>();
     }
 
     public class FinancialSourceSummary

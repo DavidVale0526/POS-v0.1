@@ -19,9 +19,18 @@
             <Grid>
                 <TextBlock Text="Reparaciones" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <ComboBox Width="150" SelectedIndex="0">
-                        <ComboBoxItem Content="Administrador"/>
-                    </ComboBox>
+                    <Button Command="{Binding DataContext.SwitchUserCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                            Background="Transparent" BorderThickness="0" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Background="#e7f1ff" CornerRadius="15" Padding="10,4" BorderBrush="#0d6efd" BorderThickness="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="👤 " VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding DataContext.CurrentUser.Name, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#0d6efd"/>
+                                    <TextBlock Text=" (Cambiar)" FontSize="10" Margin="5,0,0,0" VerticalAlignment="Center" Foreground="#666"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
@@ -95,10 +104,11 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="80"/>
-                                    <ColumnDefinition Width="150"/>
-                                    <ColumnDefinition Width="180"/>
-                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="140"/>
+                                    <ColumnDefinition Width="160"/>
+                                    <ColumnDefinition Width="160"/>
                                     <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="100"/>
                                     <ColumnDefinition Width="100"/>
                                     <ColumnDefinition Width="100"/>
                                     <ColumnDefinition Width="100"/>
@@ -108,9 +118,10 @@
                                 <TextBlock Grid.Column="2" Text="Cliente" FontWeight="Bold"/>
                                 <TextBlock Grid.Column="3" Text="Dispositivo" FontWeight="Bold"/>
                                 <TextBlock Grid.Column="4" Text="Falla Reportada" FontWeight="Bold"/>
-                                <TextBlock Grid.Column="5" Text="Estado" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                <TextBlock Grid.Column="6" Text="Total" FontWeight="Bold" HorizontalAlignment="Right"/>
-                                <TextBlock Grid.Column="7" Text="Acciones" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="5" Text="Responsable" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="6" Text="Estado" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="7" Text="Total" FontWeight="Bold" HorizontalAlignment="Right"/>
+                                <TextBlock Grid.Column="8" Text="Acciones" FontWeight="Bold" HorizontalAlignment="Center"/>
                             </Grid>
                         </Border>
 
@@ -122,23 +133,36 @@
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="80"/>
-                                                <ColumnDefinition Width="150"/>
-                                                <ColumnDefinition Width="180"/>
-                                                <ColumnDefinition Width="180"/>
+                                                <ColumnDefinition Width="140"/>
+                                                <ColumnDefinition Width="160"/>
+                                                <ColumnDefinition Width="160"/>
                                                 <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="100"/>
                                                 <ColumnDefinition Width="100"/>
                                                 <ColumnDefinition Width="100"/>
                                                 <ColumnDefinition Width="100"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Text="{Binding Id}" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding EntryDate, StringFormat='\{0:dd/MM/yyyy HH:mm\}'}" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="2" Text="{Binding ClientName}" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="3" VerticalAlignment="Center">
-                                                <Run Text="{Binding DeviceBrand}"/> <Run Text="{Binding DeviceModel}"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding EntryDate, StringFormat='\{0:dd/MM/yyyy HH:mm\}'}" VerticalAlignment="Center" FontSize="11"/>
+                                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding ClientName}" FontWeight="Bold" FontSize="13"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                <TextBlock Text="&#x1F4DE;" Margin="0,0,6,0" VerticalAlignment="Center" FontSize="10"/>
+                                                    <TextBlock Text="{Binding ClientPhone, TargetNullValue=N/A}" Foreground="#666" FontSize="11" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="3" VerticalAlignment="Center" TextWrapping="Wrap" FontSize="12">
+                                                <Run Text="{Binding DeviceBrand}" FontWeight="SemiBold"/> <Run Text="{Binding DeviceModel}"/>
                                             </TextBlock>
-                                            <TextBlock Grid.Column="4" Text="{Binding ReportedFailure}" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Grid.Column="4" Text="{Binding ReportedFailure}" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" FontSize="12"/>
 
-                                            <Border Grid.Column="5" CornerRadius="10" Padding="8,2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <StackPanel Grid.Column="5" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding ReceivedByName, TargetNullValue='N/A'}" FontSize="11" FontWeight="Medium" Foreground="#444" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="Técnico:" FontSize="9" Foreground="#888" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                                <TextBlock Text="{Binding TechnicianName, TargetNullValue='No asignado'}" FontSize="10" Foreground="#555" HorizontalAlignment="Center"/>
+                                            </StackPanel>
+
+                                            <Border Grid.Column="6" CornerRadius="10" Padding="8,2" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <Border.Style>
                                                     <Style TargetType="Border">
                                                         <Setter Property="Background" Value="#e9ecef"/>
@@ -169,24 +193,30 @@
                                                 </TextBlock>
                                             </Border>
 
-                                            <TextBlock Grid.Column="6" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                            <TextBlock Grid.Column="7" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"
                                                        Text="{Binding Total, StringFormat='C$ \{0:N2\}'}"/>
 
-                                            <Button Grid.Column="7" Content="Entregar" Padding="10,2" Background="White" BorderBrush="#28a745" Foreground="#28a745"
-                                                    Command="{Binding DataContext.ChangeStatusCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                    CommandParameter="{Binding}">
-                                                <Button.Style>
-                                                    <Style TargetType="Button">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Status}" Value="Entregado">
-                                                                <Setter Property="Content" Value="Reabrir"/>
-                                                                <Setter Property="BorderBrush" Value="#6c757d"/>
-                                                                <Setter Property="Foreground" Value="#6c757d"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Button.Style>
-                                            </Button>
+                                            <StackPanel Grid.Column="8" Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Content="Entregar" Padding="10,2" Margin="0,0,6,0" Background="White" BorderBrush="#28a745" Foreground="#28a745"
+                                                        Command="{Binding DataContext.ChangeStatusCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Status}" Value="Entregado">
+                                                                    <Setter Property="Content" Value="Reabrir"/>
+                                                                    <Setter Property="BorderBrush" Value="#6c757d"/>
+                                                                    <Setter Property="Foreground" Value="#6c757d"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                </Button>
+
+                                                <Button Content="👁" Padding="8,2" Background="White" BorderBrush="#0d6efd" Foreground="#0d6efd"
+                                                        Command="{Binding DataContext.ShowDetailCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        CommandParameter="{Binding}" ToolTip="Ver detalle"/>
+                                            </StackPanel>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

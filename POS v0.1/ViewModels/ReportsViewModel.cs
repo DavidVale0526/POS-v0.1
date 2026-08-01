@@ -70,22 +70,53 @@ namespace POS_v0_1.ViewModels
             var topups = _main.Topups.Where(t => t.DateTime >= start && t.DateTime <= end).ToList();
             var repairs = _main.Repairs.Where(r => r.EntryDate >= start && r.EntryDate <= end).ToList();
             var movements = _main.FinancialMovements.Where(m => m.Date >= start && m.Date <= end).ToList();
+            var sessions = _main.CashSessions.Where(s => s.OpeningTime >= start && s.OpeningTime <= end).ToList();
 
             var summary = new BusinessSummary();
 
             // 1. Resumen General
             summary.GrossSales = sales.Sum(s => s.Total);
             summary.PosSalesIncome = summary.GrossSales;
-            summary.CostOfGoodsSold = sales.Sum(s => s.Total * 0.7m);
+            summary.CostOfGoodsSold = sales.Sum(s => s.Total * 0.7m); // Estimado al 70%
             summary.TopupFlow = topups.Sum(t => t.Amount);
-            summary.TopupIncome = topups.Sum(t => t.Amount);
+            summary.TopupIncome = summary.TopupFlow;
+
             var deliveredRepairs = repairs.Where(r => r.Status == "Entregado");
             summary.DeliveredRepairsTotal = deliveredRepairs.Sum(r => r.Total);
             summary.RepairIncome = summary.DeliveredRepairsTotal;
+
             summary.OtherExtraIncome = movements.Where(m => m.Type == "Ingreso").Sum(m => m.Amount);
             summary.ExpensesAndOutflows = movements.Where(m => m.Type == "Gasto").Sum(m => m.Amount);
-            summary.RealOperatingProfit = (summary.GrossSales - summary.CostOfGoodsSold) + (summary.TopupFlow * 0.05m) + summary.RepairIncome;
-            summary.ActualCashInHand = (summary.TotalGrossIncome - summary.ExpensesAndOutflows);
+
+            summary.RealOperatingProfit = (summary.GrossSales - summary.CostOfGoodsSold) + topups.Sum(t => t.Profit) + summary.RepairIncome;
+
+            // Determinar si hay caja abierta o si usamos saldo de cierre auditado
+            var activeSession = _main.Session ?? _main.CashSessions.FirstOrDefault(s => s.IsOpen);
+            var closedSessions = sessions.Where(s => !s.IsOpen && s.ClosingTime != null).ToList();
+
+            if (activeSession != null && activeSession.IsOpen)
+            {
+                summary.IsSessionOpen = true;
+                summary.CashTitleText = "Efectivo en Caja (En Curso)";
+                summary.CashStatusText = "Caja Abierta (Calculado en tiempo real)";
+                decimal openingBalances = sessions.Sum(s => s.OpeningBalance);
+                summary.ActualCashInHand = openingBalances + (summary.TotalGrossIncome - summary.ExpensesAndOutflows);
+            }
+            else if (closedSessions.Any())
+            {
+                summary.IsSessionOpen = false;
+                summary.CashTitleText = "Saldo de Cierre (Auditado)";
+                var lastClosed = closedSessions.OrderByDescending(s => s.ClosingTime).First();
+                summary.CashStatusText = $"Caja Cerrada ({lastClosed.ClosingTime:dd/MM/yyyy HH:mm})";
+                summary.ActualCashInHand = closedSessions.Sum(s => s.ClosingBalance);
+            }
+            else
+            {
+                summary.IsSessionOpen = false;
+                summary.CashTitleText = "Saldo de Caja";
+                summary.CashStatusText = "Caja Cerrada (Sin sesiones abiertas)";
+                summary.ActualCashInHand = 0m;
+            }
 
             // 2. Finanzas por Fuente
             summary.FinancialSummaries = movements
@@ -127,7 +158,18 @@ namespace POS_v0_1.ViewModels
                 .OrderByDescending(x => x.TotalSales)
                 .Take(5).ToList();
 
-            // 5. Servicios (Recargas)
+            summary.SalesBySeller = sales
+                .GroupBy(s => s.SellerName ?? "Administrador")
+                .Select(g => new RankedItem
+                {
+                    Name = g.Key,
+                    Quantity = g.Count(),
+                    TotalSales = g.Sum(s => s.Total)
+                })
+                .OrderByDescending(x => x.TotalSales)
+                .ToList();
+
+            // 5. Servicios (Reparaciones y Recargas)
             summary.TopupReport = topups
                 .GroupBy(t => t.Company)
                 .Select(g => new ServiceReportItem
@@ -136,6 +178,26 @@ namespace POS_v0_1.ViewModels
                     TicketCount = g.Count(),
                     TotalAmount = g.Sum(t => t.Amount),
                     TotalProfit = g.Sum(t => t.Profit)
+                }).ToList();
+
+            summary.RepairsByTechnician = repairs
+                .GroupBy(r => r.TechnicianName ?? "Sin Asignar")
+                .Select(g => new ServiceReportItem
+                {
+                    Operator = g.Key,
+                    TicketCount = g.Count(),
+                    TotalAmount = g.Sum(r => r.Total),
+                    TotalProfit = g.Where(r => r.Status == "Entregado").Sum(r => r.Total)
+                }).ToList();
+
+            summary.RepairsByReceiver = repairs
+                .GroupBy(r => r.ReceivedByName ?? "Sin Asignar")
+                .Select(g => new ServiceReportItem
+                {
+                    Operator = g.Key,
+                    TicketCount = g.Count(),
+                    TotalAmount = g.Sum(r => r.Total),
+                    TotalProfit = g.Where(r => r.Status == "Entregado").Sum(r => r.Total)
                 }).ToList();
 
             Summary = summary;

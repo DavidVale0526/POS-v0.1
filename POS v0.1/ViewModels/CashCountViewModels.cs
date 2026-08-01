@@ -30,6 +30,10 @@ namespace POS_v0_1.ViewModels
 
         public decimal TotalCalculated => Denominations.Sum(d => d.Subtotal);
 
+        // Propiedades para el resumen comparativo
+        public decimal TheoreticalBalance => _main.Session?.TheoreticalBalance ?? 0m;
+        public decimal Difference => TotalCalculated - TheoreticalBalance;
+
         private string _notes;
         public string Notes
         {
@@ -40,9 +44,12 @@ namespace POS_v0_1.ViewModels
         public ICommand SaveCommand { get; }
         public ICommand BackCommand { get; }
 
-        public NewCashCountViewModel(MainViewModel main)
+        private readonly Action<Models.CashCount> _onSaved;
+
+        public NewCashCountViewModel(MainViewModel main, Action<Models.CashCount> onSaved = null)
         {
             _main = main;
+            _onSaved = onSaved;
 
             Denominations = new ObservableCollection<DenominationViewModel>
             {
@@ -59,7 +66,11 @@ namespace POS_v0_1.ViewModels
 
             foreach (var item in Denominations)
             {
-                item.PropertyChanged += (s, e) => OnPropertyChanged(nameof(TotalCalculated));
+                item.PropertyChanged += (s, e) =>
+                {
+                    OnPropertyChanged(nameof(TotalCalculated));
+                    OnPropertyChanged(nameof(Difference));
+                };
             }
 
             SaveCommand = new RelayCommand(o =>
@@ -81,10 +92,26 @@ namespace POS_v0_1.ViewModels
                 _main.Db.CashCounts.Add(count);
                 _main.Db.SaveChanges();
                 _main.CashCounts.Add(count);
-                _main.CurrentView = new CashCountHistoryViewModel(_main);
+
+                if (_onSaved != null)
+                {
+                    _onSaved(count);
+                    // Regresar al control de caja después del cierre exitoso
+                    _main.CurrentView = new CashControlViewModel(_main);
+                }
+                else
+                {
+                    _main.CurrentView = new CashCountHistoryViewModel(_main);
+                }
             });
 
-            BackCommand = new RelayCommand(o => _main.CurrentView = new CashCountHistoryViewModel(_main));
+            BackCommand = new RelayCommand(o =>
+            {
+                if (_onSaved != null)
+                    _main.CurrentView = new CashControlViewModel(_main);
+                else
+                    _main.CurrentView = new CashCountHistoryViewModel(_main);
+            });
         }
     }
 

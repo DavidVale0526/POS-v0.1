@@ -35,7 +35,8 @@ namespace POS_v0_1.ViewModels
             {
                 _main.CurrentUser = user;
                 _main.IsAuthenticated = true;
-                _main.CurrentView = new OpenCashViewModel(_main);
+                // Navigate to the dedicated cash control view so the session is created/persisted correctly
+                _main.CurrentView = new CashControlViewModel(_main);
             }
             else
             {

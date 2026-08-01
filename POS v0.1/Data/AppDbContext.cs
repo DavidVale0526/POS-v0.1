@@ -15,6 +15,7 @@ namespace POS_v0_1.Data
         public DbSet<Purchase> Purchases { get; set; }
         public DbSet<Topup> Topups { get; set; }
         public DbSet<RepairOrder> Repairs { get; set; }
+        public DbSet<RepairStatusHistory> RepairStatusHistories { get; set; }
         public DbSet<RepairCategory> RepairCategories { get; set; }
         public DbSet<RepairType> RepairTypes { get; set; }
         public DbSet<FinancialMovement> FinancialMovements { get; set; }
@@ -22,6 +23,7 @@ namespace POS_v0_1.Data
         public DbSet<CashCount> CashCounts { get; set; }
         public DbSet<BankTransaction> BankTransactions { get; set; }
         public DbSet<CashSession> CashSessions { get; set; }
+        public DbSet<BusinessConfiguration> BusinessConfigs { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

@@ -7,8 +7,9 @@ namespace POS_v0_1.Models
     {
         public int Id { get; set; }
         public DateTime Date { get; set; }
-        public string CustomerName { get; set; } = "Consumidor Final";
-        public string SellerPin { get; set; }
+        public string? CustomerName { get; set; } = "Consumidor Final";
+        public string? SellerPin { get; set; }
+        public string? SellerName { get; set; }
         public decimal Subtotal { get; set; }
         public decimal Discount { get; set; }
         public decimal Iva { get; set; }
@@ -20,7 +21,7 @@ namespace POS_v0_1.Models
     {
         public int Id { get; set; }
         public int ProductId { get; set; }
-        public string ProductName { get; set; }
+        public string? ProductName { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal Subtotal => Quantity * UnitPrice;

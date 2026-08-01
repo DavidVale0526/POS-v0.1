@@ -56,7 +56,9 @@
                 <DataGridTemplateColumn Header="Acciones" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Content="👁" HorizontalAlignment="Center" Padding="5,2" Background="Transparent" BorderThickness="0"/>
+                            <Button Content="👁" HorizontalAlignment="Center" Padding="5,2" Background="Transparent" BorderThickness="0"
+                                    Command="{Binding DataContext.ShowPurchaseDetailCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                    CommandParameter="{Binding}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

@@ -140,6 +140,13 @@ namespace POS_v0_1.ViewModels
                 _main.Db.Topups.Add(topup);
                 _main.Db.SaveChanges();
                 _main.Topups.Add(topup);
+
+                // Actualizar sesión de caja si hay una abierta
+                if (_main.Session != null && _main.Session.IsOpen)
+                {
+                    _main.Session.TopupsTotal += topup.Amount;
+                }
+
                 _main.CurrentView = new TopupHistoryViewModel(_main);
             });
 

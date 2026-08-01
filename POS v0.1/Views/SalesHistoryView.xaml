@@ -19,9 +19,18 @@
             <Grid>
                 <TextBlock Text="Historial de Ventas" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <ComboBox Width="150" SelectedIndex="0">
-                        <ComboBoxItem Content="Administrador"/>
-                    </ComboBox>
+                    <Button Command="{Binding DataContext.SwitchUserCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                            Background="Transparent" BorderThickness="0" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Background="#e7f1ff" CornerRadius="15" Padding="10,4" BorderBrush="#0d6efd" BorderThickness="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="👤 " VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding DataContext.CurrentUser.Name, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#0d6efd"/>
+                                    <TextBlock Text=" (Cambiar)" FontSize="10" Margin="5,0,0,0" VerticalAlignment="Center" Foreground="#666"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
@@ -146,12 +155,17 @@
                                             <TextBlock Grid.Column="0" Text="{Binding Id, StringFormat='#\{0:D5\}'}" VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="1" Text="{Binding Date, StringFormat='\{0:dd/MM/yyyy HH:mm\}'}" VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="2" Text="{Binding CustomerName}" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="3" Text="Administrador" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding SellerName}" VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="4" Text="Efectivo" VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="5" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center">
                                                 <Run Text="C$ " /><Run Text="{Binding Total, StringFormat=N2}" />
                                             </TextBlock>
-                                            <Button Grid.Column="6" Content="Ver" Padding="10,2" Background="White" BorderBrush="#007bff" Foreground="#007bff"/>
+                                            <StackPanel Grid.Column="6" Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Content="👁️" ToolTip="Ver Detalle" Padding="8,2" Background="White" BorderBrush="#dee2e6" Margin="0,0,5,0"/>
+                                                <Button Content="🖨️" ToolTip="Re-imprimir Ticket" Padding="8,2" Background="White" BorderBrush="#dee2e6"
+                                                        Command="{Binding DataContext.ReprintCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"/>
+                                            </StackPanel>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

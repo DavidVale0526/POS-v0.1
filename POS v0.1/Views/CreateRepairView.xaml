@@ -116,23 +116,35 @@
 
         <!-- Footer Actions -->
         <Border Grid.Row="2" Background="White" Padding="20" BorderBrush="#dee2e6" BorderThickness="0,1,0,0">
-            <Button Content="💾 Generar Orden de Reparación" HorizontalAlignment="Right" Padding="30,12"
-                    Background="#0d6efd" Foreground="White" FontWeight="Bold" BorderThickness="0"
-                    Command="{Binding SaveCommand}">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" CornerRadius="5">
-                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </Button.Style>
-            </Button>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <!-- PIN de Auditoría -->
+                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                    <TextBlock Text="PIN del Receptor" FontSize="11" Foreground="#6c757d" HorizontalAlignment="Right"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding SellerNamePreview}" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold" Foreground="#0d6efd"/>
+                        <PasswordBox x:Name="PinBox" Width="80" Padding="5" MaxLength="4"
+                                     PasswordChanged="PinBox_PasswordChanged"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <Button Content="💾 Generar Orden de Reparación" Padding="30,12"
+                        Background="#0d6efd" Foreground="White" FontWeight="Bold" BorderThickness="0"
+                        Command="{Binding SaveCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </StackPanel>
         </Border>
     </Grid>
 </UserControl>

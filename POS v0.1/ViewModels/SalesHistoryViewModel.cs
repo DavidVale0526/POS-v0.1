@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using POS_v0_1.Models;
+using POS_v0_1.Services;
 
 namespace POS_v0_1.ViewModels
 {
@@ -38,6 +39,7 @@ namespace POS_v0_1.ViewModels
 
         public ICommand FilterCommand { get; }
         public ICommand ShowPosCommand { get; }
+        public ICommand ReprintCommand { get; }
 
         public SalesHistoryViewModel(MainViewModel main)
         {
@@ -53,6 +55,22 @@ namespace POS_v0_1.ViewModels
 
             FilterCommand = new RelayCommand(o => ApplyFilter());
             ShowPosCommand = _main.ShowPosCommand;
+
+            ReprintCommand = new RelayCommand(o =>
+            {
+                if (o is Sale sale)
+                {
+                    try
+                    {
+                        var printer = new TicketPrinter();
+                        printer.PrintSaleTicket(sale, isReprint: true);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Windows.MessageBox.Show("Error al reimprimir: " + ex.Message);
+                    }
+                }
+            });
         }
 
         private void ApplyFilter()

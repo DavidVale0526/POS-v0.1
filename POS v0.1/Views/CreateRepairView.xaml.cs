@@ -8,5 +8,13 @@ namespace POS_v0_1.Views
         {
             InitializeComponent();
         }
+
+        private void PinBox_PasswordChanged(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.CreateRepairViewModel vm && sender is PasswordBox pb)
+            {
+                vm.SellerPin = pb.Password;
+            }
+        }
     }
 }

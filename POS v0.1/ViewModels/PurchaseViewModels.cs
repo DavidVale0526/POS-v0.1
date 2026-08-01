@@ -3,6 +3,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using POS_v0_1.Models;
+using System.Collections.Specialized;
+using System.ComponentModel;
 
 namespace POS_v0_1.ViewModels
 {
@@ -12,12 +14,43 @@ namespace POS_v0_1.ViewModels
         public ObservableCollection<Purchase> Purchases => _main.Purchases;
 
         public ICommand ShowCreatePurchaseCommand { get; }
+        public ICommand ShowPurchaseDetailCommand { get; }
 
         public PurchasesViewModel(MainViewModel main)
         {
             _main = main;
             ShowCreatePurchaseCommand = new RelayCommand(o => _main.CurrentView = new CreatePurchaseViewModel(_main));
+            ShowPurchaseDetailCommand = new RelayCommand(o =>
+            {
+                if (o is Purchase p)
+                {
+                    _main.CurrentView = new PurchaseDetailViewModel(_main, p);
+                }
+            });
         }
+    }
+
+    public class PurchaseDetailViewModel : BaseViewModel
+    {
+        private readonly MainViewModel _main;
+        public Purchase Purchase { get; }
+        public Provider Provider { get; }
+
+        public ICommand BackCommand { get; }
+
+        public PurchaseDetailViewModel(MainViewModel main, Purchase purchase)
+        {
+            _main = main;
+            Purchase = purchase;
+
+            // Buscar info extendida del proveedor
+            Provider = _main.Providers.FirstOrDefault(p => p.Name == purchase.ProviderName)
+                       ?? new Provider { Name = purchase.ProviderName ?? "N/A" };
+
+            BackCommand = new RelayCommand(o => _main.CurrentView = new PurchasesViewModel(_main));
+        }
+
+
     }
 
     public class CreatePurchaseViewModel : BaseViewModel
@@ -64,6 +97,45 @@ namespace POS_v0_1.ViewModels
 
         public ObservableCollection<PurchaseDetail> Items { get; } = new ObservableCollection<PurchaseDetail>();
 
+        private void SubscribeToItem(PurchaseDetail item)
+        {
+            if (item == null) return;
+            item.PropertyChanged += Item_PropertyChanged;
+        }
+
+        private void UnsubscribeFromItem(PurchaseDetail item)
+        {
+            if (item == null) return;
+            item.PropertyChanged -= Item_PropertyChanged;
+        }
+
+        private void Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(PurchaseDetail.Subtotal) || e.PropertyName == nameof(PurchaseDetail.Quantity) || e.PropertyName == nameof(PurchaseDetail.UnitPrice))
+            {
+                OnPropertyChanged(nameof(Total));
+            }
+        }
+
+        private void Items_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach (var ni in e.NewItems)
+                {
+                    if (ni is PurchaseDetail pd) SubscribeToItem(pd);
+                }
+            }
+            if (e.OldItems != null)
+            {
+                foreach (var oi in e.OldItems)
+                {
+                    if (oi is PurchaseDetail pd) UnsubscribeFromItem(pd);
+                }
+            }
+            OnPropertyChanged(nameof(Total));
+        }
+
         public decimal Total => Items.Sum(i => i.Subtotal);
 
         public ICommand AddItemCommand { get; }
@@ -76,6 +148,9 @@ namespace POS_v0_1.ViewModels
         {
             _main = main;
 
+            // keep track of item changes so Total updates when Quantity or UnitPrice change
+            Items.CollectionChanged += Items_CollectionChanged;
+
             AddItemCommand = new RelayCommand(o =>
             {
                 if (SelectedProductToSearch == null) return;
@@ -83,19 +158,18 @@ namespace POS_v0_1.ViewModels
                 var existing = Items.FirstOrDefault(i => i.ProductId == SelectedProductToSearch.Id);
                 if (existing != null)
                 {
-                    existing.Quantity++;
-                    OnPropertyChanged(nameof(Total));
-                    // Trigger refresh for DataGrid if needed, though simple props don't always notify in sub-items without INPC on detail
+                    existing.Quantity = existing.Quantity + 1;
                 }
                 else
                 {
-                    Items.Add(new PurchaseDetail
+                    var newItem = new PurchaseDetail
                     {
                         ProductId = SelectedProductToSearch.Id,
                         ProductName = SelectedProductToSearch.Name,
                         Quantity = 1,
                         UnitPrice = SelectedProductToSearch.PurchasePrice
-                    });
+                    };
+                    Items.Add(newItem);
                 }
                 OnPropertyChanged(nameof(Total));
                 SelectedProductToSearch = null;
@@ -112,7 +186,6 @@ namespace POS_v0_1.ViewModels
 
             ShowQuickCreateProductCommand = new RelayCommand(o =>
             {
-                // This would ideally be a modal, but since we use dynamic navigation:
                 _main.CurrentView = new QuickCreateProductViewModel(_main, this);
             });
 
@@ -149,7 +222,6 @@ namespace POS_v0_1.ViewModels
             BackCommand = new RelayCommand(o => _main.CurrentView = new PurchasesViewModel(_main));
         }
 
-        // Helper to notify total change from UI if quantity/price edits are allowed in grid
         public void RefreshTotal() => OnPropertyChanged(nameof(Total));
     }
 
@@ -213,7 +285,6 @@ namespace POS_v0_1.ViewModels
                 _main.Products.Add(newProduct);
                 SelectedCategory.ProductCount++;
 
-                // Automatically add to current purchase
                 _purchaseVM.Items.Add(new PurchaseDetail
                 {
                     ProductId = newProduct.Id,
@@ -223,7 +294,6 @@ namespace POS_v0_1.ViewModels
                 });
                 _purchaseVM.RefreshTotal();
 
-                // Go back to purchase view
                 _main.CurrentView = _purchaseVM;
             });
 

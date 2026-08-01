@@ -8,13 +8,13 @@ namespace POS_v0_1.Models
     public class Product : INotifyPropertyChanged
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public string Barcode { get; set; }
-        public string SKU { get; set; }
-        public string Description { get; set; }
-        public string Category { get; set; }
-        public string Provider { get; set; }
-        public string Location { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Barcode { get; set; }
+        public string? SKU { get; set; }
+        public string? Description { get; set; }
+        public string Category { get; set; } = string.Empty;
+        public string? Provider { get; set; }
+        public string? Location { get; set; }
 
         public decimal PurchasePrice { get; set; }
         public decimal SellingPrice { get; set; }
@@ -29,7 +29,7 @@ namespace POS_v0_1.Models
         public int MinStock { get; set; }
 
         public string Status { get; set; } = "Activo";
-        public string ImagePath { get; set; }
+        public string? ImagePath { get; set; }
 
         public decimal Price
         {

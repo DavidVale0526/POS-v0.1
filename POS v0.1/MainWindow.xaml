@@ -18,6 +18,12 @@
         <DataTemplate DataType="{x:Type viewModels:CreateProductViewModel}">
             <views:CreateProductView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:CashControlViewModel}">
+            <views:CashControlView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:CashSessionDetailViewModel}">
+            <views:CashSessionDetailView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type viewModels:OpenCashViewModel}">
             <views:OpenCashView/>
         </DataTemplate>
@@ -48,6 +54,9 @@
         <DataTemplate DataType="{x:Type viewModels:PurchasesViewModel}">
             <views:PurchasesView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:PurchaseDetailViewModel}">
+            <views:PurchaseDetailView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type viewModels:CreatePurchaseViewModel}">
             <views:CreatePurchaseView/>
         </DataTemplate>
@@ -65,6 +74,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewModels:CreateRepairViewModel}">
             <views:CreateRepairView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:RepairDetailViewModel}">
+            <views:RepairDetailView/>
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewModels:RepairCategoriesViewModel}">
             <views:RepairCategoriesView/>
@@ -108,6 +120,12 @@
         <DataTemplate DataType="{x:Type viewModels:ReportsViewModel}">
             <views:ReportsView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:ConfigurationViewModel}">
+            <views:ConfigurationView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:BackupViewModel}">
+            <views:BackupView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type viewModels:LoginViewModel}">
             <views:LoginView/>
         </DataTemplate>
@@ -127,7 +145,7 @@
         <ScrollViewer Grid.Column="0" Background="#f0f0f0" VerticalScrollBarVisibility="Auto" Width="200"
                       Visibility="{Binding IsAuthenticated, Converter={StaticResource VisConverter}}">
             <StackPanel Margin="5">
-                <TextBlock Text="POS SYSTEM" FontSize="20" FontWeight="Bold" Margin="10,10" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding BusinessConfig.BusinessName}" FontSize="20" FontWeight="Bold" Margin="10,10" HorizontalAlignment="Center"/>
 
                 <TextBlock Text="VENTAS" Margin="10,10,10,5" FontWeight="SemiBold" Foreground="#666"/>
                 <Button Content="Nueva Venta (POS)" Margin="2" Padding="8" Command="{Binding ShowPosCommand}"/>

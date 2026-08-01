@@ -6,7 +6,11 @@
     <Application.Resources>
         <ResourceDictionary>
             <converters:VisConverter x:Key="VisConverter"/>
+            <converters:VisConverter x:Key="InvVisConverter" />
             <converters:BoolToStatusConverter x:Key="BoolToStatusConverter"/>
+            <converters:StatusToBrushConverter x:Key="StatusToBrushConverter"/>
+            <converters:DifferenceToBrushConverter x:Key="DifferenceToBrushConverter"/>
+            <converters:RoleToVisibilityConverter x:Key="RoleToVisibilityConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
