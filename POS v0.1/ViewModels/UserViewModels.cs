@@ -14,12 +14,20 @@ namespace POS_v0_1.ViewModels
         public ObservableCollection<User> Users => _main.Users;
 
         public ICommand ShowCreateUserCommand { get; }
+        public ICommand EditUserCommand { get; }
         public ICommand DeleteUserCommand { get; }
 
         public UserManagementViewModel(MainViewModel main)
         {
             _main = main;
             ShowCreateUserCommand = new RelayCommand(o => _main.CurrentView = new CreateUserViewModel(_main));
+            EditUserCommand = new RelayCommand(o =>
+            {
+                if (o is User user)
+                {
+                    _main.CurrentView = new CreateUserViewModel(_main, user);
+                }
+            });
             DeleteUserCommand = new RelayCommand(o =>
             {
                 if (o is User user)
@@ -43,6 +51,9 @@ namespace POS_v0_1.ViewModels
     public class CreateUserViewModel : BaseViewModel
     {
         private readonly MainViewModel _main;
+        private readonly User _editingUser;
+
+        public string Title => _editingUser == null ? "Crear Usuario" : "Editar Usuario";
 
         private string _name;
         public string Name { get => _name; set { _name = value; OnPropertyChanged(); } }
@@ -67,9 +78,21 @@ namespace POS_v0_1.ViewModels
         public ICommand SaveCommand { get; }
         public ICommand BackCommand { get; }
 
-        public CreateUserViewModel(MainViewModel main)
+        public CreateUserViewModel(MainViewModel main, User user = null)
         {
             _main = main;
+            _editingUser = user;
+
+            if (_editingUser != null)
+            {
+                Name = _editingUser.Name;
+                Email = _editingUser.Email;
+                Role = _editingUser.Role;
+                Pin = _editingUser.Pin;
+                Password = _editingUser.Password;
+                ConfirmPassword = _editingUser.Password;
+            }
+
             SaveCommand = new RelayCommand(o => Save());
             BackCommand = new RelayCommand(o => _main.CurrentView = new UserManagementViewModel(_main));
         }
@@ -94,19 +117,32 @@ namespace POS_v0_1.ViewModels
                 return;
             }
 
-            var newUser = new User
+            if (_editingUser == null)
             {
-                Name = Name,
-                Email = Email,
-                Role = Role,
-                Pin = Pin,
-                Password = Password,
-                RegistrationDate = DateTime.Now
-            };
+                var newUser = new User
+                {
+                    Name = Name,
+                    Email = Email,
+                    Role = Role,
+                    Pin = Pin,
+                    Password = Password,
+                    RegistrationDate = DateTime.Now
+                };
 
-            _main.Db.Users.Add(newUser);
-            _main.Db.SaveChanges();
-            _main.Users.Add(newUser);
+                _main.Db.Users.Add(newUser);
+                _main.Db.SaveChanges();
+                _main.Users.Add(newUser);
+            }
+            else
+            {
+                _editingUser.Name = Name;
+                _editingUser.Email = Email;
+                _editingUser.Role = Role;
+                _editingUser.Pin = Pin;
+                _editingUser.Password = Password;
+                _main.Db.SaveChanges();
+            }
+
             _main.CurrentView = new UserManagementViewModel(_main);
         }
     }

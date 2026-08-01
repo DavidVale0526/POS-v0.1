@@ -16,8 +16,17 @@ namespace POS_v0_1.ViewModels
         public ObservableCollection<RepairOrder> FilteredRepairs
         {
             get => _filteredRepairs;
-            set { _filteredRepairs = value; OnPropertyChanged(); }
+            set
+            {
+                _filteredRepairs = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(TotalRepairsAmount));
+                OnPropertyChanged(nameof(RepairsCount));
+            }
         }
+
+        public decimal TotalRepairsAmount => FilteredRepairs?.Sum(r => r.Total) ?? 0;
+        public int RepairsCount => FilteredRepairs?.Count ?? 0;
 
         private string _searchText;
         public string SearchText

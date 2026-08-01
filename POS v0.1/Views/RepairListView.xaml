@@ -60,6 +60,24 @@
                     </Button>
                 </Grid>
 
+                <!-- Summary Cards -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,25">
+                    <Border Background="#0d6efd" Width="200" Height="80" CornerRadius="8" Padding="15" Margin="0,0,15,0">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="TOTAL RECAUDADO" Foreground="White" FontSize="12" Opacity="0.8"/>
+                            <TextBlock FontWeight="Bold" FontSize="18" Foreground="White">
+                                <Run Text="C$ " /><Run Text="{Binding TotalRepairsAmount, Mode=OneWay, StringFormat=\{0:N2\}}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="#0dcaf0" Width="200" Height="80" CornerRadius="8" Padding="15">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="REPARACIONES" Foreground="White" FontSize="12" Opacity="0.8"/>
+                            <TextBlock Text="{Binding RepairsCount, Mode=OneWay}" FontWeight="Bold" FontSize="18" Foreground="White"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
                 <!-- Filters -->
                 <Border Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15" BorderBrush="#dee2e6" BorderThickness="1">
                     <Grid>

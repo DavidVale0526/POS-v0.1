@@ -11,13 +11,26 @@ namespace POS_v0_1.Views
             InitializeComponent();
         }
 
-        // Manejo manual de PasswordBox ya que no soporta Binding directo por seguridad
+        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is CreateUserViewModel vm)
+            {
+                if (sender is PasswordBox pb)
+                {
+                    if (pb.Name == "PassBox")
+                        vm.Password = pb.Password;
+                    else if (pb.Name == "ConfirmPassBox")
+                        vm.ConfirmPassword = pb.Password;
+                }
+            }
+        }
+
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
             if (DataContext is CreateUserViewModel vm)
             {
-                // En una app real usaríamos SecureString o un Helper
-                // Para este v0.1, sincronizaremos al hacer clic en Guardar o mediante eventos
+                PassBox.Password = vm.Password;
+                ConfirmPassBox.Password = vm.ConfirmPassword;
             }
         }
     }

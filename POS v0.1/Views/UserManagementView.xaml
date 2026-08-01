@@ -71,15 +71,23 @@
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="PIN" Binding="{Binding Pin}" Width="100"/>
                         <DataGridTextColumn Header="Fecha Registro" Binding="{Binding RegistrationDate, StringFormat='dd/MM/yyyy'}" Width="150"/>
-                        <DataGridTemplateColumn Header="Acciones" Width="100">
+                        <DataGridTemplateColumn Header="Acciones" Width="120">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Button Command="{Binding DataContext.DeleteUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                            CommandParameter="{Binding}"
-                                            Background="Transparent" BorderThickness="0" Foreground="#dc3545" HorizontalAlignment="Center">
-                                        <TextBlock Text="🗑" FontSize="16"/>
-                                    </Button>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Command="{Binding DataContext.EditUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Background="Transparent" BorderThickness="0" Foreground="#0d6efd" Margin="0,0,10,0">
+                                            <TextBlock Text="✎" FontSize="16"/>
+                                        </Button>
+                                        <Button Command="{Binding DataContext.DeleteUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Background="Transparent" BorderThickness="0" Foreground="#dc3545">
+                                            <TextBlock Text="🗑" FontSize="16"/>
+                                        </Button>
+                                    </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

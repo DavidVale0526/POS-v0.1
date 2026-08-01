@@ -14,7 +14,7 @@
         <!-- Header -->
         <Border Grid.Row="0" Background="White" Padding="15" Margin="0,0,0,10">
             <Grid>
-                <TextBlock Text="Nuevo Usuario" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Command="{Binding DataContext.SwitchUserCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                             Background="Transparent" BorderThickness="0" Cursor="Hand">
@@ -35,7 +35,7 @@
         <ScrollViewer Grid.Row="1">
             <StackPanel Margin="20" MaxWidth="600" HorizontalAlignment="Stretch">
                 <Grid Margin="0,0,0,20">
-                    <TextBlock Text="Crear Usuario" FontSize="22" FontWeight="Bold" Foreground="#333" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding Title}" FontSize="22" FontWeight="Bold" Foreground="#333" VerticalAlignment="Center"/>
                     <Button Content="← Volver" HorizontalAlignment="Right"
                             Background="Transparent" Foreground="#6c757d" BorderBrush="#6c757d"
                             Padding="15,5" BorderThickness="1"
@@ -67,10 +67,10 @@
 
                         <!-- Password -->
                         <TextBlock Text="Contraseña (Opcional si solo usará PIN)" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                        <PasswordBox x:Name="PassBox" Padding="10" Margin="0,0,0,15"/>
+                        <PasswordBox x:Name="PassBox" PasswordChanged="PasswordBox_PasswordChanged" Padding="10" Margin="0,0,0,15"/>
 
                         <TextBlock Text="Confirmar Contraseña" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                        <PasswordBox x:Name="ConfirmPassBox" Padding="10" Margin="0,0,0,25"/>
+                        <PasswordBox x:Name="ConfirmPassBox" PasswordChanged="PasswordBox_PasswordChanged" Padding="10" Margin="0,0,0,25"/>
 
                         <!-- Guardar Button -->
                         <Button Content="💾 Guardar Usuario"
