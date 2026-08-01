@@ -36,13 +36,59 @@ namespace POS_v0_1.ViewModels
 
         public ICommand ConsultCommand { get; }
         public ICommand PrintReportCommand { get; }
+        public ICommand ExportCommand { get; }
 
         public ReportsViewModel(MainViewModel main)
         {
             _main = main;
             ConsultCommand = new RelayCommand(o => CalculateSummary());
-            PrintReportCommand = new RelayCommand(o => { /* Logica de impresion */ });
+            PrintReportCommand = new RelayCommand(o =>
+            {
+                if (Summary == null) return;
+                var printer = new Services.TicketPrinter();
+                printer.PrintBusinessReport(Summary, SelectedPeriod);
+            });
+
+            ExportCommand = new RelayCommand(o => ExportToCsv());
             CalculateSummary();
+        }
+
+        private void ExportToCsv()
+        {
+            if (Summary == null) return;
+
+            try
+            {
+                var dialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Filter = "Archivo CSV (*.csv)|*.csv",
+                    FileName = $"Reporte_{SelectedPeriod}_{DateTime.Now:yyyyMMdd}"
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    var lines = new List<string>
+                    {
+                        "Concepto,Monto",
+                        $"Ventas Brutas,{Summary.GrossSales}",
+                        $"Costo de Ventas,{Summary.CostOfGoodsSold}",
+                        $"Utilidad Operativa Real,{Summary.RealOperatingProfit}",
+                        $"Flujo Recargas,{Summary.TopupFlow}",
+                        $"Reparaciones Cobradas,{Summary.DeliveredRepairsTotal}",
+                        $"Ingresos Extras,{Summary.OtherExtraIncome}",
+                        $"Gastos y Egresos,{Summary.ExpensesAndOutflows}",
+                        $"Utilidad Neta Total,{Summary.TotalNetProfit}",
+                        $"Efectivo en Mano,{Summary.ActualCashInHand}"
+                    };
+
+                    System.IO.File.WriteAllLines(dialog.FileName, lines, System.Text.Encoding.UTF8);
+                    System.Windows.MessageBox.Show("Reporte exportado exitosamente.", "Éxito", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show("Error al exportar: " + ex.Message);
+            }
         }
 
         private void CalculateSummary()
@@ -77,7 +123,10 @@ namespace POS_v0_1.ViewModels
             // 1. Resumen General
             summary.GrossSales = sales.Sum(s => s.Total);
             summary.PosSalesIncome = summary.GrossSales;
-            summary.CostOfGoodsSold = sales.Sum(s => s.Total * 0.7m); // Estimado al 70%
+
+            // Cálculo real del costo de venta basado en el costo histórico guardado en SaleItem
+            summary.CostOfGoodsSold = sales.SelectMany(s => s.Items).Sum(i => i.PurchasePrice * i.Quantity);
+
             summary.TopupFlow = topups.Sum(t => t.Amount);
             summary.TopupIncome = summary.TopupFlow;
 

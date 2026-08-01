@@ -109,6 +109,42 @@
 
             <!-- Right: Outflows and Net Summary -->
             <StackPanel Grid.Column="2">
+                <!-- Mini Gráfica de Rendimiento -->
+                <TextBlock Text="📊 RENDIMIENTO VISUAL" FontWeight="SemiBold" Foreground="#666" Margin="0,0,0,10"/>
+                <Border Background="#f1f5f9" Padding="15" CornerRadius="8" Margin="0,0,0,20">
+                    <StackPanel>
+                        <!-- Ingresos Bar -->
+                        <TextBlock Text="Ingresos Totales" FontSize="10" Margin="0,0,0,2"/>
+                        <Grid Height="12" Margin="0,0,0,10">
+                            <Border Background="#e2e8f0" CornerRadius="6"/>
+                            <Border Background="#198754" CornerRadius="6" HorizontalAlignment="Left">
+                                <Border.Width>
+                                    <MultiBinding Converter="{StaticResource PercentageToWidthConverter}" ConverterParameter="300">
+                                        <Binding Path="Summary.TotalGrossIncome"/>
+                                        <Binding Path="Summary.TotalGrossIncome"/> <!-- 100% reference -->
+                                    </MultiBinding>
+                                </Border.Width>
+                            </Border>
+                        </Grid>
+
+                        <!-- Egresos Bar -->
+                        <TextBlock Text="Egresos y Costos" FontSize="10" Margin="0,0,0,2"/>
+                        <Grid Height="12">
+                            <Border Background="#e2e8f0" CornerRadius="6"/>
+                            <Border Background="#dc3545" CornerRadius="6" HorizontalAlignment="Left">
+                                <Border.Width>
+                                    <MultiBinding Converter="{StaticResource PercentageToWidthConverter}" ConverterParameter="300">
+                                        <Binding Path="Summary.TotalOutflows"/>
+                                        <Binding Path="Summary.TotalGrossIncome"/>
+                                    </MultiBinding>
+                                </Border.Width>
+                            </Border>
+                        </Grid>
+
+                        <TextBlock Text="* Proporción visual de gastos vs ingresos" FontSize="9" Foreground="#64748b" Margin="0,8,0,0" FontStyle="Italic"/>
+                    </StackPanel>
+                </Border>
+
                 <Grid Margin="0,5">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="⊖" Foreground="#dc3545" Margin="0,0,10,0"/>

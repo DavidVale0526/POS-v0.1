@@ -14,4 +14,20 @@ namespace POS_v0_1.Models
         public string? Seller { get; set; } = "Usuario";
         public string? Notes { get; set; }
     }
+
+    public class TopupCompany
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } // TIGO, CLARO, etc.
+        public string? Color { get; set; } // For UI
+    }
+
+    public class TopupPreset
+    {
+        public int Id { get; set; }
+        public string CompanyName { get; set; }
+        public decimal Amount { get; set; }
+        public decimal Cost { get; set; }
+        public string DisplayLabel => $"{CompanyName} - C$ {Amount:N0}";
+    }
 }

@@ -11,6 +11,7 @@
             <converters:StatusToBrushConverter x:Key="StatusToBrushConverter"/>
             <converters:DifferenceToBrushConverter x:Key="DifferenceToBrushConverter"/>
             <converters:RoleToVisibilityConverter x:Key="RoleToVisibilityConverter"/>
+            <converters:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

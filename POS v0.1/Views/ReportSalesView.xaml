@@ -22,7 +22,24 @@
                           Background="Transparent" BorderThickness="0" RowHeaderWidth="0" GridLinesVisibility="None">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Producto" Binding="{Binding Name}" Width="*"/>
-                        <DataGridTextColumn Header="Cant." Binding="{Binding Quantity}" Width="80">
+                        <DataGridTemplateColumn Header="Tendencia" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid VerticalAlignment="Center" Margin="5,0">
+                                        <Border Background="#f1f5f9" Height="6" CornerRadius="3"/>
+                                        <Border Background="#3b82f6" Height="6" CornerRadius="3" HorizontalAlignment="Left">
+                                            <Border.Width>
+                                                <MultiBinding Converter="{StaticResource PercentageToWidthConverter}" ConverterParameter="90">
+                                                    <Binding Path="TotalSales"/>
+                                                    <Binding Path="DataContext.Summary.GrossSales" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                                </MultiBinding>
+                                            </Border.Width>
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Cant." Binding="{Binding Quantity}" Width="60">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="HorizontalAlignment" Value="Center"/>

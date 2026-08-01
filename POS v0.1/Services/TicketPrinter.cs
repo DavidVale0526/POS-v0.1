@@ -16,7 +16,9 @@ namespace POS_v0_1.Services
     {
         private readonly BusinessConfiguration _config;
         private Sale _sale;
+        private BusinessSummary _report;
         private bool _isReprint;
+        private string _printMode = "Sale"; // "Sale", "Repair", "Report"
 
         public TicketPrinter()
         {
@@ -32,6 +34,7 @@ namespace POS_v0_1.Services
             {
                 _sale = sale;
                 _isReprint = isReprint;
+                _printMode = "Sale";
 
                 PrintDocument pd = new PrintDocument();
                 int paperWidth = _config.TicketFormat == "80mm" ? 315 : 220;
@@ -44,7 +47,7 @@ namespace POS_v0_1.Services
 
                 if (showPreview)
                 {
-                    ShowWpfPreview(pd, paperWidth, calculatedHeight);
+                    ShowWpfPreview(pd, paperWidth, calculatedHeight, $"Ticket #{_sale.Id}");
                 }
                 else
                 {
@@ -57,7 +60,37 @@ namespace POS_v0_1.Services
             }
         }
 
-        private void ShowWpfPreview(PrintDocument pd, int width, int height)
+        public void PrintBusinessReport(BusinessSummary report, string periodName, bool showPreview = true)
+        {
+            try
+            {
+                _report = report;
+                _printMode = "Report";
+
+                PrintDocument pd = new PrintDocument();
+                int paperWidth = _config.TicketFormat == "80mm" ? 315 : 220;
+                int calculatedHeight = 800; // Reportes son largos
+
+                pd.DefaultPageSettings.PaperSize = new PaperSize("Report", paperWidth, calculatedHeight);
+                pd.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
+                pd.PrintPage += new PrintPageEventHandler(PrintPageEvent);
+
+                if (showPreview)
+                {
+                    ShowWpfPreview(pd, paperWidth, calculatedHeight, $"Reporte - {periodName}");
+                }
+                else
+                {
+                    pd.Print();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show("Error al imprimir reporte: " + ex.Message);
+            }
+        }
+
+        private void ShowWpfPreview(PrintDocument pd, int width, int height, string title)
         {
             int scale = 2;
             int bmpWidth = width * scale;
@@ -80,7 +113,7 @@ namespace POS_v0_1.Services
 
                 var previewWindow = new Window
                 {
-                    Title = $"Vista Previa - Ticket #{_sale.Id}",
+                    Title = $"Vista Previa - {title}",
                     Width = 440,
                     Height = 650,
                     WindowStartupLocation = WindowStartupLocation.CenterScreen,
@@ -179,6 +212,86 @@ namespace POS_v0_1.Services
         }
 
         private void PrintPageEvent(object sender, PrintPageEventArgs e)
+        {
+            if (_printMode == "Report")
+            {
+                PrintReportPage(e);
+            }
+            else
+            {
+                PrintSalePage(e);
+            }
+        }
+
+        private void PrintReportPage(PrintPageEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            bool is80mm = _config.TicketFormat == "80mm";
+            float paperWidth = is80mm ? 315f : 220f;
+            float margin = 6f;
+
+            System.Drawing.Font fontRegular = new System.Drawing.Font("Consolas", 7.5f, System.Drawing.FontStyle.Regular);
+            System.Drawing.Font fontBold = new System.Drawing.Font("Consolas", 8f, System.Drawing.FontStyle.Bold);
+            System.Drawing.Font fontTitle = new System.Drawing.Font("Consolas", 10.5f, System.Drawing.FontStyle.Bold);
+            System.Drawing.Font fontHeader = new System.Drawing.Font("Consolas", 8f, System.Drawing.FontStyle.Bold);
+
+            float y = 10f;
+            StringFormat center = new StringFormat { Alignment = StringAlignment.Center };
+            StringFormat right = new StringFormat { Alignment = StringAlignment.Far };
+            string dashes = new string('-', is80mm ? 44 : 31);
+
+            g.DrawString("REPORTE FINANCIERO", fontTitle, System.Drawing.Brushes.Black, new RectangleF(0, y, paperWidth, 22), center);
+            y += 20f;
+            g.DrawString(DateTime.Now.ToString("dd/MM/yyyy HH:mm"), fontRegular, System.Drawing.Brushes.Black, new RectangleF(0, y, paperWidth, 18), center);
+            y += 20f;
+
+            g.DrawString(dashes, fontRegular, System.Drawing.Brushes.Black, margin, y);
+            y += 14f;
+
+            g.DrawString("INGRESOS", fontBold, System.Drawing.Brushes.Black, margin, y);
+            y += 14f;
+            g.DrawString("Ventas POS:", fontRegular, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.PosSalesIncome.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 14f;
+            g.DrawString("Recargas:", fontRegular, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.TopupIncome.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 14f;
+            g.DrawString("Reparaciones:", fontRegular, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.RepairIncome.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 14f;
+            g.DrawString("Otros:", fontRegular, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.OtherExtraIncome.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 14f;
+            g.DrawString("TOTAL INGRESOS:", fontBold, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.TotalGrossIncome.ToString("N2"), fontBold, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 20f;
+
+            g.DrawString("EGRESOS Y COSTOS", fontBold, System.Drawing.Brushes.Black, margin, y);
+            y += 14f;
+            g.DrawString("Costo de Ventas:", fontRegular, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.CostOfGoodsSold.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 14f;
+            g.DrawString("Gastos/Egresos:", fontRegular, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.ExpensesAndOutflows.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 14f;
+            g.DrawString("TOTAL EGRESOS:", fontBold, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.TotalOutflows.ToString("N2"), fontBold, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 20f;
+
+            g.DrawString(dashes, fontRegular, System.Drawing.Brushes.Black, margin, y);
+            y += 14f;
+            g.DrawString("UTILIDAD NETA:", fontTitle, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.TotalNetProfit.ToString("N2"), fontTitle, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 25f;
+
+            g.DrawString("EFECTIVO EN MANO:", fontBold, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.ActualCashInHand.ToString("N2"), fontBold, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 20f;
+
+            g.DrawString("--- Fin de Reporte ---", fontRegular, System.Drawing.Brushes.Black, new RectangleF(0, y, paperWidth, 20), center);
+        }
+
+        private void PrintSalePage(PrintPageEventArgs e)
         {
             Graphics g = e.Graphics;
             bool is80mm = _config.TicketFormat == "80mm";

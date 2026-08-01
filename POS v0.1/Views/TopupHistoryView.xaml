@@ -48,6 +48,25 @@
                                 <TextBlock Text="{Binding TotalSoldToday, Mode=OneWay, StringFormat='C$ \{0:N2\}'}" Foreground="White" FontSize="18" FontWeight="Bold"/>
                             </StackPanel>
                         </Border>
+                        <Button Content="⚙ Gestionar Compañías"
+                                Background="Transparent" Foreground="#666" Padding="15,8"
+                                BorderThickness="1" BorderBrush="#ccc" FontWeight="SemiBold"
+                                Margin="0,0,10,0"
+                                Command="{Binding ManageCompaniesCommand}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="5">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                         <Button Content="📲 Nueva Recarga"
                                 Background="#0d6efd" Foreground="White" Padding="15,8"
                                 BorderThickness="0" FontWeight="SemiBold"

@@ -9,6 +9,9 @@ namespace POS_v0_1.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            if (value == null || value == System.Windows.DependencyProperty.UnsetValue)
+                return Brushes.Black;
+
             if (value is decimal diff)
             {
                 if (diff == 0) return Brushes.Black;

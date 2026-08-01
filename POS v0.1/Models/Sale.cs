@@ -29,6 +29,7 @@ namespace POS_v0_1.Models
         public string? ProductName { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
+        public decimal PurchasePrice { get; set; } // Costo al momento de la venta
         public decimal Discount { get; set; }
         public decimal Subtotal => (Quantity * UnitPrice) - Discount;
     }

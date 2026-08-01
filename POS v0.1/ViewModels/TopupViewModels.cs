@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
@@ -37,6 +38,7 @@ namespace POS_v0_1.ViewModels
 
         public ICommand FilterCommand { get; }
         public ICommand ShowCreateTopupCommand { get; }
+        public ICommand ManageCompaniesCommand { get; }
 
         public TopupHistoryViewModel(MainViewModel main)
         {
@@ -50,6 +52,11 @@ namespace POS_v0_1.ViewModels
 
             FilterCommand = new RelayCommand(o => ApplyFilter());
             ShowCreateTopupCommand = new RelayCommand(o => _main.CurrentView = new CreateTopupViewModel(_main));
+            ManageCompaniesCommand = new RelayCommand(o =>
+            {
+                var dialog = new Views.ManageTopupCompaniesDialog(_main);
+                dialog.ShowDialog();
+            });
         }
 
         private void ApplyFilter()
@@ -60,7 +67,7 @@ namespace POS_v0_1.ViewModels
             {
                 filtered = filtered.Where(t =>
                     t.PhoneNumber.Contains(SearchText) ||
-                    t.Company.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+                    (t.Company != null && t.Company.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
             }
 
             if (SelectedDate.HasValue)
@@ -76,12 +83,23 @@ namespace POS_v0_1.ViewModels
     {
         private readonly MainViewModel _main;
 
-        private string _selectedCompany = "TIGO";
-        public string SelectedCompany
+        public ObservableCollection<TopupCompany> Companies => _main.TopupCompanies;
+        public ObservableCollection<TopupPreset> Presets => _main.TopupPresets;
+
+        private TopupCompany _selectedCompany;
+        public TopupCompany SelectedCompany
         {
             get => _selectedCompany;
-            set { _selectedCompany = value; OnPropertyChanged(); }
+            set
+            {
+                _selectedCompany = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(FilteredPresets));
+            }
         }
+
+        public IEnumerable<TopupPreset> FilteredPresets =>
+            Presets.Where(p => p.CompanyName == SelectedCompany?.Name);
 
         private string _phoneNumber;
         public string PhoneNumber
@@ -111,30 +129,38 @@ namespace POS_v0_1.ViewModels
             set { _notes = value; OnPropertyChanged(); }
         }
 
-        public ICommand SelectTigoCommand { get; }
-        public ICommand SelectClaroCommand { get; }
         public ICommand SaveCommand { get; }
         public ICommand BackCommand { get; }
+        public ICommand ApplyPresetCommand { get; }
 
         public CreateTopupViewModel(MainViewModel main)
         {
             _main = main;
 
-            SelectTigoCommand = new RelayCommand(o => SelectedCompany = "TIGO");
-            SelectClaroCommand = new RelayCommand(o => SelectedCompany = "CLARO");
+            SelectedCompany = _main.TopupCompanies.FirstOrDefault();
+
+            ApplyPresetCommand = new RelayCommand(o =>
+            {
+                if (o is TopupPreset preset)
+                {
+                    Amount = preset.Amount;
+                    Cost = preset.Cost;
+                }
+            });
 
             SaveCommand = new RelayCommand(o =>
             {
-                if (string.IsNullOrWhiteSpace(PhoneNumber) || Amount <= 0) return;
+                if (SelectedCompany == null || string.IsNullOrWhiteSpace(PhoneNumber) || Amount <= 0) return;
 
                 var topup = new Topup
                 {
                     DateTime = DateTime.Now,
-                    Company = SelectedCompany,
+                    Company = SelectedCompany.Name,
                     PhoneNumber = PhoneNumber,
                     Amount = Amount,
                     Cost = Cost,
-                    Notes = Notes
+                    Notes = Notes,
+                    Seller = _main.CurrentUser?.Name ?? "Usuario"
                 };
 
                 _main.Db.Topups.Add(topup);

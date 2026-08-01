@@ -45,6 +45,8 @@ namespace POS_v0_1.ViewModels
         public ObservableCollection<Purchase> Purchases { get; set; } = new ObservableCollection<Purchase>();
         public ObservableCollection<Sale> Sales { get; set; } = new ObservableCollection<Sale>();
         public ObservableCollection<Topup> Topups { get; set; } = new ObservableCollection<Topup>();
+        public ObservableCollection<TopupCompany> TopupCompanies { get; set; } = new ObservableCollection<TopupCompany>();
+        public ObservableCollection<TopupPreset> TopupPresets { get; set; } = new ObservableCollection<TopupPreset>();
         public ObservableCollection<RepairOrder> Repairs { get; set; } = new ObservableCollection<RepairOrder>();
         public ObservableCollection<RepairCategory> RepairCategories { get; set; } = new ObservableCollection<RepairCategory>();
         public ObservableCollection<RepairType> RepairTypes { get; set; } = new ObservableCollection<RepairType>();
@@ -152,7 +154,53 @@ namespace POS_v0_1.ViewModels
             AddColumnIfMissing("Sales", "IsCancelled", "INTEGER DEFAULT 0");
             AddColumnIfMissing("Sales", "CancellationReason", "TEXT");
             AddColumnIfMissing("SaleItems", "Discount", "DECIMAL DEFAULT 0");
+            AddColumnIfMissing("SaleItems", "PurchasePrice", "DECIMAL DEFAULT 0");
             AddColumnIfMissing("Purchases", "Status", "TEXT DEFAULT 'Recibida'");
+
+            // Migración: Llenar PurchasePrice para ventas viejas que no lo tienen (usando el costo actual del producto)
+            try
+            {
+                Db.Database.ExecuteSqlRaw(@"
+                    UPDATE SaleItems
+                    SET PurchasePrice = (SELECT PurchasePrice FROM Products WHERE Products.Id = SaleItems.ProductId)
+                    WHERE PurchasePrice = 0 OR PurchasePrice IS NULL
+                ");
+
+                // Asegurar que las nuevas tablas de la auditoría existan
+                Db.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS RepairParts (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        RepairOrderId INTEGER NOT NULL,
+                        ProductId INTEGER NOT NULL,
+                        ProductName TEXT,
+                        Quantity INTEGER NOT NULL,
+                        UnitPrice DECIMAL NOT NULL
+                    );
+
+                    CREATE TABLE IF NOT EXISTS CreditNotes (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        SaleId INTEGER NOT NULL,
+                        Date TEXT NOT NULL,
+                        Amount DECIMAL NOT NULL,
+                        Reason TEXT,
+                        CustomerName TEXT
+                    );
+
+                    CREATE TABLE IF NOT EXISTS TopupCompanies (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Name TEXT NOT NULL,
+                        Color TEXT
+                    );
+
+                    CREATE TABLE IF NOT EXISTS TopupPresets (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        CompanyName TEXT NOT NULL,
+                        Amount DECIMAL NOT NULL,
+                        Cost DECIMAL NOT NULL
+                    );
+                ");
+            }
+            catch { }
         }
 
         private void AddColumnIfMissing(string tableName, string columnName, string columnDefinition)
@@ -237,6 +285,37 @@ namespace POS_v0_1.ViewModels
             foreach (var client in Db.Clients.ToList()) Clients.Add(client);
             foreach (var repair in Db.Repairs.ToList()) Repairs.Add(repair);
             foreach (var topup in Db.Topups.ToList()) Topups.Add(topup);
+
+            // Load Topups Companies/Presets logic
+            try
+            {
+                var dbTopupCos = Db.TopupCompanies.ToList();
+                if (!dbTopupCos.Any())
+                {
+                    Db.TopupCompanies.AddRange(
+                        new TopupCompany { Name = "TIGO", Color = "#0033A0" },
+                        new TopupCompany { Name = "CLARO", Color = "#EF3340" }
+                    );
+                    Db.SaveChanges();
+                    dbTopupCos = Db.TopupCompanies.ToList();
+                }
+                foreach (var co in dbTopupCos) TopupCompanies.Add(co);
+
+                var dbPresets = Db.TopupPresets.ToList();
+                if (!dbPresets.Any() && TopupCompanies.Any())
+                {
+                    Db.TopupPresets.AddRange(
+                        new TopupPreset { CompanyName = "TIGO", Amount = 10, Cost = 9.5m },
+                        new TopupPreset { CompanyName = "TIGO", Amount = 20, Cost = 19m },
+                        new TopupPreset { CompanyName = "CLARO", Amount = 10, Cost = 9.5m }
+                    );
+                    Db.SaveChanges();
+                    dbPresets = Db.TopupPresets.ToList();
+                }
+                foreach (var preset in dbPresets) TopupPresets.Add(preset);
+            }
+            catch { }
+
             foreach (var movement in Db.FinancialMovements.ToList()) FinancialMovements.Add(movement);
             foreach (var count in Db.CashCounts.Include(c => c.Details).ToList()) CashCounts.Add(count);
             foreach (var bank in Db.BankTransactions.ToList()) BankTransactions.Add(bank);
@@ -721,6 +800,7 @@ namespace POS_v0_1.ViewModels
                         ProductName = i.Product.Name,
                         Quantity = i.Quantity,
                         UnitPrice = i.Product.SellingPrice,
+                        PurchasePrice = i.Product.PurchasePrice, // Guardar costo histórico
                         Discount = i.Discount
                     }))
                 };
