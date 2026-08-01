@@ -15,11 +15,19 @@ namespace POS_v0_1.ViewModels
 
         public ICommand ShowCreatePurchaseCommand { get; }
         public ICommand ShowPurchaseDetailCommand { get; }
+        public ICommand ShowEditPurchaseCommand { get; }
 
         public PurchasesViewModel(MainViewModel main)
         {
             _main = main;
             ShowCreatePurchaseCommand = new RelayCommand(o => _main.CurrentView = new CreatePurchaseViewModel(_main));
+            ShowEditPurchaseCommand = new RelayCommand(o =>
+            {
+                if (o is Purchase p)
+                {
+                    _main.CurrentView = new CreatePurchaseViewModel(_main, p);
+                }
+            });
             ShowPurchaseDetailCommand = new RelayCommand(o =>
             {
                 if (o is Purchase p)
@@ -56,9 +64,27 @@ namespace POS_v0_1.ViewModels
     public class CreatePurchaseViewModel : BaseViewModel
     {
         private readonly MainViewModel _main;
+        private Purchase? _editingPurchase;
 
         public ObservableCollection<Provider> Providers => _main.Providers;
         public ObservableCollection<Product> Products => _main.Products;
+        public ObservableCollection<FinancialSource> FinancialSources => _main.FinancialSources;
+
+        public ObservableCollection<string> Statuses { get; } = new ObservableCollection<string> { "Pendiente", "Recibida", "Parcial" };
+
+        private string _selectedStatus = "Recibida";
+        public string SelectedStatus
+        {
+            get => _selectedStatus;
+            set { _selectedStatus = value; OnPropertyChanged(); }
+        }
+
+        private FinancialSource? _selectedFinancialSource;
+        public FinancialSource? SelectedFinancialSource
+        {
+            get => _selectedFinancialSource;
+            set { _selectedFinancialSource = value; OnPropertyChanged(); }
+        }
 
         private Provider _selectedProvider;
         public Provider SelectedProvider
@@ -144,9 +170,33 @@ namespace POS_v0_1.ViewModels
         public ICommand BackCommand { get; }
         public ICommand ShowQuickCreateProductCommand { get; }
 
-        public CreatePurchaseViewModel(MainViewModel main)
+        public CreatePurchaseViewModel(MainViewModel main, Purchase? purchaseToEdit = null)
         {
             _main = main;
+            _editingPurchase = purchaseToEdit;
+
+            // default source
+            SelectedFinancialSource = _main.FinancialSources.FirstOrDefault();
+
+            if (_editingPurchase != null)
+            {
+                SelectedProvider = _main.Providers.FirstOrDefault(p => p.Name == _editingPurchase.ProviderName);
+                InvoiceNumber = _editingPurchase.InvoiceNumber;
+                PurchaseDate = _editingPurchase.Date;
+                Notes = _editingPurchase.Notes;
+                SelectedStatus = _editingPurchase.Status;
+                foreach (var item in _editingPurchase.Items)
+                {
+                    Items.Add(new PurchaseDetail
+                    {
+                        Id = item.Id,
+                        ProductId = item.ProductId,
+                        ProductName = item.ProductName,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.UnitPrice
+                    });
+                }
+            }
 
             // keep track of item changes so Total updates when Quantity or UnitPrice change
             Items.CollectionChanged += Items_CollectionChanged;
@@ -193,29 +243,74 @@ namespace POS_v0_1.ViewModels
             {
                 if (SelectedProvider == null || !Items.Any()) return;
 
-                var purchase = new Purchase
+                if (_editingPurchase != null)
                 {
-                    Date = PurchaseDate,
-                    ProviderName = SelectedProvider.Name,
-                    InvoiceNumber = InvoiceNumber,
-                    Notes = Notes,
-                    Total = Total,
-                    Items = new ObservableCollection<PurchaseDetail>(Items)
-                };
+                    // Revertir stock previo si estaba Recibida o Parcial
+                    foreach (var oldItem in _editingPurchase.Items)
+                    {
+                        var prod = _main.Db.Products.Find(oldItem.ProductId);
+                        if (prod != null) prod.Stock -= oldItem.Quantity;
+                    }
 
+                    _editingPurchase.Date = PurchaseDate;
+                    _editingPurchase.ProviderName = SelectedProvider.Name;
+                    _editingPurchase.InvoiceNumber = InvoiceNumber;
+                    _editingPurchase.Notes = Notes;
+                    _editingPurchase.Total = Total;
+                    _editingPurchase.Status = SelectedStatus;
+
+                    // Actualizar items (simplificado: borrar y agregar)
+                    _main.Db.RemoveRange(_editingPurchase.Items);
+                    _editingPurchase.Items = new ObservableCollection<PurchaseDetail>(Items);
+                }
+                else
+                {
+                    var purchase = new Purchase
+                    {
+                        Date = PurchaseDate,
+                        ProviderName = SelectedProvider.Name,
+                        InvoiceNumber = InvoiceNumber,
+                        Notes = Notes,
+                        Total = Total,
+                        Status = SelectedStatus,
+                        Items = new ObservableCollection<PurchaseDetail>(Items),
+                        RegisteredBy = _main.CurrentUser?.Name ?? "Usuario"
+                    };
+                    _main.Db.Purchases.Add(purchase);
+                    _main.Purchases.Add(purchase);
+                }
+
+                // Aplicar nuevo stock y actualizar precios de compra
                 foreach (var item in Items)
                 {
                     var product = _main.Db.Products.FirstOrDefault(p => p.Id == item.ProductId);
                     if (product != null)
                     {
                         product.Stock += item.Quantity;
+                        product.PurchasePrice = item.UnitPrice; // Audit: Actualización de precio de compra
                     }
                 }
 
-                _main.Db.Purchases.Add(purchase);
-                _main.Db.SaveChanges();
+                // Audit: Registro en gastos (Movimiento financiero automático)
+                if (SelectedFinancialSource != null && Total > 0)
+                {
+                    var movement = new FinancialMovement
+                    {
+                        Date = DateTime.Now,
+                        Type = "Gasto",
+                        Concept = $"Compra a proveedor: {SelectedProvider.Name} (Fact: {InvoiceNumber})",
+                        Source = SelectedFinancialSource.Name,
+                        Amount = Total,
+                        RegisteredBy = _main.CurrentUser?.Name ?? "Usuario",
+                        Reference = InvoiceNumber
+                    };
+                    _main.Db.FinancialMovements.Add(movement);
+                    _main.FinancialMovements.Add(movement);
 
-                _main.Purchases.Add(purchase);
+                    SelectedFinancialSource.MovementCount++;
+                }
+
+                _main.Db.SaveChanges();
                 _main.CurrentView = new PurchasesViewModel(_main);
             });
 

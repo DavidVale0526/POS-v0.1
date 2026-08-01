@@ -14,6 +14,11 @@ namespace POS_v0_1.Models
         public decimal Discount { get; set; }
         public decimal Iva { get; set; }
         public decimal Total { get; set; }
+        public string PaymentMethod { get; set; } = "Efectivo";
+        public decimal ReceivedAmount { get; set; }
+        public decimal ChangeAmount { get; set; }
+        public bool IsCancelled { get; set; }
+        public string? CancellationReason { get; set; }
         public ObservableCollection<SaleItem> Items { get; set; } = new ObservableCollection<SaleItem>();
     }
 
@@ -24,6 +29,7 @@ namespace POS_v0_1.Models
         public string? ProductName { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
-        public decimal Subtotal => Quantity * UnitPrice;
+        public decimal Discount { get; set; }
+        public decimal Subtotal => (Quantity * UnitPrice) - Discount;
     }
 }

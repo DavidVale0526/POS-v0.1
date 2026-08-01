@@ -24,6 +24,7 @@ namespace POS_v0_1.Data
         public DbSet<BankTransaction> BankTransactions { get; set; }
         public DbSet<CashSession> CashSessions { get; set; }
         public DbSet<BusinessConfiguration> BusinessConfigs { get; set; }
+        public DbSet<CreditNote> CreditNotes { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

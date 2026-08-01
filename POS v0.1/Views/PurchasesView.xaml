@@ -62,14 +62,59 @@
                 <DataGridTextColumn Header="Fecha" Binding="{Binding Date, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="150"/>
                 <DataGridTextColumn Header="Proveedor" Binding="{Binding ProviderName}" Width="*"/>
                 <DataGridTextColumn Header="Factura" Binding="{Binding InvoiceNumber}" Width="150"/>
-                <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=C2}" Width="120"/>
-                <DataGridTextColumn Header="Registrado por" Binding="{Binding RegisteredBy}" Width="150"/>
-                <DataGridTemplateColumn Header="Acciones" Width="100">
+                <DataGridTemplateColumn Header="Estado" Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Content="👁" HorizontalAlignment="Center" Padding="5,2" Background="Transparent" BorderThickness="0"
-                                    Command="{Binding DataContext.ShowPurchaseDetailCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                    CommandParameter="{Binding}"/>
+                            <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Status}" Value="Recibida">
+                                                <Setter Property="Background" Value="#d1e7dd"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Status}" Value="Pendiente">
+                                                <Setter Property="Background" Value="#fff3cd"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Status}" Value="Parcial">
+                                                <Setter Property="Background" Value="#cfe2ff"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="SemiBold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Status}" Value="Recibida">
+                                                    <Setter Property="Foreground" Value="#0f5132"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Status}" Value="Pendiente">
+                                                    <Setter Property="Foreground" Value="#664d03"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Status}" Value="Parcial">
+                                                    <Setter Property="Foreground" Value="#084298"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=C2}" Width="120"/>
+                <DataGridTextColumn Header="Registrado por" Binding="{Binding RegisteredBy}" Width="150"/>
+                <DataGridTemplateColumn Header="Acciones" Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Content="👁" Padding="5,2" Background="Transparent" BorderThickness="0"
+                                        Command="{Binding DataContext.ShowPurchaseDetailCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"/>
+                                <Button Content="✏️" Padding="5,2" Background="Transparent" BorderThickness="0" Margin="5,0,0,0"
+                                        Command="{Binding DataContext.ShowEditPurchaseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"/>
+                            </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

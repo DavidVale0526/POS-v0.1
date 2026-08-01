@@ -121,6 +121,7 @@ namespace POS_v0_1.ViewModels
             // Initialize Database
             // Db.Database.EnsureDeleted(); // Comentado para evitar pérdida de datos en cada inicio
             Db.Database.EnsureCreated();
+            ApplySchemaUpdates();
 
             LoadDataFromDatabase();
 
@@ -140,6 +141,35 @@ namespace POS_v0_1.ViewModels
             IsAuthenticated = false;
             CurrentView = new LoginViewModel(this);
             */
+        }
+
+        private void ApplySchemaUpdates()
+        {
+            // SQLite no soporta 'ADD COLUMN IF NOT EXISTS', así que verificamos la existencia manualmente.
+            AddColumnIfMissing("Sales", "PaymentMethod", "TEXT DEFAULT 'Efectivo'");
+            AddColumnIfMissing("Sales", "ReceivedAmount", "DECIMAL DEFAULT 0");
+            AddColumnIfMissing("Sales", "ChangeAmount", "DECIMAL DEFAULT 0");
+            AddColumnIfMissing("Sales", "IsCancelled", "INTEGER DEFAULT 0");
+            AddColumnIfMissing("Sales", "CancellationReason", "TEXT");
+            AddColumnIfMissing("SaleItems", "Discount", "DECIMAL DEFAULT 0");
+            AddColumnIfMissing("Purchases", "Status", "TEXT DEFAULT 'Recibida'");
+        }
+
+        private void AddColumnIfMissing(string tableName, string columnName, string columnDefinition)
+        {
+            try
+            {
+                // PRAGMA table_info devuelve información sobre las columnas de la tabla
+                var columns = Db.Database.SqlQueryRaw<string>($"SELECT name FROM pragma_table_info('{tableName}')").ToList();
+                if (!columns.Contains(columnName, StringComparer.OrdinalIgnoreCase))
+                {
+                    Db.Database.ExecuteSqlRaw($"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDefinition}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error actualizando esquema ({tableName}.{columnName}): {ex.Message}");
+            }
         }
 
         private void LoadDataFromDatabase()
@@ -479,8 +509,66 @@ namespace POS_v0_1.ViewModels
             }
         }
 
-        public decimal Iva => Math.Round((Subtotal - Discount) * (_taxRate / 100m), 2);
-        public decimal Total => Subtotal - Discount + Iva;
+        private bool _isPercentageDiscount;
+        public bool IsPercentageDiscount
+        {
+            get => _isPercentageDiscount;
+            set
+            {
+                _isPercentageDiscount = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(Iva));
+                OnPropertyChanged(nameof(Total));
+            }
+        }
+
+        public decimal DiscountValue => IsPercentageDiscount ? (Subtotal * (Discount / 100m)) : Discount;
+
+        public decimal Iva => Math.Round((Subtotal - DiscountValue) * (_taxRate / 100m), 2);
+        public decimal Total => Subtotal - DiscountValue + Iva;
+
+        public ObservableCollection<Client> Clients => _main.Clients;
+
+        private Client? _selectedClient;
+        public Client? _previousSelectedClient;
+        public Client? SelectedClient
+        {
+            get => _selectedClient;
+            set
+            {
+                _selectedClient = value;
+                OnPropertyChanged();
+                if (value != null) CustomerNameText = value.Name;
+            }
+        }
+
+        private string _customerNameText = "Consumidor Final";
+        public string CustomerNameText
+        {
+            get => _customerNameText;
+            set { _customerNameText = value; OnPropertyChanged(); }
+        }
+
+        private string _paymentMethod = "Efectivo";
+        public string PaymentMethod
+        {
+            get => _paymentMethod;
+            set { _paymentMethod = value; OnPropertyChanged(); }
+        }
+
+        private decimal _receivedAmount;
+        public decimal ReceivedAmount
+        {
+            get => _receivedAmount;
+            set
+            {
+                _receivedAmount = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ChangeAmount));
+            }
+        }
+
+        public decimal ChangeAmount => Math.Max(0, ReceivedAmount - Total);
 
         private string _sellerPin;
         public string SellerPin
@@ -516,6 +604,7 @@ namespace POS_v0_1.ViewModels
         public ICommand ClearCartCommand { get; }
         public ICommand SellCommand { get; }
         public ICommand CloseCashCommand { get; }
+        public ICommand QuickAddClientCommand { get; }
 
         public PosViewModel(MainViewModel main)
         {
@@ -545,7 +634,17 @@ namespace POS_v0_1.ViewModels
 
             IncreaseQuantityCommand = new RelayCommand(o =>
             {
-                if (o is CartItem item) item.Quantity++;
+                if (o is CartItem item)
+                {
+                    if (item.Product.Stock > item.Quantity)
+                    {
+                        item.Quantity++;
+                    }
+                    else
+                    {
+                        System.Windows.MessageBox.Show($"Stock insuficiente. Solo quedan {item.Product.Stock} unidades.", "Aviso", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    }
+                }
             });
 
             // Expose a command that can be used by the view to process a scanned barcode string
@@ -566,13 +665,34 @@ namespace POS_v0_1.ViewModels
             {
                 Cart.Clear();
                 Discount = 0;
+                CustomerNameText = "Consumidor Final";
+                SelectedClient = null;
                 OnPropertyChanged(nameof(Subtotal));
                 OnPropertyChanged(nameof(Total));
+            });
+
+            QuickAddClientCommand = new RelayCommand(o =>
+            {
+                var dialog = new Views.QuickClientDialog();
+                if (dialog.ShowDialog() == true)
+                {
+                    var client = dialog.Client;
+                    _main.Db.Clients.Add(client);
+                    _main.Db.SaveChanges();
+                    _main.Clients.Add(client);
+                    SelectedClient = client;
+                }
             });
 
             SellCommand = new RelayCommand(o =>
             {
                 if (!Cart.Any()) return;
+
+                if (PaymentMethod == "Efectivo" && ReceivedAmount < Total)
+                {
+                    System.Windows.MessageBox.Show("El monto recibido es menor al total.", "Error de Pago", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
 
                 // Volver a la búsqueda por el PIN del cuadro de texto (sin diálogo)
                 var pinActual = SellerPin?.Trim();
@@ -587,16 +707,21 @@ namespace POS_v0_1.ViewModels
                     Date = DateTime.Now,
                     SellerPin = pinFinal,
                     SellerName = nombreFinal,
+                    CustomerName = string.IsNullOrWhiteSpace(CustomerNameText) ? "Consumidor Final" : CustomerNameText,
                     Subtotal = Subtotal,
-                    Discount = Discount,
+                    Discount = DiscountValue,
                     Iva = Iva,
                     Total = Total,
+                    PaymentMethod = PaymentMethod,
+                    ReceivedAmount = ReceivedAmount,
+                    ChangeAmount = ChangeAmount,
                     Items = new ObservableCollection<SaleItem>(Cart.Select(i => new SaleItem
                     {
                         ProductId = i.Product.Id,
                         ProductName = i.Product.Name,
                         Quantity = i.Quantity,
-                        UnitPrice = i.Product.SellingPrice
+                        UnitPrice = i.Product.SellingPrice,
+                        Discount = i.Discount
                     }))
                 };
 
@@ -604,7 +729,12 @@ namespace POS_v0_1.ViewModels
                 foreach (var item in Cart)
                 {
                     var dbProd = _main.Db.Products.Find(item.Product.Id);
-                    if (dbProd != null) dbProd.Stock -= item.Quantity;
+                    if (dbProd != null)
+                    {
+                        dbProd.Stock -= item.Quantity;
+                        // Actualizar en memoria para la UI
+                        item.Product.Stock = dbProd.Stock;
+                    }
                 }
 
                 _main.Db.Sales.Add(newSale);
@@ -624,6 +754,11 @@ namespace POS_v0_1.ViewModels
                 _main.Sales.Add(newSale);
                 _main.Session.SalesTotal += Total;
                 SellerPin = string.Empty;
+                ReceivedAmount = 0;
+                Discount = 0;
+                IsPercentageDiscount = false;
+                SelectedClient = null;
+                CustomerNameText = "Consumidor Final";
                 ClearCartCommand.Execute(null);
             });
 
@@ -652,10 +787,25 @@ namespace POS_v0_1.ViewModels
         public void AddProductToCart(Product prod, int quantity = 1)
         {
             if (prod == null) return;
+
+            // Validación de stock
+            if (prod.Stock <= 0)
+            {
+                System.Windows.MessageBox.Show("Producto agotado.", "Aviso", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
             var existing = Cart.FirstOrDefault(i => i.Product.Id == prod.Id);
             if (existing != null)
             {
-                existing.Quantity += quantity;
+                if (prod.Stock > existing.Quantity)
+                {
+                    existing.Quantity += quantity;
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show($"No hay suficiente stock. Disponible: {prod.Stock}", "Aviso", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                }
             }
             else
             {

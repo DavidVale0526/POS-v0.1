@@ -156,14 +156,26 @@
                                             <TextBlock Grid.Column="1" Text="{Binding Date, StringFormat='\{0:dd/MM/yyyy HH:mm\}'}" VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="2" Text="{Binding CustomerName}" VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="3" Text="{Binding SellerName}" VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="4" Text="Efectivo" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="4" Text="{Binding PaymentMethod}" VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="5" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsCancelled}" Value="True">
+                                                                <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                                <Setter Property="Foreground" Value="Red"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
                                                 <Run Text="C$ " /><Run Text="{Binding Total, StringFormat=N2}" />
                                             </TextBlock>
                                             <StackPanel Grid.Column="6" Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Content="👁️" ToolTip="Ver Detalle" Padding="8,2" Background="White" BorderBrush="#dee2e6" Margin="0,0,5,0"/>
                                                 <Button Content="🖨️" ToolTip="Re-imprimir Ticket" Padding="8,2" Background="White" BorderBrush="#dee2e6"
                                                         Command="{Binding DataContext.ReprintCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"/>
+                                                <Button Content="❌" ToolTip="Anular Venta" Padding="8,2" Background="White" BorderBrush="#dc3545" Foreground="#dc3545" Margin="5,0,0,0"
+                                                        Command="{Binding DataContext.CancelSaleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"/>
                                             </StackPanel>
                                         </Grid>

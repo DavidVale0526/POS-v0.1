@@ -40,6 +40,7 @@ namespace POS_v0_1.ViewModels
         public ICommand FilterCommand { get; }
         public ICommand ShowPosCommand { get; }
         public ICommand ReprintCommand { get; }
+        public ICommand CancelSaleCommand { get; }
 
         public SalesHistoryViewModel(MainViewModel main)
         {
@@ -68,6 +69,62 @@ namespace POS_v0_1.ViewModels
                     catch (Exception ex)
                     {
                         System.Windows.MessageBox.Show("Error al reimprimir: " + ex.Message);
+                    }
+                }
+            });
+
+            CancelSaleCommand = new RelayCommand(o =>
+            {
+                if (o is Sale sale)
+                {
+                    if (sale.IsCancelled)
+                    {
+                        System.Windows.MessageBox.Show("Esta venta ya ha sido anulada.", "Aviso", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                        return;
+                    }
+
+                    var result = System.Windows.MessageBox.Show($"¿Está seguro que desea anular la venta #{sale.Id}?\nEl stock de los productos será devuelto.", "Confirmar Anulación", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+
+                    if (result == System.Windows.MessageBoxResult.Yes)
+                    {
+                        try
+                        {
+                            sale.IsCancelled = true;
+                            sale.CancellationReason = "Anulación manual por usuario";
+
+                            // Crear Nota de Crédito
+                            var creditNote = new CreditNote
+                            {
+                                SaleId = sale.Id,
+                                Date = DateTime.Now,
+                                Amount = sale.Total,
+                                Reason = "Anulación de venta",
+                                CustomerName = sale.CustomerName
+                            };
+                            _main.Db.CreditNotes.Add(creditNote);
+
+                            // Devolver stock
+                            foreach (var item in sale.Items)
+                            {
+                                var dbProd = _main.Db.Products.Find(item.ProductId);
+                                if (dbProd != null)
+                                {
+                                    dbProd.Stock += item.Quantity;
+                                    // Actualizar en memoria si el producto está cargado
+                                    var memProd = _main.Products.FirstOrDefault(p => p.Id == item.ProductId);
+                                    if (memProd != null) memProd.Stock = dbProd.Stock;
+                                }
+                            }
+
+                            _main.Db.SaveChanges();
+                            OnPropertyChanged(nameof(TotalSold));
+                            ApplyFilter();
+                            System.Windows.MessageBox.Show("Venta anulada correctamente.", "Éxito", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Windows.MessageBox.Show("Error al anular venta: " + ex.Message);
+                        }
                     }
                 }
             });
