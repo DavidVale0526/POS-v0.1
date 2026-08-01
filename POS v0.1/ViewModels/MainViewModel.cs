@@ -157,6 +157,12 @@ namespace POS_v0_1.ViewModels
             AddColumnIfMissing("SaleItems", "PurchasePrice", "DECIMAL DEFAULT 0");
             AddColumnIfMissing("Purchases", "Status", "TEXT DEFAULT 'Recibida'");
 
+            // 4.1 Nuevas Columnas para Integridad de Datos (FKs)
+            AddColumnIfMissing("Products", "CategoryId", "INTEGER DEFAULT 0");
+            AddColumnIfMissing("Products", "ProviderId", "INTEGER");
+            AddColumnIfMissing("Purchases", "ProviderId", "INTEGER");
+            AddColumnIfMissing("FinancialMovements", "SourceId", "INTEGER DEFAULT 0");
+
             // Migración: Llenar PurchasePrice para ventas viejas que no lo tienen (usando el costo actual del producto)
             try
             {
@@ -164,6 +170,29 @@ namespace POS_v0_1.ViewModels
                     UPDATE SaleItems
                     SET PurchasePrice = (SELECT PurchasePrice FROM Products WHERE Products.Id = SaleItems.ProductId)
                     WHERE PurchasePrice = 0 OR PurchasePrice IS NULL
+                ");
+
+                // Migración 4.1: Vincular Texto a ID para integridad de datos
+                Db.Database.ExecuteSqlRaw(@"
+                    -- Vincular Categorías de Productos
+                    UPDATE Products
+                    SET CategoryId = (SELECT Id FROM Categories WHERE Categories.Name = Products.Category)
+                    WHERE CategoryId = 0 OR CategoryId IS NULL;
+
+                    -- Vincular Proveedores de Productos
+                    UPDATE Products
+                    SET ProviderId = (SELECT Id FROM Providers WHERE Providers.Name = Products.Provider)
+                    WHERE ProviderId IS NULL;
+
+                    -- Vincular Proveedores de Compras
+                    UPDATE Purchases
+                    SET ProviderId = (SELECT Id FROM Providers WHERE Providers.Name = Purchases.ProviderName)
+                    WHERE ProviderId IS NULL;
+
+                    -- Vincular Fuentes Financieras
+                    UPDATE FinancialMovements
+                    SET SourceId = (SELECT Id FROM FinancialSources WHERE FinancialSources.Name = FinancialMovements.Source)
+                    WHERE SourceId = 0 OR SourceId IS NULL;
                 ");
 
                 // Asegurar que las nuevas tablas de la auditoría existan
@@ -237,18 +266,18 @@ namespace POS_v0_1.ViewModels
             foreach (var user in dbUsers) Users.Add(user);
 
             // Load Categories
-            var dbCategories = Db.Categories.ToList();
+            var dbCategories = Db.Categories.Include(c => c.Products).ToList();
             if (!dbCategories.Any())
             {
                 Db.Categories.Add(new Category { Name = "Celulares", Description = "Dispositivos móviles" });
                 Db.Categories.Add(new Category { Name = "Accesorios", Description = "Cargadores, cables, etc." });
                 Db.SaveChanges();
-                dbCategories = Db.Categories.ToList();
+                dbCategories = Db.Categories.Include(c => c.Products).ToList();
             }
             foreach (var cat in dbCategories) Categories.Add(cat);
 
             // Load Products
-            var dbProducts = Db.Products.ToList();
+            var dbProducts = Db.Products.Include(p => p.Category).Include(p => p.Provider).ToList();
             if (!dbProducts.Any())
             {
                 var category = Db.Categories.FirstOrDefault();
@@ -258,11 +287,11 @@ namespace POS_v0_1.ViewModels
                     SellingPrice = 100,
                     PurchasePrice = 70,
                     Stock = 50,
-                    Category = category?.Name ?? "Celulares",
+                    CategoryId = category?.Id ?? 1,
                     Barcode = "123456789"
                 });
                 Db.SaveChanges();
-                dbProducts = Db.Products.ToList();
+                dbProducts = Db.Products.Include(p => p.Category).Include(p => p.Provider).ToList();
             }
             foreach (var prod in dbProducts) Products.Add(prod);
 
@@ -270,13 +299,13 @@ namespace POS_v0_1.ViewModels
             foreach (var prov in Db.Providers.ToList()) Providers.Add(prov);
 
             // Load Financial Sources
-            var dbSources = Db.FinancialSources.ToList();
+            var dbSources = Db.FinancialSources.Include(s => s.Movements).ToList();
             if (!dbSources.Any())
             {
                 Db.FinancialSources.Add(new FinancialSource { Name = "Caja", Description = "Dinero en caja" });
                 Db.FinancialSources.Add(new FinancialSource { Name = "Banco", Description = "Cuenta bancaria" });
                 Db.SaveChanges();
-                dbSources = Db.FinancialSources.ToList();
+                dbSources = Db.FinancialSources.Include(s => s.Movements).ToList();
             }
             foreach (var source in dbSources) FinancialSources.Add(source);
 
@@ -316,10 +345,10 @@ namespace POS_v0_1.ViewModels
             }
             catch { }
 
-            foreach (var movement in Db.FinancialMovements.ToList()) FinancialMovements.Add(movement);
+            foreach (var movement in Db.FinancialMovements.Include(m => m.FinancialSource).ToList()) FinancialMovements.Add(movement);
             foreach (var count in Db.CashCounts.Include(c => c.Details).ToList()) CashCounts.Add(count);
             foreach (var bank in Db.BankTransactions.ToList()) BankTransactions.Add(bank);
-            foreach (var purchase in Db.Purchases.Include(p => p.Items).ToList()) Purchases.Add(purchase);
+            foreach (var purchase in Db.Purchases.Include(p => p.Items).Include(p => p.Provider).ToList()) Purchases.Add(purchase);
             foreach (var sess in Db.CashSessions.ToList()) CashSessions.Add(sess);
 
             // Set current active session if any

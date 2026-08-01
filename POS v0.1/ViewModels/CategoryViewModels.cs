@@ -75,8 +75,7 @@ namespace POS_v0_1.ViewModels
                     var newCat = new Category
                     {
                         Name = Name,
-                        Description = Description,
-                        ProductCount = 0
+                        Description = Description
                     };
                     _main.Db.Categories.Add(newCat);
                     _main.Db.SaveChanges();

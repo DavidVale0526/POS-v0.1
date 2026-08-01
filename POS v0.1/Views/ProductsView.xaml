@@ -118,7 +118,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTextColumn Header="Categoría" Binding="{Binding Category}" Width="150"/>
+                <DataGridTextColumn Header="Categoría" Binding="{Binding Category.Name}" Width="150"/>
 
                 <DataGridTemplateColumn Header="Precios (Compra/Venta)" Width="180">
                     <DataGridTemplateColumn.CellTemplate>

@@ -42,7 +42,7 @@ namespace POS_v0_1.ViewModels
     {
         private readonly MainViewModel _main;
         public Purchase Purchase { get; }
-        public Provider Provider { get; }
+        public Provider Provider => Purchase?.Provider ?? new Provider { Name = "N/A" };
 
         public ICommand BackCommand { get; }
 
@@ -50,15 +50,8 @@ namespace POS_v0_1.ViewModels
         {
             _main = main;
             Purchase = purchase;
-
-            // Buscar info extendida del proveedor
-            Provider = _main.Providers.FirstOrDefault(p => p.Name == purchase.ProviderName)
-                       ?? new Provider { Name = purchase.ProviderName ?? "N/A" };
-
             BackCommand = new RelayCommand(o => _main.CurrentView = new PurchasesViewModel(_main));
         }
-
-
     }
 
     public class CreatePurchaseViewModel : BaseViewModel
@@ -175,12 +168,11 @@ namespace POS_v0_1.ViewModels
             _main = main;
             _editingPurchase = purchaseToEdit;
 
-            // default source
             SelectedFinancialSource = _main.FinancialSources.FirstOrDefault();
 
             if (_editingPurchase != null)
             {
-                SelectedProvider = _main.Providers.FirstOrDefault(p => p.Name == _editingPurchase.ProviderName);
+                SelectedProvider = _main.Providers.FirstOrDefault(p => p.Id == _editingPurchase.ProviderId);
                 InvoiceNumber = _editingPurchase.InvoiceNumber;
                 PurchaseDate = _editingPurchase.Date;
                 Notes = _editingPurchase.Notes;
@@ -198,7 +190,6 @@ namespace POS_v0_1.ViewModels
                 }
             }
 
-            // keep track of item changes so Total updates when Quantity or UnitPrice change
             Items.CollectionChanged += Items_CollectionChanged;
 
             AddItemCommand = new RelayCommand(o =>
@@ -245,7 +236,6 @@ namespace POS_v0_1.ViewModels
 
                 if (_editingPurchase != null)
                 {
-                    // Revertir stock previo si estaba Recibida o Parcial
                     foreach (var oldItem in _editingPurchase.Items)
                     {
                         var prod = _main.Db.Products.Find(oldItem.ProductId);
@@ -253,13 +243,13 @@ namespace POS_v0_1.ViewModels
                     }
 
                     _editingPurchase.Date = PurchaseDate;
-                    _editingPurchase.ProviderName = SelectedProvider.Name;
+                    _editingPurchase.ProviderId = SelectedProvider.Id;
+                    _editingPurchase.Provider = SelectedProvider;
                     _editingPurchase.InvoiceNumber = InvoiceNumber;
                     _editingPurchase.Notes = Notes;
                     _editingPurchase.Total = Total;
                     _editingPurchase.Status = SelectedStatus;
 
-                    // Actualizar items (simplificado: borrar y agregar)
                     _main.Db.RemoveRange(_editingPurchase.Items);
                     _editingPurchase.Items = new ObservableCollection<PurchaseDetail>(Items);
                 }
@@ -268,7 +258,8 @@ namespace POS_v0_1.ViewModels
                     var purchase = new Purchase
                     {
                         Date = PurchaseDate,
-                        ProviderName = SelectedProvider.Name,
+                        ProviderId = SelectedProvider.Id,
+                        Provider = SelectedProvider,
                         InvoiceNumber = InvoiceNumber,
                         Notes = Notes,
                         Total = Total,
@@ -280,18 +271,16 @@ namespace POS_v0_1.ViewModels
                     _main.Purchases.Add(purchase);
                 }
 
-                // Aplicar nuevo stock y actualizar precios de compra
                 foreach (var item in Items)
                 {
                     var product = _main.Db.Products.FirstOrDefault(p => p.Id == item.ProductId);
                     if (product != null)
                     {
                         product.Stock += item.Quantity;
-                        product.PurchasePrice = item.UnitPrice; // Audit: Actualización de precio de compra
+                        product.PurchasePrice = item.UnitPrice;
                     }
                 }
 
-                // Audit: Registro en gastos (Movimiento financiero automático)
                 if (SelectedFinancialSource != null && Total > 0)
                 {
                     var movement = new FinancialMovement
@@ -299,15 +288,14 @@ namespace POS_v0_1.ViewModels
                         Date = DateTime.Now,
                         Type = "Gasto",
                         Concept = $"Compra a proveedor: {SelectedProvider.Name} (Fact: {InvoiceNumber})",
-                        Source = SelectedFinancialSource.Name,
+                        SourceId = SelectedFinancialSource.Id,
+                        FinancialSource = SelectedFinancialSource,
                         Amount = Total,
                         RegisteredBy = _main.CurrentUser?.Name ?? "Usuario",
                         Reference = InvoiceNumber
                     };
                     _main.Db.FinancialMovements.Add(movement);
                     _main.FinancialMovements.Add(movement);
-
-                    SelectedFinancialSource.MovementCount++;
                 }
 
                 _main.Db.SaveChanges();
@@ -363,7 +351,8 @@ namespace POS_v0_1.ViewModels
                 var newProduct = new Product
                 {
                     Name = Name,
-                    Category = SelectedCategory.Name,
+                    CategoryId = SelectedCategory.Id,
+                    Category = SelectedCategory,
                     PurchasePrice = PurchasePrice,
                     SellingPrice = SellingPrice,
                     Stock = Stock,
@@ -373,12 +362,8 @@ namespace POS_v0_1.ViewModels
                 };
 
                 _main.Db.Products.Add(newProduct);
-                var dbCat = _main.Db.Categories.FirstOrDefault(c => c.Name == SelectedCategory.Name);
-                if (dbCat != null) dbCat.ProductCount++;
                 _main.Db.SaveChanges();
-
                 _main.Products.Add(newProduct);
-                SelectedCategory.ProductCount++;
 
                 _purchaseVM.Items.Add(new PurchaseDetail
                 {

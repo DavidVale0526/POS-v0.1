@@ -9,7 +9,11 @@ namespace POS_v0_1.Models
     {
         public int Id { get; set; }
         public DateTime Date { get; set; }
-        public string? ProviderName { get; set; }
+
+        // New Foreign Key Relation
+        public int? ProviderId { get; set; }
+        public virtual Provider? Provider { get; set; }
+
         public string? InvoiceNumber { get; set; }
         public decimal Total { get; set; }
         public string Status { get; set; } = "Recibida"; // Pendiente, Recibida, Parcial
@@ -22,7 +26,7 @@ namespace POS_v0_1.Models
     {
         public int Id { get; set; }
         public int ProductId { get; set; }
-        public string ProductName { get; set; }
+        public string ProductName { get; set; } = string.Empty;
 
         private int _quantity;
         public int Quantity
@@ -52,7 +56,7 @@ namespace POS_v0_1.Models
 
         public decimal Subtotal => Quantity * UnitPrice;
 
-        public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));

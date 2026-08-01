@@ -69,7 +69,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <ComboBox Grid.Column="0" Margin="0,0,10,0" ItemsSource="{Binding TypeFilters}" SelectedItem="{Binding SelectedType}" Padding="8"/>
-                        <ComboBox Grid.Column="1" Margin="0,0,10,0" ItemsSource="{Binding SourceFilters}" SelectedItem="{Binding SelectedSource}" Padding="8"/>
+                        <ComboBox Grid.Column="1" Margin="0,0,10,0" ItemsSource="{Binding SourceFilters}" SelectedItem="{Binding SelectedSource}" DisplayMemberPath="Name" Padding="8"/>
                         <DatePicker Grid.Column="2" Margin="0,0,10,0" VerticalContentAlignment="Center" SelectedDate="{Binding SelectedDate}"/>
                         <Button Grid.Column="3" Content="🔍 Filtrar" Padding="40,8" Background="#6c757d" Foreground="White" BorderThickness="0" Command="{Binding FilterCommand}">
                             <Button.Style>
@@ -160,7 +160,7 @@
                                                 <TextBlock Text="{Binding Concept}" FontWeight="SemiBold"/>
                                                 <TextBlock Text="{Binding Reference}" FontSize="11" Foreground="#6c757d"/>
                                             </StackPanel>
-                                            <TextBlock Grid.Column="3" Text="{Binding Source}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding FinancialSource.Name}" VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="4" Text="{Binding Amount, StringFormat='C$ \{0:N2\}'}" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">

@@ -78,9 +78,7 @@
 
                         <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,15">
                             <TextBlock Text="Proveedor" Margin="0,0,0,5"/>
-                            <ComboBox Text="{Binding Provider}" Padding="8" IsEditable="True">
-                                <ComboBoxItem Content="Ninguno"/>
-                            </ComboBox>
+                            <ComboBox ItemsSource="{Binding Providers}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedProvider}" Padding="8"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="1" Grid.ColumnSpan="3" Margin="0,0,0,0">

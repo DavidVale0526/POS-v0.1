@@ -20,13 +20,13 @@ namespace POS_v0_1.ViewModels
         }
 
         public ObservableCollection<string> TypeFilters { get; } = new ObservableCollection<string> { "Tipo de Movimiento", "Gasto", "Ingreso" };
-        public ObservableCollection<string> SourceFilters { get; } = new ObservableCollection<string> { "Cualquier Fuente / Origen" };
+        public ObservableCollection<FinancialSource> SourceFilters { get; }
 
         private string _selectedType = "Tipo de Movimiento";
         public string SelectedType { get => _selectedType; set { _selectedType = value; OnPropertyChanged(); ApplyFilter(); } }
 
-        private string _selectedSource = "Cualquier Fuente / Origen";
-        public string SelectedSource { get => _selectedSource; set { _selectedSource = value; OnPropertyChanged(); ApplyFilter(); } }
+        private FinancialSource? _selectedSource;
+        public FinancialSource? SelectedSource { get => _selectedSource; set { _selectedSource = value; OnPropertyChanged(); ApplyFilter(); } }
 
         private DateTime? _selectedDate;
         public DateTime? SelectedDate { get => _selectedDate; set { _selectedDate = value; OnPropertyChanged(); ApplyFilter(); } }
@@ -34,20 +34,25 @@ namespace POS_v0_1.ViewModels
         public ICommand ShowCreateCommand { get; }
         public ICommand ShowSourcesCommand { get; }
         public ICommand FilterCommand { get; }
+        public ICommand ClearFiltersCommand { get; }
 
         public FinancialMovementsViewModel(MainViewModel main)
         {
             _main = main;
-
-            // Sync sources for filter
-            foreach (var src in _main.FinancialSources)
-                SourceFilters.Add(src.Name);
+            SourceFilters = _main.FinancialSources;
 
             ApplyFilter();
 
             ShowCreateCommand = new RelayCommand(o => _main.CurrentView = new CreateFinancialMovementViewModel(_main));
             ShowSourcesCommand = new RelayCommand(o => _main.CurrentView = new FinancialSourcesViewModel(_main));
             FilterCommand = new RelayCommand(o => ApplyFilter());
+            ClearFiltersCommand = new RelayCommand(o =>
+            {
+                SelectedType = "Tipo de Movimiento";
+                SelectedSource = null;
+                SelectedDate = null;
+                ApplyFilter();
+            });
         }
 
         private void ApplyFilter()
@@ -57,8 +62,8 @@ namespace POS_v0_1.ViewModels
             if (SelectedType != "Tipo de Movimiento")
                 filtered = filtered.Where(m => m.Type == SelectedType);
 
-            if (SelectedSource != "Cualquier Fuente / Origen")
-                filtered = filtered.Where(m => m.Source == SelectedSource);
+            if (SelectedSource != null)
+                filtered = filtered.Where(m => m.SourceId == SelectedSource.Id);
 
             if (SelectedDate.HasValue)
                 filtered = filtered.Where(m => m.Date.Date == SelectedDate.Value.Date);
@@ -115,11 +120,11 @@ namespace POS_v0_1.ViewModels
         private FinancialSource _selectedSource;
         public FinancialSource SelectedSource { get => _selectedSource; set { _selectedSource = value; OnPropertyChanged(); } }
 
-        public string Concept { get; set; }
+        public string Concept { get; set; } = string.Empty;
         public decimal Amount { get; set; }
         public DateTime Date { get; set; } = DateTime.Now;
-        public string Reference { get; set; }
-        public string Notes { get; set; }
+        public string? Reference { get; set; }
+        public string? Notes { get; set; }
 
         public ICommand SaveCommand { get; }
         public ICommand BackCommand { get; }
@@ -128,8 +133,7 @@ namespace POS_v0_1.ViewModels
         public CreateFinancialMovementViewModel(MainViewModel main)
         {
             _main = main;
-
-            SetTypeCommand = new RelayCommand(o => Type = o.ToString());
+            SetTypeCommand = new RelayCommand(o => Type = o?.ToString() ?? "Gasto");
 
             SaveCommand = new RelayCommand(o =>
             {
@@ -140,7 +144,8 @@ namespace POS_v0_1.ViewModels
                     Date = Date,
                     Type = Type,
                     Concept = Concept,
-                    Source = SelectedSource.Name,
+                    SourceId = SelectedSource.Id,
+                    FinancialSource = SelectedSource,
                     Amount = Amount,
                     RegisteredBy = _main.CurrentUser?.Name ?? "Sistema",
                     Reference = Reference,
@@ -148,10 +153,7 @@ namespace POS_v0_1.ViewModels
                 };
 
                 _main.Db.FinancialMovements.Add(move);
-                var dbSource = _main.Db.FinancialSources.Find(SelectedSource.Id);
-                if (dbSource != null) dbSource.MovementCount++;
                 _main.Db.SaveChanges();
-
                 _main.FinancialMovements.Add(move);
 
                 // Actualizar sesión de caja si hay una abierta y la fuente es "Caja"
@@ -163,7 +165,6 @@ namespace POS_v0_1.ViewModels
                         _main.Session.ExpensesTotal += Amount;
                 }
 
-                SelectedSource.MovementCount++;
                 _main.CurrentView = new FinancialMovementsViewModel(_main);
             });
 

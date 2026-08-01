@@ -169,10 +169,10 @@ namespace POS_v0_1.ViewModels
 
             // 2. Finanzas por Fuente
             summary.FinancialSummaries = movements
-                .GroupBy(m => new { m.Source, m.Type })
+                .GroupBy(m => new { SourceName = m.FinancialSource?.Name ?? "Desconocido", m.Type })
                 .Select(g => new FinancialSourceSummary
                 {
-                    Source = g.Key.Source,
+                    Source = g.Key.SourceName,
                     Type = g.Key.Type,
                     Total = g.Sum(m => m.Amount)
                 }).ToList();

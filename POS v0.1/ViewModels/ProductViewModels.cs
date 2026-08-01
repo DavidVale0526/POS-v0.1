@@ -76,9 +76,6 @@ namespace POS_v0_1.ViewModels
                     var result = System.Windows.MessageBox.Show($"¿Desea eliminar {prod.Name}?", "Confirmar", System.Windows.MessageBoxButton.YesNo);
                     if (result == System.Windows.MessageBoxResult.Yes)
                     {
-                        var cat = _main.Categories.FirstOrDefault(c => c.Name == prod.Category);
-                        if (cat != null) cat.ProductCount--;
-
                         _main.Products.Remove(prod);
                         var dbProd = _main.Db.Products.Find(prod.Id);
                         if (dbProd != null) _main.Db.Products.Remove(dbProd);
@@ -130,7 +127,7 @@ namespace POS_v0_1.ViewModels
 
             if (SelectedCategoryFilter != null)
             {
-                query = query.Where(p => p.Category == SelectedCategoryFilter.Name);
+                query = query.Where(p => p.CategoryId == SelectedCategoryFilter.Id);
             }
 
             if (!string.IsNullOrWhiteSpace(LocationFilter))
@@ -220,6 +217,7 @@ namespace POS_v0_1.ViewModels
                 if (QuantityToAdd > 0)
                 {
                     Product.Stock += QuantityToAdd;
+                    _main.Db.SaveChanges();
                     _main.CurrentView = new LowStockViewModel(_main);
                 }
             });
@@ -233,6 +231,7 @@ namespace POS_v0_1.ViewModels
 
         public string Title => _editingProduct == null ? "Nuevo Producto" : "Editar Producto";
         public ObservableCollection<Category> Categories => _main.Categories;
+        public ObservableCollection<Provider> Providers => _main.Providers;
         public ObservableCollection<string> Statuses { get; } = new ObservableCollection<string> { "Activo", "Inactivo" };
 
         private string _name;
@@ -250,8 +249,8 @@ namespace POS_v0_1.ViewModels
         private Category _selectedCategory;
         public Category SelectedCategory { get => _selectedCategory; set { _selectedCategory = value; OnPropertyChanged(); } }
 
-        private string _provider;
-        public string Provider { get => _provider; set { _provider = value; OnPropertyChanged(); } }
+        private Provider _selectedProvider;
+        public Provider SelectedProvider { get => _selectedProvider; set { _selectedProvider = value; OnPropertyChanged(); } }
 
         private string _location;
         public string Location { get => _location; set { _location = value; OnPropertyChanged(); } }
@@ -290,9 +289,10 @@ namespace POS_v0_1.ViewModels
                 Stock = _editingProduct.Stock;
                 MinStock = _editingProduct.MinStock;
                 Location = _editingProduct.Location;
-                Provider = _editingProduct.Provider;
                 SelectedStatus = _editingProduct.Status;
-                SelectedCategory = _main.Categories.FirstOrDefault(c => c.Name == _editingProduct.Category);
+
+                SelectedCategory = _main.Categories.FirstOrDefault(c => c.Id == _editingProduct.CategoryId);
+                SelectedProvider = _main.Providers.FirstOrDefault(p => p.Id == _editingProduct.ProviderId);
             }
 
             SaveCommand = new RelayCommand(o =>
@@ -312,24 +312,18 @@ namespace POS_v0_1.ViewModels
                         Stock = Stock,
                         MinStock = MinStock,
                         Location = Location,
-                        Provider = Provider,
                         Status = SelectedStatus,
-                        Category = SelectedCategory.Name
+                        CategoryId = SelectedCategory.Id,
+                        Category = SelectedCategory,
+                        ProviderId = SelectedProvider?.Id,
+                        Provider = SelectedProvider
                     };
                     _main.Db.Products.Add(newProd);
                     _main.Db.SaveChanges();
                     _main.Products.Add(newProd);
-                    SelectedCategory.ProductCount++;
                 }
                 else
                 {
-                    if (_editingProduct.Category != SelectedCategory.Name)
-                    {
-                        var oldCat = _main.Categories.FirstOrDefault(c => c.Name == _editingProduct.Category);
-                        if (oldCat != null) oldCat.ProductCount--;
-                        SelectedCategory.ProductCount++;
-                    }
-
                     _editingProduct.Name = Name;
                     _editingProduct.Barcode = Barcode;
                     _editingProduct.SKU = SKU;
@@ -339,9 +333,11 @@ namespace POS_v0_1.ViewModels
                     _editingProduct.Stock = Stock;
                     _editingProduct.MinStock = MinStock;
                     _editingProduct.Location = Location;
-                    _editingProduct.Provider = Provider;
                     _editingProduct.Status = SelectedStatus;
-                    _editingProduct.Category = SelectedCategory.Name;
+                    _editingProduct.CategoryId = SelectedCategory.Id;
+                    _editingProduct.Category = SelectedCategory;
+                    _editingProduct.ProviderId = SelectedProvider?.Id;
+                    _editingProduct.Provider = SelectedProvider;
 
                     _main.Db.SaveChanges();
                 }
