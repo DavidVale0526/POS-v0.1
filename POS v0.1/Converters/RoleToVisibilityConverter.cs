@@ -9,19 +9,7 @@ namespace POS_v0_1.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            string userRole = value as string;
-            string requiredRole = parameter as string;
-
-            if (string.IsNullOrEmpty(userRole) || string.IsNullOrEmpty(requiredRole))
-                return Visibility.Collapsed;
-
-            // Si el requerimiento es "Administrador", solo el Admin lo ve.
-            // Si el requerimiento es "Cualquiera", todos lo ven.
-            if (requiredRole == "Administrador")
-            {
-                return userRole == "Administrador" ? Visibility.Visible : Visibility.Collapsed;
-            }
-
+            // Estandarización: Se eliminan restricciones de rol. Todos los elementos son visibles para usuarios logueados.
             return Visibility.Visible;
         }
 

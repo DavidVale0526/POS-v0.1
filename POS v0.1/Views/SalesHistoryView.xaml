@@ -130,7 +130,7 @@
                                 <TextBlock Grid.Column="0" Text="Ticket" FontWeight="Bold"/>
                                 <TextBlock Grid.Column="1" Text="Fecha" FontWeight="Bold"/>
                                 <TextBlock Grid.Column="2" Text="Cliente" FontWeight="Bold"/>
-                                <TextBlock Grid.Column="3" Text="Vendedor" FontWeight="Bold"/>
+                                <TextBlock Grid.Column="3" Text="Usuario" FontWeight="Bold"/>
                                 <TextBlock Grid.Column="4" Text="Método" FontWeight="Bold"/>
                                 <TextBlock Grid.Column="5" Text="Total" FontWeight="Bold" HorizontalAlignment="Right"/>
                                 <TextBlock Grid.Column="6" Text="Acciones" FontWeight="Bold" HorizontalAlignment="Center"/>

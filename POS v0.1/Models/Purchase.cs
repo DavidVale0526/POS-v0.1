@@ -12,7 +12,7 @@ namespace POS_v0_1.Models
         public string? ProviderName { get; set; }
         public string? InvoiceNumber { get; set; }
         public decimal Total { get; set; }
-        public string? RegisteredBy { get; set; } = "Administrador";
+        public string? RegisteredBy { get; set; } = "Usuario";
         public string? Notes { get; set; }
         public ObservableCollection<PurchaseDetail> Items { get; set; } = new ObservableCollection<PurchaseDetail>();
     }

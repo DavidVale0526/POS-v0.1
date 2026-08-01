@@ -14,15 +14,37 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <DockPanel Grid.Row="0" Margin="0,0,0,20">
-            <StackPanel>
-                <TextBlock Text="Proveedores" FontSize="24" FontWeight="Bold" Foreground="#333"/>
-                <TextBlock Text="Gestión de contactos y abastecimiento" FontSize="14" Foreground="#666"/>
-            </StackPanel>
-            <Button Content="+ Nuevo Proveedor" HorizontalAlignment="Right" VerticalAlignment="Center"
-                    Padding="15,8" Background="#007bff" Foreground="White" BorderThickness="0"
-                    Command="{Binding ShowCreateProviderCommand}"/>
-        </DockPanel>
+        <Border Grid.Row="0" Padding="15" Background="White" CornerRadius="8" Margin="0,0,0,20">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="1" Color="#EEEEEE"/>
+            </Border.Effect>
+            <Grid>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Proveedores" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Text=" - Gestión de contactos" FontSize="14" Foreground="#666" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Command="{Binding DataContext.SwitchUserCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                            Background="Transparent" BorderThickness="0" Cursor="Hand" Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Background="#e7f1ff" CornerRadius="15" Padding="10,4" BorderBrush="#0d6efd" BorderThickness="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="👤 " VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding DataContext.CurrentUser.Name, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#0d6efd"/>
+                                    <TextBlock Text=" (Cambiar)" FontSize="10" Margin="5,0,0,0" VerticalAlignment="Center" Foreground="#666"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Button>
+                    <Button Content="+ Nuevo Proveedor" Padding="15,8" Background="#007bff" Foreground="White" BorderThickness="0"
+                            Command="{Binding ShowCreateProviderCommand}">
+                        <Button.Resources>
+                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                        </Button.Resources>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
 
         <!-- Search and Filter -->
         <Border Grid.Row="1" Background="#f8f9fa" CornerRadius="5" Padding="15" Margin="0,0,0,20">

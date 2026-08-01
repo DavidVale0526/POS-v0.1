@@ -11,7 +11,7 @@ namespace POS_v0_1.Models
         public decimal Amount { get; set; }
         public decimal Cost { get; set; }
         public decimal Profit => Amount - Cost;
-        public string? Seller { get; set; } = "Administrador";
+        public string? Seller { get; set; } = "Usuario";
         public string? Notes { get; set; }
     }
 }

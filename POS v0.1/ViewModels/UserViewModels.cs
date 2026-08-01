@@ -50,7 +50,7 @@ namespace POS_v0_1.ViewModels
         private string _email;
         public string Email { get => _email; set { _email = value; OnPropertyChanged(); } }
 
-        private string _role = "Vendedor";
+        private string _role = "Usuario";
         public string Role { get => _role; set { _role = value; OnPropertyChanged(); } }
 
         private string _pin;
@@ -62,7 +62,7 @@ namespace POS_v0_1.ViewModels
         private string _confirmPassword;
         public string ConfirmPassword { get => _confirmPassword; set { _confirmPassword = value; OnPropertyChanged(); } }
 
-        public ObservableCollection<string> Roles { get; } = new ObservableCollection<string> { "Administrador", "Vendedor" };
+        public ObservableCollection<string> Roles { get; } = new ObservableCollection<string> { "Usuario" };
 
         public ICommand SaveCommand { get; }
         public ICommand BackCommand { get; }

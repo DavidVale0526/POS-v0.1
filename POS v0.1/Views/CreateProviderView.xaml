@@ -14,11 +14,38 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,30">
+        <Border Grid.Row="0" Padding="15" Background="White" CornerRadius="8" Margin="0,0,0,20">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="1" Color="#EEEEEE"/>
+            </Border.Effect>
+            <Grid>
+                <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Command="{Binding DataContext.SwitchUserCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                            Background="Transparent" BorderThickness="0" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Background="#e7f1ff" CornerRadius="15" Padding="10,4" BorderBrush="#0d6efd" BorderThickness="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="👤 " VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding DataContext.CurrentUser.Name, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#0d6efd"/>
+                                    <TextBlock Text=" (Cambiar)" FontSize="10" Margin="5,0,0,0" VerticalAlignment="Center" Foreground="#666"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Title and Back Action -->
+        <Grid Grid.Row="1" Margin="0,0,0,15" Visibility="Collapsed"> <!-- Hidden as it's now in header, but keeping Grid for Row index consistency if needed -->
+        </Grid>
+
+        <!-- Re-adjusting the content to follow the header -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,20">
             <Button Content="← Volver a Proveedores" HorizontalAlignment="Left"
                     Background="Transparent" BorderThickness="0" Foreground="#007bff"
                     Command="{Binding BackCommand}" Cursor="Hand"/>
-            <TextBlock Text="{Binding Title}" FontSize="28" FontWeight="Bold" Margin="0,15,0,0"/>
         </StackPanel>
 
         <!-- Form -->

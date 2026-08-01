@@ -17,9 +17,18 @@
             <Grid>
                 <TextBlock Text="Reportes de Inteligencia de Negocio" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <ComboBox Width="150" SelectedIndex="0">
-                        <ComboBoxItem Content="Administrador"/>
-                    </ComboBox>
+                    <Button Command="{Binding DataContext.SwitchUserCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                            Background="Transparent" BorderThickness="0" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <Border Background="#e7f1ff" CornerRadius="15" Padding="10,4" BorderBrush="#0d6efd" BorderThickness="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="👤 " VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding DataContext.CurrentUser.Name, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#0d6efd"/>
+                                    <TextBlock Text=" (Cambiar)" FontSize="10" Margin="5,0,0,0" VerticalAlignment="Center" Foreground="#666"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>

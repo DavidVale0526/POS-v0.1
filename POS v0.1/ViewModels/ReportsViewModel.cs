@@ -159,7 +159,7 @@ namespace POS_v0_1.ViewModels
                 .Take(5).ToList();
 
             summary.SalesBySeller = sales
-                .GroupBy(s => s.SellerName ?? "Administrador")
+                .GroupBy(s => s.SellerName ?? "Usuario")
                 .Select(g => new RankedItem
                 {
                     Name = g.Key,

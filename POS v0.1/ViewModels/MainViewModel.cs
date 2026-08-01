@@ -133,7 +133,7 @@ namespace POS_v0_1.ViewModels
 
             // Initial view
             IsAuthenticated = true;
-            CurrentUser = Users.FirstOrDefault(u => u.Role == "Administrador");
+            CurrentUser = Users.FirstOrDefault();
             CurrentView = new RepairListViewModel(this);
 
             /* MODO PRODUCCIÓN:
@@ -149,9 +149,9 @@ namespace POS_v0_1.ViewModels
             if (!dbUsers.Any())
             {
                 // Seed default users if none exist
-                var admin = new User { Name = "Administrador", Email = "admin@admin.com", Password = "admin", Role = "Administrador", Pin = "1234" };
-                var seller = new User { Name = "Vendedor Juan", Email = "vendedor@admin.com", Password = "123", Role = "Vendedor", Pin = "4321" };
-                var miki = new User { Name = "Miki", Email = "miki@admin.com", Password = "miki", Role = "Vendedor", Pin = "7845" };
+                var admin = new User { Name = "Usuario Principal", Email = "admin@admin.com", Password = "admin", Role = "Usuario", Pin = "1234" };
+                var seller = new User { Name = "Vendedor Juan", Email = "vendedor@admin.com", Password = "123", Role = "Usuario", Pin = "4321" };
+                var miki = new User { Name = "Miki", Email = "miki@admin.com", Password = "miki", Role = "Usuario", Pin = "7845" };
                 Db.Users.AddRange(admin, seller, miki);
                 Db.SaveChanges();
                 dbUsers = Db.Users.ToList();
@@ -324,43 +324,31 @@ namespace POS_v0_1.ViewModels
             {
                 if (Session == null) return;
 
-                // VALIDACIÓN RBAC: Solo Admin puede cerrar caja
-                var pinDialog = new Views.PinValidationDialog();
-                if (pinDialog.ShowDialog() == true)
+                var result = System.Windows.MessageBox.Show("¿Está seguro de cerrar la caja?", "Confirmar Cierre", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+                if (result != System.Windows.MessageBoxResult.Yes) return;
+
+                var currentSession = this.Session;
+                if (currentSession == null) return;
+
+                // Open the cash count view to perform a physical count before finalizing close.
+                _main.CurrentView = new NewCashCountViewModel(_main, savedCount =>
                 {
-                    var user = _main.Users.FirstOrDefault(u => u.Pin == pinDialog.Pin);
-                    if (user == null || user.Role != "Administrador")
+                    try
                     {
-                        System.Windows.MessageBox.Show("Acceso denegado. Se requiere PIN de Administrador para cerrar la caja.", "Seguridad", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Stop);
-                        return;
+                        currentSession.ClosingTime = DateTime.Now;
+                        currentSession.ClosingBalance = savedCount.TotalCalculated;
+                        currentSession.IsOpen = false;
+                        currentSession.ClosedBy = _main.CurrentUser?.Name ?? "Usuario"; // Registrar quién cerró
+
+                        _main.Db.SaveChanges();
+                        _main.Session = null;
+                        OnPropertyChanged(nameof(Session));
                     }
-
-                    var result = System.Windows.MessageBox.Show("¿Está seguro de cerrar la caja?", "Confirmar Cierre", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
-                    if (result != System.Windows.MessageBoxResult.Yes) return;
-
-                    var currentSession = this.Session;
-                    if (currentSession == null) return;
-
-                    // Open the cash count view to perform a physical count before finalizing close.
-                    _main.CurrentView = new NewCashCountViewModel(_main, savedCount =>
+                    catch (Exception ex)
                     {
-                        try
-                        {
-                            currentSession.ClosingTime = DateTime.Now;
-                            currentSession.ClosingBalance = savedCount.TotalCalculated;
-                            currentSession.IsOpen = false;
-                            currentSession.ClosedBy = user.Name; // Registrar quién cerró
-
-                            _main.Db.SaveChanges();
-                            _main.Session = null;
-                            OnPropertyChanged(nameof(Session));
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Windows.MessageBox.Show($"Error al cerrar sesión: {ex.Message}");
-                        }
-                    });
-                }
+                        System.Windows.MessageBox.Show($"Error al cerrar sesión: {ex.Message}");
+                    }
+                });
             });
 
             ViewDetailCommand = new RelayCommand(o =>
@@ -511,10 +499,10 @@ namespace POS_v0_1.ViewModels
             get
             {
                 if (string.IsNullOrWhiteSpace(SellerPin))
-                    return _main.CurrentUser?.Name ?? "Administrador";
+                    return _main.CurrentUser?.Name ?? "Usuario";
 
                 var seller = _main.Users.FirstOrDefault(u => u.Pin?.Trim() == SellerPin.Trim());
-                return seller?.Name ?? _main.CurrentUser?.Name ?? "Administrador";
+                return seller?.Name ?? _main.CurrentUser?.Name ?? "Usuario";
             }
         }
 
@@ -590,7 +578,7 @@ namespace POS_v0_1.ViewModels
                 var pinActual = SellerPin?.Trim();
                 var seller = _main.Users.FirstOrDefault(u => u.Pin == pinActual);
 
-                string nombreFinal = seller?.Name ?? _main.CurrentUser?.Name ?? "Administrador";
+                string nombreFinal = seller?.Name ?? _main.CurrentUser?.Name ?? "Usuario";
                 string pinFinal = seller?.Pin ?? _main.CurrentUser?.Pin ?? "0000";
 
                 // Save sale record to DB

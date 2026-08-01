@@ -47,7 +47,7 @@
             </StackPanel>
         </Border>
 
-        <!-- Derecha: Clientes y Vendedores -->
+        <!-- Derecha: Clientes y Usuarios -->
         <StackPanel Grid.Column="2">
             <!-- Top 5 Clientes -->
             <Border Background="White" CornerRadius="8" BorderBrush="#dee2e6" BorderThickness="1" Margin="0,0,0,20">
@@ -76,16 +76,16 @@
                 </StackPanel>
             </Border>
 
-            <!-- Rendimiento Vendedores -->
+            <!-- Rendimiento Usuarios -->
             <Border Background="White" CornerRadius="8" BorderBrush="#dee2e6" BorderThickness="1">
                 <StackPanel>
                     <Border Background="#f8f9fa" Padding="15" CornerRadius="8,8,0,0">
-                        <TextBlock Text="RENDIMIENTO DE VENDEDORES (POR PIN)" FontWeight="SemiBold" FontSize="12" Foreground="#666"/>
+                        <TextBlock Text="RENDIMIENTO DE USUARIOS (POR PIN)" FontWeight="SemiBold" FontSize="12" Foreground="#666"/>
                     </Border>
                     <DataGrid ItemsSource="{Binding Summary.SalesBySeller}" AutoGenerateColumns="False" IsReadOnly="True"
                               Background="Transparent" BorderThickness="0" RowHeaderWidth="0" GridLinesVisibility="None" MaxHeight="250">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Vendedor" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Usuario" Binding="{Binding Name}" Width="*"/>
                             <DataGridTextColumn Header="Ops." Binding="{Binding Quantity}" Width="50">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
@@ -105,7 +105,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
                     <Grid Margin="20" Visibility="{Binding Summary.SalesBySeller.Count, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}">
-                        <TextBlock Text="Sin datos de vendedores." HorizontalAlignment="Center" Foreground="#adb5bd" FontSize="12"/>
+                        <TextBlock Text="Sin datos de usuarios." HorizontalAlignment="Center" Foreground="#adb5bd" FontSize="12"/>
                     </Grid>
                 </StackPanel>
             </Border>
