@@ -83,7 +83,19 @@ namespace POS_v0_1.ViewModels
         public Provider SelectedProvider
         {
             get => _selectedProvider;
-            set { _selectedProvider = value; OnPropertyChanged(); }
+            set
+            {
+                _selectedProvider = value;
+                OnPropertyChanged();
+                if (value != null) ProviderNameText = value.Name;
+            }
+        }
+
+        private string _providerNameText;
+        public string ProviderNameText
+        {
+            get => _providerNameText;
+            set { _providerNameText = value; OnPropertyChanged(); }
         }
 
         private string _invoiceNumber;
@@ -173,6 +185,7 @@ namespace POS_v0_1.ViewModels
             if (_editingPurchase != null)
             {
                 SelectedProvider = _main.Providers.FirstOrDefault(p => p.Id == _editingPurchase.ProviderId);
+                ProviderNameText = SelectedProvider?.Name ?? "";
                 InvoiceNumber = _editingPurchase.InvoiceNumber;
                 PurchaseDate = _editingPurchase.Date;
                 Notes = _editingPurchase.Notes;
@@ -232,7 +245,26 @@ namespace POS_v0_1.ViewModels
 
             SavePurchaseCommand = new RelayCommand(o =>
             {
-                if (SelectedProvider == null || !Items.Any()) return;
+                if (string.IsNullOrWhiteSpace(ProviderNameText) || !Items.Any()) return;
+
+                // Si no hay objeto seleccionado pero hay texto, intentar buscar por nombre o crear uno temporal
+                if (SelectedProvider == null || SelectedProvider.Name != ProviderNameText)
+                {
+                    var existing = _main.Providers.FirstOrDefault(p => p.Name.Equals(ProviderNameText, StringComparison.OrdinalIgnoreCase));
+                    if (existing != null)
+                    {
+                        SelectedProvider = existing;
+                    }
+                    else
+                    {
+                        // Crear proveedor rápido/temporal
+                        var newProv = new Provider { Name = ProviderNameText, Description = "Proveedor registrado durante compra" };
+                        _main.Db.Providers.Add(newProv);
+                        _main.Db.SaveChanges();
+                        _main.Providers.Add(newProv);
+                        SelectedProvider = newProv;
+                    }
+                }
 
                 if (_editingPurchase != null)
                 {

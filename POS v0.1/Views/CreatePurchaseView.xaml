@@ -61,7 +61,9 @@
                     <StackPanel Grid.Column="0" Margin="0,0,10,0">
                         <TextBlock Text="Proveedor *" FontWeight="SemiBold" Margin="0,0,0,5"/>
                         <ComboBox ItemsSource="{Binding Providers}" DisplayMemberPath="Name"
-                                  SelectedItem="{Binding SelectedProvider}" Padding="10,8"/>
+                                  SelectedItem="{Binding SelectedProvider}"
+                                  Text="{Binding ProviderNameText, UpdateSourceTrigger=PropertyChanged}"
+                                  IsEditable="True" Padding="10,8"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Margin="10,0,10,0">
