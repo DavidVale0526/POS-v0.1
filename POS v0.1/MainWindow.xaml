@@ -7,7 +7,7 @@
         xmlns:viewModels="clr-namespace:POS_v0_1.ViewModels"
         xmlns:views="clr-namespace:POS_v0_1.Views"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="1000">
+        Title="MainWindow" WindowState="Maximized">
     <Window.Resources>
         <DataTemplate DataType="{x:Type viewModels:SalesHistoryViewModel}">
             <views:SalesHistoryView/>
@@ -134,6 +134,50 @@
                 <TextBlock Text="{Binding Title}" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Gray"/>
             </Grid>
         </DataTemplate>
+
+        <!-- Modern UI Colors -->
+        <SolidColorBrush x:Key="SidebarBg" Color="#1e1e2d"/>
+        <SolidColorBrush x:Key="SidebarAccent" Color="#3699ff"/>
+        <SolidColorBrush x:Key="SidebarText" Color="#a2a3b7"/>
+        <SolidColorBrush x:Key="SidebarTextMuted" Color="#494b74"/>
+
+        <!-- Modern Menu Button Style -->
+        <Style x:Key="ModernMenuButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource SidebarText}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="15,12"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                Margin="5,2" CornerRadius="8">
+                            <StackPanel Orientation="Horizontal" Margin="{TemplateBinding Padding}">
+                                <TextBlock x:Name="icon" Text="{TemplateBinding Tag}"
+                                         FontFamily="Segoe MDL2 Assets" FontSize="16"
+                                         Margin="0,0,15,0" VerticalAlignment="Center"
+                                         Foreground="{StaticResource SidebarAccent}"/>
+                                <ContentPresenter VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2b2b40"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="{StaticResource SidebarAccent}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter TargetName="icon" Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -142,71 +186,93 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <ScrollViewer Grid.Column="0" Background="#f0f0f0" VerticalScrollBarVisibility="Auto" Width="200"
-                      Visibility="{Binding IsAuthenticated, Converter={StaticResource VisConverter}}">
-            <StackPanel Margin="5">
-                <TextBlock Text="{Binding BusinessConfig.BusinessName}" FontSize="20" FontWeight="Bold" Margin="10,10" HorizontalAlignment="Center"/>
+        <Border Grid.Column="0" Background="{StaticResource SidebarBg}" Width="220"
+                Visibility="{Binding IsAuthenticated, Converter={StaticResource VisConverter}}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Logo/Header -->
+                    <RowDefinition Height="*"/>    <!-- Menu Scroll -->
+                    <RowDefinition Height="Auto"/> <!-- Footer Card -->
+                </Grid.RowDefinitions>
 
-                <TextBlock Text="VENTAS" Margin="10,10,10,5" FontWeight="SemiBold" Foreground="#666"/>
-                <Button Content="Nueva Venta (POS)" Margin="2" Padding="8" Command="{Binding ShowPosCommand}"/>
-                <Button Content="Historial Ventas" Margin="2" Padding="8" Command="{Binding ShowSalesHistoryCommand}"/>
-                <Button Content="Recargas" Margin="2" Padding="8" Command="{Binding ShowTopupsCommand}"/>
-
-                <TextBlock Text="INVENTARIO" Margin="10,15,10,5" FontWeight="SemiBold" Foreground="#666"/>
-                <Button Content="Productos" Margin="2" Padding="8" Command="{Binding ShowProductManagementCommand}"/>
-                <Button Content="Categorías" Margin="2" Padding="8" Command="{Binding ShowCategoriesCommand}"/>
-                <Button Content="Stock Bajo" Margin="2" Padding="8" Command="{Binding ShowLowStockCommand}"/>
-                <Button Content="Proveedores" Margin="2" Padding="8" Command="{Binding ShowProvidersCommand}"/>
-                <Button Content="Compras" Margin="2" Padding="8" Command="{Binding ShowPurchasesCommand}"/>
-
-                <TextBlock Text="REPARACIONES" Margin="10,15,10,5" FontWeight="SemiBold" Foreground="#666"/>
-                <Button Content="Reparaciones" Margin="2" Padding="8" Command="{Binding ShowRepairsCommand}"/>
-                <Button Content="Categorías Rep." Margin="2" Padding="8" Command="{Binding ShowRepairCategoriesCommand}"/>
-                <Button Content="Tipos Rep." Margin="2" Padding="8" Command="{Binding ShowRepairTypesCommand}"/>
-
-                <TextBlock Text="TESORERÍA" Margin="10,15,10,5" FontWeight="SemiBold" Foreground="#666"/>
-                <Button Content="Caja (Abrir/Cerrar)" Margin="2" Padding="8" Command="{Binding ShowOpenCashCommand}"/>
-                <Button Content="Conteo Billetes" Margin="2" Padding="8" Command="{Binding ShowCashCountCommand}"/>
-                <Button Content="Gastos/Ingresos" Margin="2" Padding="8" Command="{Binding ShowExpensesIncomesCommand}"/>
-                <Button Content="Banco" Margin="2" Padding="8" Command="{Binding ShowBankCommand}"/>
-
-                <TextBlock Text="ADMIN" Margin="10,15,10,5" FontWeight="SemiBold" Foreground="#666"/>
-                <Button Content="Clientes" Margin="2" Padding="8" Command="{Binding ShowClientsCommand}"/>
-                <Button Content="Reportes" Margin="2" Padding="8" Command="{Binding ShowReportsCommand}"/>
-                <Button Content="Usuarios / Roles" Margin="2" Padding="8" Command="{Binding ShowUsersRolesCommand}"/>
-                <Button Content="Configuración" Margin="2" Padding="8" Command="{Binding ShowConfigurationCommand}"/>
-
-                <Separator Margin="0,20"/>
-
-                <TextBlock Text="Estado de Caja:" Margin="10,0" FontWeight="Bold"/>
-                <TextBlock Text="{Binding Session.IsOpen, Converter={StaticResource BoolToStatusConverter}}" Margin="10,5" HorizontalAlignment="Center"/>
-
-                <Separator Margin="0,10"/>
-                <StackPanel Margin="10,5">
-                    <TextBlock Text="Usuario:" FontSize="10" Foreground="#666"/>
-                    <TextBlock Text="{Binding CurrentUser.Name}" FontWeight="SemiBold" FontSize="12"/>
-                    <TextBlock Text="{Binding CurrentUser.Role}" FontSize="10" Foreground="#0d6efd"/>
+                <!-- Header -->
+                <StackPanel Grid.Row="0" Margin="0,20,0,20">
+                    <TextBlock Text="M" FontSize="32" FontWeight="Black" Foreground="{StaticResource SidebarAccent}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding BusinessConfig.BusinessName}" FontSize="12" FontWeight="Bold"
+                               Foreground="White" HorizontalAlignment="Center" Margin="10,5" TextAlignment="Center" TextWrapping="Wrap"/>
                 </StackPanel>
 
-                <Button Content="🚪 Cerrar Sesión" Margin="10,10" Padding="8"
-                        Background="#dc3545" Foreground="White" BorderThickness="0"
-                        Command="{Binding LogoutCommand}">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}" CornerRadius="5">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </Button.Style>
-                </Button>
-            </StackPanel>
-        </ScrollViewer>
+                <!-- Navigation -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
+                    <StackPanel Margin="10,0">
+                        <TextBlock Text="VENTAS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,10,0,5"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8A1;" Content="Nueva Venta (POS)" Command="{Binding ShowPosCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE81C;" Content="Historial Ventas" Command="{Binding ShowSalesHistoryCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE722;" Content="Recargas" Command="{Binding ShowTopupsCommand}"/>
+
+                        <TextBlock Text="INVENTARIO" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE71D;" Content="Productos" Command="{Binding ShowProductManagementCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8FD;" Content="Categorías" Command="{Binding ShowCategoriesCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE7BA;" Content="Stock Bajo" Command="{Binding ShowLowStockCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8F1;" Content="Proveedores" Command="{Binding ShowProvidersCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8D7;" Content="Compras" Command="{Binding ShowPurchasesCommand}"/>
+
+                        <TextBlock Text="SERVICIOS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xEBE8;" Content="Reparaciones" Command="{Binding ShowRepairsCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8FD;" Content="Categorías Rep." Command="{Binding ShowRepairCategoriesCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE943;" Content="Tipos Rep." Command="{Binding ShowRepairTypesCommand}"/>
+
+                        <TextBlock Text="TESORERÍA" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8C7;" Content="Caja (Abrir/Cerrar)" Command="{Binding ShowOpenCashCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xEF20;" Content="Conteo Billetes" Command="{Binding ShowCashCountCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8D2;" Content="Gastos / Ingresos" Command="{Binding ShowExpensesIncomesCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE80F;" Content="Banco" Command="{Binding ShowBankCommand}"/>
+
+                        <TextBlock Text="ADMIN" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE716;" Content="Clientes" Command="{Binding ShowClientsCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE77B;" Content="Usuarios / Roles" Command="{Binding ShowUsersRolesCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE99A;" Content="Reportes" Command="{Binding ShowReportsCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE713;" Content="Configuración" Command="{Binding ShowConfigurationCommand}"/>
+
+                        <Border Height="20"/> <!-- Spacer -->
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- User Footer Card -->
+                <Border Grid.Row="2" Background="#2b2b40" CornerRadius="12" Margin="10,0,10,20" Padding="15">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <StackPanel>
+                                <TextBlock Text="{Binding CurrentUser.Name}" Foreground="White" FontWeight="SemiBold" FontSize="13"/>
+                                <TextBlock Text="{Binding CurrentUser.Role}" Foreground="{StaticResource SidebarAccent}" FontSize="10"/>
+                            </StackPanel>
+                            <Button Content="🚪" Command="{Binding LogoutCommand}" HorizontalAlignment="Right"
+                                    Background="Transparent" BorderThickness="0" Foreground="#dc3545"
+                                    Cursor="Hand" ToolTip="Cerrar Sesión"/>
+                        </Grid>
+
+                        <Border Height="1" Background="#3e3e5a" Margin="0,5"/>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                            <Ellipse Width="8" Height="8" Margin="0,0,8,0">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="#dc3545"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Session.IsOpen}" Value="True">
+                                                <Setter Property="Fill" Value="#50cd89"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <TextBlock Text="{Binding Session.IsOpen, Converter={StaticResource BoolToStatusConverter}}"
+                                       Foreground="White" FontSize="11" FontWeight="Medium"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
 
         <ContentControl Grid.Column="1" Content="{Binding CurrentView}"/>
     </Grid>
