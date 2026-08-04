@@ -77,45 +77,71 @@ namespace POS_v0_1.ViewModels
             {
                 if (o is RepairOrder repair)
                 {
-                    string targetStatus = repair.Status == "Recibido" ? "Entregado" : "Recibido";
-
-                    // Si vamos a entregar, mostramos el campo de monto opcional
-                    bool isDelivering = targetStatus == "Entregado";
-                    var pinDialog = new Views.PinValidationDialog(isDelivering, isDelivering ? repair.Total : null);
-
-                    if (pinDialog.ShowDialog() == true)
+                    if (repair.Status == "Entregado")
                     {
-                        // VALIDACIÓN DE CAJA (Bloqueo si hay cobro sin caja abierta)
+                        var confirm = MessageBox.Show($"La orden #{repair.Id} ya está entregada. ¿Desea reabrirla para edición?", "Reabrir Orden", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                        if (confirm == MessageBoxResult.Yes)
+                        {
+                            var user = _main.Users.FirstOrDefault(u => u.Id == _main.CurrentUser?.Id);
+                            if (user == null || user.Role != "Administrador")
+                            {
+                                var pinDialog = new Views.PinValidationDialog();
+                                if (pinDialog.ShowDialog() != true) return;
+                                user = _main.Users.FirstOrDefault(u => u.Pin == pinDialog.Pin && u.Role == "Administrador");
+                                if (user == null)
+                                {
+                                    MessageBox.Show("Se requiere PIN de Administrador para reabrir órdenes.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    return;
+                                }
+                            }
+
+                            string oldStatus = repair.Status;
+                            repair.Status = "Recibido";
+
+                            var history = new RepairStatusHistory
+                            {
+                                RepairOrderId = repair.Id,
+                                Status = repair.Status,
+                                ChangeDate = DateTime.Now,
+                                UserId = user.Id,
+                                UserName = user.Name,
+                                Notes = $"Orden reabierta por {user.Name}. Estado cambió de {oldStatus} a {repair.Status}."
+                            };
+
+                            _main.Db.RepairStatusHistories.Add(history);
+                            _main.Db.SaveChanges();
+                            ApplyFilter();
+                            _main.ShowToast("Orden reabierta.");
+                        }
+                        return;
+                    }
+
+                    // Flujo de Entrega (solo si está Recibido)
+                    var deliverPinDialog = new Views.PinValidationDialog(true, repair.Total);
+                    if (deliverPinDialog.ShowDialog() == true)
+                    {
                         bool isSessionOpen = _main.Session != null && _main.Session.IsOpen;
-                        decimal finalAmount = pinDialog.Amount ?? (isDelivering ? repair.Total : 0);
+                        decimal finalAmount = deliverPinDialog.Amount ?? repair.Total;
 
                         if (finalAmount > 0 && !isSessionOpen)
                         {
-                            System.Windows.MessageBox.Show(
-                                "No se puede registrar un cobro sin una caja abierta.\nPor favor, abra caja primero.",
-                                "Caja Cerrada",
-                                System.Windows.MessageBoxButton.OK,
-                                System.Windows.MessageBoxImage.Warning);
+                            MessageBox.Show("No se puede cobrar sin caja abierta.", "Caja Cerrada", MessageBoxButton.OK, MessageBoxImage.Warning);
                             return;
                         }
 
-                        var user = _main.Users.FirstOrDefault(u => u.Pin == pinDialog.Pin);
+                        var user = _main.Users.FirstOrDefault(u => u.Pin == deliverPinDialog.Pin);
                         if (user == null)
                         {
-                            System.Windows.MessageBox.Show("PIN incorrecto.", "Seguridad", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                            MessageBox.Show("PIN incorrecto.", "Seguridad", MessageBoxButton.OK, MessageBoxImage.Error);
                             return;
                         }
 
                         string oldStatus = repair.Status;
                         decimal oldTotal = repair.Total;
-                        repair.Status = targetStatus;
 
-                        if (isDelivering && pinDialog.Amount.HasValue)
-                        {
-                            repair.Total = pinDialog.Amount.Value;
-                        }
+                        repair.Status = "Entregado";
+                        repair.Total = finalAmount;
 
-                        // Actualizar sesión de caja si hay una abierta y el total cambió
                         if (isSessionOpen && repair.Total != oldTotal)
                         {
                             _main.Session.RepairsTotal += (repair.Total - oldTotal);
@@ -128,13 +154,13 @@ namespace POS_v0_1.ViewModels
                             ChangeDate = DateTime.Now,
                             UserId = user.Id,
                             UserName = user.Name,
-                            Notes = $"Cambio de estado por {user.Name}. De {oldStatus} a {repair.Status}. Monto: {repair.Total:C$ 0.00}"
+                            Notes = $"Equipo entregado por {user.Name}. Cobro: {repair.Total:C$ 0.00}"
                         };
 
                         _main.Db.RepairStatusHistories.Add(history);
                         _main.Db.SaveChanges();
                         ApplyFilter();
-                        System.Windows.MessageBox.Show($"Estado actualizado a {repair.Status} por {user.Name}. Total: {repair.Total:C$ 0.00}", "Éxito");
+                        MessageBox.Show($"Equipo entregado correctamente. Total: {repair.Total:C$ 0.00}", "Éxito");
                     }
                 }
             });
@@ -191,6 +217,41 @@ namespace POS_v0_1.ViewModels
             set { _reportedFailure = value; OnPropertyChanged(); }
         }
 
+        private string _clientName;
+        public string ClientName
+        {
+            get => _clientName;
+            set { _clientName = value; OnPropertyChanged(); }
+        }
+
+        private string _clientPhone;
+        public string ClientPhone
+        {
+            get => _clientPhone;
+            set { _clientPhone = value; OnPropertyChanged(); }
+        }
+
+        private string _deviceBrand;
+        public string DeviceBrand
+        {
+            get => _deviceBrand;
+            set { _deviceBrand = value; OnPropertyChanged(); }
+        }
+
+        private string _deviceModel;
+        public string DeviceModel
+        {
+            get => _deviceModel;
+            set { _deviceModel = value; OnPropertyChanged(); }
+        }
+
+        private string _imei;
+        public string IMEI
+        {
+            get => _imei;
+            set { _imei = value; OnPropertyChanged(); }
+        }
+
         private User _selectedTechnician;
         public User SelectedTechnician
         {
@@ -211,11 +272,19 @@ namespace POS_v0_1.ViewModels
         {
             _main = main;
             Repair = repair;
-            Parts = new ObservableCollection<RepairPart>(repair.Parts ?? new List<RepairPart>());
+
+            // Cargar repuestos explícitamente desde la DB para evitar desincronización
+            var dbParts = _main.Db.RepairParts.Where(p => p.RepairOrderId == repair.Id).ToList();
+            Parts = new ObservableCollection<RepairPart>(dbParts);
 
             Status = repair.Status;
             Total = repair.Total;
             ReportedFailure = repair.ReportedFailure;
+            ClientName = repair.ClientName;
+            ClientPhone = repair.ClientPhone;
+            DeviceBrand = repair.DeviceBrand;
+            DeviceModel = repair.DeviceModel;
+            IMEI = repair.IMEI;
             SelectedTechnician = _main.Users.FirstOrDefault(u => u.Id == repair.TechnicianId);
 
             BackCommand = new RelayCommand(o => _main.CurrentView = new RepairListViewModel(_main));
@@ -270,9 +339,11 @@ namespace POS_v0_1.ViewModels
                     return;
                 }
 
-                foreach (var oldPart in Repair.Parts.ToList())
+                // Sincronizar Repuestos (Eliminados)
+                var currentDbParts = _main.Db.RepairParts.Where(p => p.RepairOrderId == Repair.Id).ToList();
+                foreach (var oldPart in currentDbParts)
                 {
-                    if (!Parts.Contains(oldPart))
+                    if (!Parts.Any(p => p.Id == oldPart.Id))
                     {
                         var prod = _main.Db.Products.Find(oldPart.ProductId);
                         if (prod != null)
@@ -286,9 +357,10 @@ namespace POS_v0_1.ViewModels
                     }
                 }
 
+                // Sincronizar Repuestos (Nuevos o Actualizados)
                 foreach (var part in Parts)
                 {
-                    if (!Repair.Parts.Contains(part))
+                    if (part.Id == 0) // Nuevo
                     {
                         var prod = _main.Db.Products.Find(part.ProductId);
                         if (prod != null)
@@ -298,6 +370,7 @@ namespace POS_v0_1.ViewModels
                             if (memProd != null) memProd.Stock = prod.Stock;
                             _main.RecordStockMovement(prod.Id, -part.Quantity, "Reparación", $"Consumo de repuesto en Orden #{Repair.Id}");
                         }
+                        _main.Db.RepairParts.Add(part);
                         Repair.Parts.Add(part);
                     }
                 }
@@ -308,6 +381,11 @@ namespace POS_v0_1.ViewModels
                 Repair.Status = Status;
                 Repair.Total = Total;
                 Repair.ReportedFailure = ReportedFailure;
+                Repair.ClientName = ClientName;
+                Repair.ClientPhone = ClientPhone;
+                Repair.DeviceBrand = DeviceBrand;
+                Repair.DeviceModel = DeviceModel;
+                Repair.IMEI = IMEI;
                 Repair.TechnicianId = SelectedTechnician?.Id;
                 Repair.TechnicianName = SelectedTechnician?.Name;
 
@@ -327,12 +405,11 @@ namespace POS_v0_1.ViewModels
                         UserName = _main.CurrentUser?.Name ?? "Admin",
                         Notes = $"Estado cambiado de {oldStatus} a {Status} desde el detalle."
                     };
-                    Repair.StatusHistory.Add(history);
                     _main.Db.RepairStatusHistories.Add(history);
                 }
 
                 _main.Db.SaveChanges();
-                _main.ShowToast("Reparación y repuestos guardados correctamente.");
+                _main.ShowToast("Reparación guardada correctamente.");
                 _main.CurrentView = new RepairListViewModel(_main);
             });
         }

@@ -17,7 +17,12 @@ namespace POS_v0_1.ViewModels
         public object CurrentView
         {
             get => _currentView;
-            set { _currentView = value; OnPropertyChanged(); }
+            set
+            {
+                _currentView = value;
+                OnPropertyChanged();
+                CheckModuleAccess();
+            }
         }
 
         private User _currentUser;
@@ -142,6 +147,7 @@ namespace POS_v0_1.ViewModels
 
         public ICommand ToggleSidebarCommand { get; }
         public ICommand ShowProductManagementCommand { get; }
+        public ICommand ShowDashboardCommand { get; }
         public ICommand ShowOpenCashCommand { get; }
         public ICommand ShowPosCommand { get; }
         public ICommand ShowCategoriesCommand { get; }
@@ -168,6 +174,7 @@ namespace POS_v0_1.ViewModels
         {
             ToggleSidebarCommand = new RelayCommand(o => IsSidebarCollapsed = !IsSidebarCollapsed);
             SwitchUserCommand = new RelayCommand(o => SwitchUser());
+            ShowDashboardCommand = new RelayCommand(o => CurrentView = new DashboardViewModel(this));
             ShowProductManagementCommand = new RelayCommand(o => CurrentView = new ProductsViewModel(this));
             ShowOpenCashCommand = new RelayCommand(o => CurrentView = new CashControlViewModel(this));
             ShowPosCommand = new RelayCommand(o =>
@@ -228,10 +235,9 @@ namespace POS_v0_1.ViewModels
             IsAuthenticated = true;
             CurrentUser = Users.FirstOrDefault();
 
-            if (Session != null && Session.IsOpen)
-                CurrentView = PosViewModel;
-            else
-                CurrentView = new RepairListViewModel(this);
+            // Forzar la vista inicial
+            _currentView = new DashboardViewModel(this);
+            OnPropertyChanged(nameof(CurrentView));
         }
 
         private void ApplySchemaUpdates()
@@ -397,28 +403,56 @@ namespace POS_v0_1.ViewModels
             dialog.Owner = Application.Current.MainWindow;
             if (dialog.ShowDialog() == true) {
                 var user = Users.FirstOrDefault(u => u.Pin == dialog.Pin);
-                if (user != null) { CurrentUser = user; CheckModuleAccess(); ShowToast($"Sesión: {user.Name}"); }
+                if (user != null)
+                {
+                    CurrentUser = user;
+                    CurrentView = new DashboardViewModel(this); // Redirigir a Dashboard al cambiar usuario
+                    CheckModuleAccess();
+                    ShowToast($"Sesión: {user.Name}");
+                }
                 else { MessageBox.Show("PIN no válido.", "Error", MessageBoxButton.OK, MessageBoxImage.Error); }
             }
         }
 
         private void CheckModuleAccess()
         {
-            if (CurrentUser == null || CurrentUser.Role == "Administrador") return;
-            var config = BusinessConfig;
-            if (config == null) return;
-            bool hasAccess = true;
-            if (CurrentView is SalesHistoryViewModel && !config.AllowUserSalesHistory) hasAccess = false;
-            if (CurrentView is ProductsViewModel && !config.AllowUserInventory) hasAccess = false;
-            if (CurrentView is PurchasesViewModel && !config.AllowUserPurchases) hasAccess = false;
-            if (CurrentView is RepairListViewModel && !config.AllowUserRepairs) hasAccess = false;
-            if (CurrentView is CashControlViewModel && !config.AllowUserTreasury) hasAccess = false;
-            if (CurrentView is ClientListViewModel && !config.AllowUserClients) hasAccess = false;
-            if (CurrentView is ReportsViewModel && !config.AllowUserReports) hasAccess = false;
+            if (CurrentUser == null) return;
 
-            if (!hasAccess) {
-                CurrentView = (Session != null && Session.IsOpen) ? PosViewModel : (object)new RepairListViewModel(this);
-                MessageBox.Show("Acceso restringido.", "Seguridad");
+            bool hasAccess = true;
+
+            // 1. Bloqueo estricto de Vistas Administrativas
+            if (CurrentUser.Role != "Administrador")
+            {
+                if (CurrentView is ConfigurationViewModel || CurrentView is UserManagementViewModel)
+                {
+                    hasAccess = false;
+                }
+            }
+
+            // 2. Bloqueo por Permisos Dinámicos
+            if (hasAccess && CurrentUser.Role != "Administrador")
+            {
+                var config = BusinessConfig;
+                if (config != null)
+                {
+                    if (CurrentView is SalesHistoryViewModel && !config.AllowUserSalesHistory) hasAccess = false;
+                    if (CurrentView is ProductsViewModel && !config.AllowUserInventory) hasAccess = false;
+                    if (CurrentView is PurchasesViewModel && !config.AllowUserPurchases) hasAccess = false;
+                    if (CurrentView is RepairListViewModel && !config.AllowUserRepairs) hasAccess = false;
+                    if (CurrentView is CashControlViewModel && !config.AllowUserTreasury) hasAccess = false;
+                    if (CurrentView is ClientListViewModel && !config.AllowUserClients) hasAccess = false;
+                    if (CurrentView is ReportsViewModel && !config.AllowUserReports) hasAccess = false;
+                }
+            }
+
+            if (!hasAccess)
+            {
+                // Usamos el campo privado para evitar recursión en el setter de CurrentView
+                _currentView = (Session != null && Session.IsOpen) ? PosViewModel : (object)new RepairListViewModel(this);
+                OnPropertyChanged(nameof(CurrentView));
+
+                MessageBox.Show("Su rol actual no tiene permiso para acceder a esta vista. Redirigiendo...",
+                                "Acceso Restringido", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
     }

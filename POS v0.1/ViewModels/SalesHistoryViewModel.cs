@@ -34,6 +34,26 @@ namespace POS_v0_1.ViewModels
             set { _selectedDate = value; OnPropertyChanged(); ApplyFilter(); }
         }
 
+        private string _selectedSeller;
+        public string SelectedSeller
+        {
+            get => _selectedSeller;
+            set { _selectedSeller = value; OnPropertyChanged(); ApplyFilter(); }
+        }
+
+        private string _selectedPaymentMethod;
+        public string SelectedPaymentMethod
+        {
+            get => _selectedPaymentMethod;
+            set { _selectedPaymentMethod = value; OnPropertyChanged(); ApplyFilter(); }
+        }
+
+        public ObservableCollection<string> Sellers { get; } = new ObservableCollection<string>();
+        public ObservableCollection<string> PaymentMethods { get; } = new ObservableCollection<string>
+        {
+            "Efectivo", "Tarjeta", "Transferencia", "Mixto"
+        };
+
         private bool _showOnlyCancelled;
         public bool ShowOnlyCancelled
         {
@@ -41,8 +61,19 @@ namespace POS_v0_1.ViewModels
             set { _showOnlyCancelled = value; OnPropertyChanged(); ApplyFilter(); }
         }
 
-        public decimal TotalSold => Sales.Sum(s => s.Total);
-        public int TransactionCount => Sales.Count;
+        private decimal _totalSold;
+        public decimal TotalSold
+        {
+            get => _totalSold;
+            set { _totalSold = value; OnPropertyChanged(); }
+        }
+
+        private int _transactionCount;
+        public int TransactionCount
+        {
+            get => _transactionCount;
+            set { _transactionCount = value; OnPropertyChanged(); }
+        }
 
         private int _pageSize = 50;
         public int PageSize
@@ -51,11 +82,7 @@ namespace POS_v0_1.ViewModels
             set { _pageSize = value; OnPropertyChanged(); }
         }
 
-        public bool HasMoreItems => FilteredSales?.Count < Sales.Count(s =>
-            (string.IsNullOrEmpty(SearchText) || s.Id.ToString().Contains(SearchText) || (s.CustomerName != null && s.CustomerName.Contains(SearchText, StringComparison.OrdinalIgnoreCase))) &&
-            (!SelectedDate.HasValue || s.Date.Date == SelectedDate.Value.Date) &&
-            (!ShowOnlyCancelled || s.IsCancelled)
-        );
+        public bool HasMoreItems => FilteredSales?.Count < TransactionCount;
 
         public ICommand FilterCommand { get; }
         public ICommand ClearFiltersCommand { get; }
@@ -67,13 +94,19 @@ namespace POS_v0_1.ViewModels
         public SalesHistoryViewModel(MainViewModel main)
         {
             _main = main;
-            FilteredSales = new ObservableCollection<Sale>(Sales);
+
+            // Cargar lista de vendedores únicos
+            LoadSellers();
+
+            ApplyFilter(); // Inicializar con filtros aplicados (y totales calculados)
 
             // Update summary when sales change
             Sales.CollectionChanged += (s, e) => {
-                OnPropertyChanged(nameof(TotalSold));
-                OnPropertyChanged(nameof(TransactionCount));
                 ApplyFilter();
+            };
+
+            _main.Users.CollectionChanged += (s, e) => {
+                LoadSellers();
             };
 
             FilterCommand = new RelayCommand(o => ApplyFilter());
@@ -81,6 +114,8 @@ namespace POS_v0_1.ViewModels
             {
                 SearchText = string.Empty;
                 SelectedDate = null;
+                SelectedSeller = null;
+                SelectedPaymentMethod = null;
                 ShowOnlyCancelled = false;
                 PageSize = 50;
                 ApplyFilter();
@@ -159,7 +194,6 @@ namespace POS_v0_1.ViewModels
                             }
 
                             _main.Db.SaveChanges();
-                            OnPropertyChanged(nameof(TotalSold));
                             ApplyFilter();
                             System.Windows.MessageBox.Show("Venta anulada correctamente.", "Éxito", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                         }
@@ -172,15 +206,23 @@ namespace POS_v0_1.ViewModels
             });
         }
 
+        private void LoadSellers()
+        {
+            Sellers.Clear();
+            var names = _main.Users.Select(u => u.Name).Distinct().OrderBy(n => n);
+            foreach (var name in names) Sellers.Add(name);
+        }
+
         private void ApplyFilter()
         {
             var filtered = Sales.AsEnumerable();
 
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
+                var search = SearchText.Trim().ToLower();
                 filtered = filtered.Where(s =>
-                    s.Id.ToString().Contains(SearchText) ||
-                    (s.CustomerName != null && s.CustomerName.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
+                    s.Id.ToString().Contains(search) ||
+                    (s.CustomerName != null && s.CustomerName.ToLower().Contains(search)));
             }
 
             if (SelectedDate.HasValue)
@@ -188,12 +230,27 @@ namespace POS_v0_1.ViewModels
                 filtered = filtered.Where(s => s.Date.Date == SelectedDate.Value.Date);
             }
 
+            if (!string.IsNullOrEmpty(SelectedSeller))
+            {
+                filtered = filtered.Where(s => s.SellerName == SelectedSeller);
+            }
+
+            if (!string.IsNullOrEmpty(SelectedPaymentMethod))
+            {
+                filtered = filtered.Where(s => s.PaymentMethod == SelectedPaymentMethod);
+            }
+
             if (ShowOnlyCancelled)
             {
                 filtered = filtered.Where(s => s.IsCancelled);
             }
 
-            var result = filtered.OrderByDescending(s => s.Date).Take(PageSize).ToList();
+            // Calculamos totales sobre el filtro COMPLETO (antes de paginar)
+            var fullFilteredList = filtered.ToList();
+            TotalSold = fullFilteredList.Where(s => !s.IsCancelled).Sum(s => s.Total);
+            TransactionCount = fullFilteredList.Count;
+
+            var result = fullFilteredList.OrderByDescending(s => s.Date).Take(PageSize).ToList();
             FilteredSales = new ObservableCollection<Sale>(result);
             OnPropertyChanged(nameof(HasMoreItems));
         }

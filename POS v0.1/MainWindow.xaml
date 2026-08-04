@@ -126,6 +126,9 @@
         <DataTemplate DataType="{x:Type viewModels:CreateUserViewModel}">
             <views:CreateUserView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:DashboardViewModel}">
+            <views:DashboardView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type viewModels:ReportsViewModel}">
             <views:ReportsView/>
         </DataTemplate>
@@ -259,6 +262,7 @@
                 <!-- Navigation -->
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
                     <StackPanel Margin="10,0">
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE80F;" Content="Dashboard" Command="{Binding ShowDashboardCommand}"/>
                         <TextBlock Text="VENTAS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,10,0,5">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">

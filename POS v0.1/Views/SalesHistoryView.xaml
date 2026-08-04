@@ -83,7 +83,9 @@
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="140"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
@@ -91,16 +93,122 @@
                                  Tag="Buscar por Ticket o Cliente..."
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                  BorderBrush="#dee2e6"/>
+
                         <DatePicker Grid.Column="1" Margin="0,0,10,0" Padding="5"
                                     SelectedDate="{Binding SelectedDate}"
                                     VerticalContentAlignment="Center" BorderBrush="#dee2e6"/>
 
-                        <CheckBox Grid.Column="2" Content="Ver solo anuladas"
+                        <ComboBox Grid.Column="2" Margin="0,0,10,0"
+                                  ItemsSource="{Binding Sellers}"
+                                  SelectedItem="{Binding SelectedSeller}"
+                                  VerticalContentAlignment="Center"
+                                  BorderBrush="#dee2e6">
+                            <ComboBox.Style>
+                                <Style TargetType="ComboBox">
+                                    <Style.Triggers>
+                                        <Trigger Property="SelectedItem" Value="{x:Null}">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ComboBox.Style>
+                            <ComboBox.Resources>
+                                <Style TargetType="ComboBoxItem">
+                                    <Setter Property="Padding" Value="10,5"/>
+                                </Style>
+                            </ComboBox.Resources>
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                            <ComboBox.Template>
+                                <ControlTemplate TargetType="ComboBox">
+                                    <Grid>
+                                        <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" CornerRadius="4">
+                                            <Grid>
+                                                <ContentPresenter x:Name="contentPresenter" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                                <TextBlock IsHitTestVisible="False" Text="Vendedor..." VerticalAlignment="Center" Margin="10,0,0,0" Foreground="#adb5bd">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=ComboBox}}" Value="{x:Null}">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <ToggleButton x:Name="toggleButton" BorderThickness="0" Background="Transparent" Grid.ColumnSpan="2" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                                <Path x:Name="arrow" Data="M0,0 L4,4 L8,0" Fill="#6c757d" HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                        <Popup x:Name="PART_Popup" AllowsTransparency="true" Grid.ColumnSpan="2" IsOpen="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Margin="1" PopupAnimation="Slide" Placement="Bottom">
+                                            <Border x:Name="dropDownBorder" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" Background="White" MaxHeight="{TemplateBinding MaxDropDownHeight}" MinWidth="{Binding ActualWidth, ElementName=border}">
+                                                <ScrollViewer x:Name="DropDownScrollViewer">
+                                                    <ItemsPresenter x:Name="ItemsPresenter" KeyboardNavigation.DirectionalNavigation="Contained" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                                </ScrollViewer>
+                                            </Border>
+                                        </Popup>
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="HasItems" Value="false">
+                                            <Setter Property="Height" TargetName="dropDownBorder" Value="95"/>
+                                        </Trigger>
+                                        <Trigger Property="IsEnabled" Value="false">
+                                            <Setter Property="Foreground" Value="#adb5bd"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ComboBox.Template>
+                        </ComboBox>
+
+                        <ComboBox Grid.Column="3" Margin="0,0,10,0"
+                                  ItemsSource="{Binding PaymentMethods}"
+                                  SelectedItem="{Binding SelectedPaymentMethod}"
+                                  VerticalContentAlignment="Center"
+                                  BorderBrush="#dee2e6">
+                            <ComboBox.Template>
+                                <ControlTemplate TargetType="ComboBox">
+                                    <Grid>
+                                        <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" CornerRadius="4">
+                                            <Grid>
+                                                <ContentPresenter x:Name="contentPresenter" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Center" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                                <TextBlock IsHitTestVisible="False" Text="Método Pago..." VerticalAlignment="Center" Margin="10,0,0,0" Foreground="#adb5bd">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=ComboBox}}" Value="{x:Null}">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                                <ToggleButton x:Name="toggleButton" BorderThickness="0" Background="Transparent" Grid.ColumnSpan="2" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                                <Path x:Name="arrow" Data="M0,0 L4,4 L8,0" Fill="#6c757d" HorizontalAlignment="Right" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                        <Popup x:Name="PART_Popup" AllowsTransparency="true" Grid.ColumnSpan="2" IsOpen="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Margin="1" PopupAnimation="Slide" Placement="Bottom">
+                                            <Border x:Name="dropDownBorder" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" Background="White" MaxHeight="{TemplateBinding MaxDropDownHeight}" MinWidth="{Binding ActualWidth, ElementName=border}">
+                                                <ScrollViewer x:Name="DropDownScrollViewer">
+                                                    <ItemsPresenter x:Name="ItemsPresenter" KeyboardNavigation.DirectionalNavigation="Contained" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                                </ScrollViewer>
+                                            </Border>
+                                        </Popup>
+                                    </Grid>
+                                </ControlTemplate>
+                            </ComboBox.Template>
+                        </ComboBox>
+
+                        <CheckBox Grid.Column="4" Content="Ver solo anuladas"
                                   IsChecked="{Binding ShowOnlyCancelled}"
                                   VerticalAlignment="Center"
                                   Margin="10,0,20,0" Foreground="#dc3545" FontWeight="SemiBold"/>
 
-                        <StackPanel Grid.Column="3" Orientation="Horizontal">
+                        <StackPanel Grid.Column="5" Orientation="Horizontal">
                             <Button Content="🔍 Filtrar" Padding="25,8"
                                     Background="#6c757d" Foreground="White" BorderThickness="0"
                                     Command="{Binding FilterCommand}">

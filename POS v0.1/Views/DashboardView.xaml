@@ -5,16 +5,46 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1100">
+
+    <UserControl.Resources>
+        <Style x:Key="QuickActionButton" TargetType="Button">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#e9ecef"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="20,15"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#f8f9fa"/>
+                                <Setter Property="BorderBrush" Value="#dee2e6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
     <Grid Background="#f8f9fa">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel Padding="25">
+            <StackPanel Margin="25">
                 <!-- Header -->
                 <Grid Margin="0,0,0,25">
                     <StackPanel>
                         <TextBlock Text="Resumen de Hoy" FontSize="24" FontWeight="Bold" Foreground="#333"/>
-                        <TextBlock Text="{Binding Source={x:Static System:DateTime.Now}, StringFormat='\{0:dd MMM, yyyy\}', ConverterCulture=es-NI}"
-                                   FontSize="14" Foreground="#666" Margin="0,5,0,0"
-                                   xmlns:System="clr-namespace:System;assembly=mscorlib"/>
+                        <TextBlock Text="{Binding FormattedDate}"
+                                   FontSize="14" Foreground="#666" Margin="0,5,0,0"/>
                     </StackPanel>
                     <Button Content="🛒 Nueva Venta Rápida" HorizontalAlignment="Right"
                             Background="#0d6efd" Foreground="White" Padding="15,10"
@@ -35,7 +65,7 @@
                             <StackPanel>
                                 <TextBlock Text="VENTAS (HOY)" FontSize="12" FontWeight="Bold" Foreground="#666"/>
                                 <TextBlock FontWeight="Bold" FontSize="22" Foreground="#333" Margin="0,15,0,0">
-                                    <Run Text="C$ " /><Run Text="{Binding TodaySales, StringFormat=N2}" />
+                                    <Run Text="C$ " /><Run Text="{Binding TodaySales, Mode=OneWay, StringFormat=N2}" />
                                 </TextBlock>
                             </StackPanel>
                             <Border Width="40" Height="40" Background="#e8f5e9" CornerRadius="20" HorizontalAlignment="Right" VerticalAlignment="Top">
@@ -51,7 +81,7 @@
                             <StackPanel>
                                 <TextBlock Text="RECARGAS (HOY)" FontSize="12" FontWeight="Bold" Foreground="#666"/>
                                 <TextBlock FontWeight="Bold" FontSize="22" Foreground="#333" Margin="0,15,0,0">
-                                    <Run Text="C$ " /><Run Text="{Binding TodayTopups, StringFormat=N2}" />
+                                    <Run Text="C$ " /><Run Text="{Binding TodayTopups, Mode=OneWay, StringFormat=N2}" />
                                 </TextBlock>
                             </StackPanel>
                             <Border Width="40" Height="40" Background="#e7f1ff" CornerRadius="20" HorizontalAlignment="Right" VerticalAlignment="Top">
@@ -66,7 +96,7 @@
                         <Grid>
                             <StackPanel>
                                 <TextBlock Text="REP. PENDIENTES" FontSize="12" FontWeight="Bold" Foreground="#666"/>
-                                <TextBlock Text="{Binding PendingRepairs}" FontWeight="Bold" FontSize="22" Foreground="#333" Margin="0,15,0,0"/>
+                                <TextBlock Text="{Binding PendingRepairs, Mode=OneWay}" FontWeight="Bold" FontSize="22" Foreground="#333" Margin="0,15,0,0"/>
                             </StackPanel>
                             <Border Width="40" Height="40" Background="#fffcf0" CornerRadius="20" HorizontalAlignment="Right" VerticalAlignment="Top">
                                 <TextBlock Text="🛠️" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -81,7 +111,7 @@
                             <StackPanel>
                                 <TextBlock Text="STOCK BAJO" FontSize="12" FontWeight="Bold" Foreground="#666"/>
                                 <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
-                                    <TextBlock Text="{Binding LowStockProducts}" FontWeight="Bold" FontSize="22" Foreground="#333"/>
+                                    <TextBlock Text="{Binding LowStockProducts, Mode=OneWay}" FontWeight="Bold" FontSize="22" Foreground="#333"/>
                                     <TextBlock Text=" productos" FontSize="14" Foreground="#666" VerticalAlignment="Bottom" Margin="5,0,0,3"/>
                                 </StackPanel>
                             </StackPanel>
@@ -107,18 +137,20 @@
                                 <Button Content="Ver Todas" HorizontalAlignment="Right" Background="Transparent" BorderBrush="#dee2e6" BorderThickness="1" Padding="10,4" Foreground="#666" Command="{Binding ViewAllSalesCommand}"/>
                             </Grid>
 
-                            <Grid Background="#f8f9fa" Padding="10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="150"/>
-                                    <ColumnDefinition Width="100"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="Ticket" FontWeight="SemiBold" Foreground="#666"/>
-                                <TextBlock Grid.Column="1" Text="Hora" FontWeight="SemiBold" Foreground="#666"/>
-                                <TextBlock Grid.Column="2" Text="Vendedor" FontWeight="SemiBold" Foreground="#666"/>
-                                <TextBlock Grid.Column="3" Text="Total" FontWeight="SemiBold" Foreground="#666" HorizontalAlignment="Right"/>
-                            </Grid>
+                            <Border Background="#f8f9fa" Padding="10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="100"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Ticket" FontWeight="SemiBold" Foreground="#666"/>
+                                    <TextBlock Grid.Column="1" Text="Hora" FontWeight="SemiBold" Foreground="#666"/>
+                                    <TextBlock Grid.Column="2" Text="Vendedor" FontWeight="SemiBold" Foreground="#666"/>
+                                    <TextBlock Grid.Column="3" Text="Total" FontWeight="SemiBold" Foreground="#666" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </Border>
 
                             <ItemsControl ItemsSource="{Binding RecentSales}">
                                 <ItemsControl.ItemTemplate>
@@ -185,34 +217,4 @@
             </StackPanel>
         </ScrollViewer>
     </Grid>
-
-    <UserControl.Resources>
-        <Style x:Key="QuickActionButton" TargetType="Button">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="#e9ecef"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="20,15"/>
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
-                            <ContentPresenter Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#f8f9fa"/>
-                                <Setter Property="BorderBrush" Value="#dee2e6"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </UserControl.Resources>
 </UserControl>

@@ -22,30 +22,24 @@
                         <StackPanel Grid.Column="0">
                             <TextBlock Text="Información del Equipo" FontWeight="Bold" Margin="0,0,0,8"/>
                             <StackPanel>
-                                <TextBlock Text="Cliente" FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding Repair.ClientName}" FontWeight="Bold" Margin="0,4,0,0" />
-                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                    <TextBlock Text="&#x1F4DE;" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding Repair.ClientPhone, TargetNullValue=N/A}" VerticalAlignment="Center"/>
-                                </StackPanel>
+                                <TextBlock Text="Cliente" FontWeight="SemiBold" FontSize="11" Foreground="#666"/>
+                                <TextBox Text="{Binding ClientName, UpdateSourceTrigger=PropertyChanged}" FontWeight="Bold" Margin="0,2,0,8" />
+
+                                <TextBlock Text="Teléfono" FontWeight="SemiBold" FontSize="11" Foreground="#666"/>
+                                <TextBox Text="{Binding ClientPhone, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8" />
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                <TextBlock Text="Equipo: " FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding Repair.DeviceBrand}" />
-                                <TextBlock Text="{Binding Repair.DeviceModel}"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                <TextBlock Text="IMEI/Serie: " FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding Repair.IMEI}"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                <TextBlock Text="Falla Reportada: " FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding Repair.ReportedFailure}"/>
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                <TextBlock Text="Fecha Ingreso: " FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding Repair.EntryDate, StringFormat={}{0:dd/MM/yyyy HH:mm}}"/>
-                            </StackPanel>
+
+                            <TextBlock Text="Marca" FontWeight="SemiBold" FontSize="11" Foreground="#666"/>
+                            <TextBox Text="{Binding DeviceBrand, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+
+                            <TextBlock Text="Modelo" FontWeight="SemiBold" FontSize="11" Foreground="#666"/>
+                            <TextBox Text="{Binding DeviceModel, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+
+                            <TextBlock Text="IMEI / Serie" FontWeight="SemiBold" FontSize="11" Foreground="#666"/>
+                            <TextBox Text="{Binding IMEI, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+
+                            <TextBlock Text="Fecha Ingreso" FontWeight="SemiBold" FontSize="11" Foreground="#666"/>
+                            <TextBlock Text="{Binding Repair.EntryDate, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Margin="0,2,0,0"/>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1" Margin="20,0,0,0">

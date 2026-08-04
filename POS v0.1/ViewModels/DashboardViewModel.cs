@@ -10,10 +10,34 @@ namespace POS_v0_1.ViewModels
     {
         private MainViewModel _main;
 
-        public decimal TodaySales { get; private set; }
-        public decimal TodayTopups { get; private set; }
-        public int PendingRepairs { get; private set; }
-        public int LowStockProducts { get; private set; }
+        private decimal _todaySales;
+        public decimal TodaySales
+        {
+            get => _todaySales;
+            private set { _todaySales = value; OnPropertyChanged(); }
+        }
+
+        private decimal _todayTopups;
+        public decimal TodayTopups
+        {
+            get => _todayTopups;
+            private set { _todayTopups = value; OnPropertyChanged(); }
+        }
+
+        private int _pendingRepairs;
+        public int PendingRepairs
+        {
+            get => _pendingRepairs;
+            private set { _pendingRepairs = value; OnPropertyChanged(); }
+        }
+
+        private int _lowStockProducts;
+        public int LowStockProducts
+        {
+            get => _lowStockProducts;
+            private set { _lowStockProducts = value; OnPropertyChanged(); }
+        }
+        public string FormattedDate => DateTime.Now.ToString("dd MMM, yyyy");
 
         public ObservableCollection<Sale> RecentSales { get; } = new ObservableCollection<Sale>();
 
@@ -28,6 +52,12 @@ namespace POS_v0_1.ViewModels
         {
             _main = main;
             LoadStats();
+
+            // Suscribirse a cambios en las colecciones para actualizar estadísticas en tiempo real
+            _main.Sales.CollectionChanged += (s, e) => LoadStats();
+            _main.Topups.CollectionChanged += (s, e) => LoadStats();
+            _main.Repairs.CollectionChanged += (s, e) => LoadStats();
+            _main.Products.CollectionChanged += (s, e) => LoadStats();
 
             NewQuickSaleCommand = _main.ShowPosCommand;
             RegisterProductCommand = _main.ShowProductManagementCommand;
@@ -48,7 +78,7 @@ namespace POS_v0_1.ViewModels
 
             // Recargas de hoy
             TodayTopups = _main.Topups
-                .Where(t => t.Date.Date == today)
+                .Where(t => t.DateTime.Date == today)
                 .Sum(t => t.Amount);
 
             // Reparaciones Pendientes
@@ -65,12 +95,6 @@ namespace POS_v0_1.ViewModels
                 .OrderByDescending(s => s.Date)
                 .Take(5);
             foreach (var s in sales) RecentSales.Add(s);
-
-            OnPropertyChanged(nameof(TodaySales));
-            OnPropertyChanged(nameof(TodayTopups));
-            OnPropertyChanged(nameof(PendingRepairs));
-            OnPropertyChanged(nameof(LowStockProducts));
-            OnPropertyChanged(nameof(RecentSales));
         }
     }
 }
