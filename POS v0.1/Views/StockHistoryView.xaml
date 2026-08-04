@@ -1,0 +1,83 @@
+<UserControl x:Class="POS_v0_1.Views.StockHistoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="1000">
+    <Grid Background="#f8f9fa">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="White" Padding="15" Margin="0,0,0,10">
+            <Grid>
+                <TextBlock Text="Kardex - Historial de Movimientos" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <Button Content="← Volver al Inventario" HorizontalAlignment="Right" Padding="15,5"
+                        Command="{Binding BackCommand}" Background="White" BorderBrush="#dee2e6"/>
+            </Grid>
+        </Border>
+
+        <!-- Filter -->
+        <Border Grid.Row="1" Background="White" Margin="20,0,20,15" Padding="15" CornerRadius="8">
+            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                     Tag="Filtrar por tipo, motivo o usuario..." Padding="8"/>
+        </Border>
+
+        <!-- Table -->
+        <Border Grid.Row="2" Background="White" Margin="20,0,20,20" CornerRadius="8" BorderBrush="#dee2e6" BorderThickness="1">
+            <DataGrid ItemsSource="{Binding FilteredMovements}" AutoGenerateColumns="False" IsReadOnly="True"
+                      Background="Transparent" BorderThickness="0" GridLinesVisibility="Horizontal" RowHeight="45">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Fecha / Hora" Binding="{Binding Date, StringFormat='\{0:dd/MM/yyyy HH:mm\}'}" Width="150"/>
+                    <DataGridTemplateColumn Header="Tipo" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="10" Padding="8,2" HorizontalAlignment="Center">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MovementType}" Value="Venta"><Setter Property="Background" Value="#fff3cd"/></DataTrigger>
+                                                <DataTrigger Binding="{Binding MovementType}" Value="Compra"><Setter Property="Background" Value="#d1e7dd"/></DataTrigger>
+                                                <DataTrigger Binding="{Binding MovementType}" Value="Anulación"><Setter Property="Background" Value="#f8d7da"/></DataTrigger>
+                                                <DataTrigger Binding="{Binding MovementType}" Value="Ajuste Manual"><Setter Property="Background" Value="#cfe2ff"/></DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding MovementType}" FontSize="11" FontWeight="Bold"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="Cambio" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding QuantityChange, StringFormat='{}{0:+0;-0;0}'}"
+                                           FontWeight="Bold" HorizontalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding QuantityChange, Converter={StaticResource DifferenceToBrushConverter}}" Value="Green">
+                                                    <Setter Property="Foreground" Value="#198754"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding QuantityChange, Converter={StaticResource DifferenceToBrushConverter}}" Value="Red">
+                                                    <Setter Property="Foreground" Value="#dc3545"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Stock Final" Binding="{Binding NewStock}" Width="100"/>
+                    <DataGridTextColumn Header="Motivo / Detalle" Binding="{Binding Reason}" Width="*"/>
+                    <DataGridTextColumn Header="Usuario" Binding="{Binding UserName}" Width="150"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+</UserControl>

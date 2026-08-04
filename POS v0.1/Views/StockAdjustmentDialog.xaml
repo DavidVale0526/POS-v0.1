@@ -1,0 +1,20 @@
+<Window x:Class="POS_v0_1.Views.StockAdjustmentDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Ajuste de Inventario" Height="300" Width="400"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" WindowStyle="ToolWindow">
+    <Grid Margin="20">
+        <StackPanel>
+            <TextBlock x:Name="ProductNameText" Text="Producto: " FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+            <TextBlock x:Name="CurrentStockText" Text="Stock Actual: 0" Foreground="Gray" Margin="0,0,0,20"/>
+
+            <TextBlock Text="Cantidad a ajustar (Ej: +5 para entrada, -2 para salida):" Margin="0,0,0,5"/>
+            <TextBox x:Name="AdjustAmountBox" Padding="8" FontSize="16" Margin="0,0,0,20"/>
+
+            <TextBlock Text="Motivo del ajuste:" Margin="0,0,0,5"/>
+            <TextBox x:Name="ReasonBox" Padding="8" Margin="0,0,0,20" Tag="Ej: Daño, Error de conteo..."/>
+
+            <Button Content="Aplicar Ajuste" Padding="10" Background="#0d6efd" Foreground="White" FontWeight="Bold" Click="Apply_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

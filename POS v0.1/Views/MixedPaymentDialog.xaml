@@ -1,0 +1,44 @@
+<Window x:Class="POS_v0_1.Views.MixedPaymentDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Pago Mixto" Height="350" Width="400"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" WindowStyle="ToolWindow">
+    <Grid Margin="20">
+        <StackPanel>
+            <TextBlock Text="Desglose de Pago Mixto" FontSize="18" FontWeight="Bold" Margin="0,0,0,20" HorizontalAlignment="Center"/>
+
+            <Grid Margin="0,0,0,10">
+                <TextBlock Text="Total a Pagar:" VerticalAlignment="Center"/>
+                <TextBlock x:Name="TotalText" HorizontalAlignment="Right" FontSize="18" FontWeight="Bold" Foreground="#0d6efd"/>
+            </Grid>
+
+            <Separator Margin="0,10"/>
+
+            <Grid Margin="0,5">
+                <TextBlock Text="Monto en Efectivo:" VerticalAlignment="Center"/>
+                <TextBox x:Name="CashBox" Width="150" HorizontalAlignment="Right" TextAlignment="Right" Padding="5" TextChanged="Amount_TextChanged"/>
+            </Grid>
+
+            <Grid Margin="0,5">
+                <TextBlock Text="Monto con Tarjeta:" VerticalAlignment="Center"/>
+                <TextBox x:Name="CardBox" Width="150" HorizontalAlignment="Right" TextAlignment="Right" Padding="5" TextChanged="Amount_TextChanged"/>
+            </Grid>
+
+            <Grid Margin="0,5">
+                <TextBlock Text="Monto Transferencia:" VerticalAlignment="Center"/>
+                <TextBox x:Name="TransferBox" Width="150" HorizontalAlignment="Right" TextAlignment="Right" Padding="5" TextChanged="Amount_TextChanged"/>
+            </Grid>
+
+            <Separator Margin="0,10"/>
+
+            <Grid Margin="0,5">
+                <TextBlock x:Name="RemainingLabel" Text="Restante:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                <TextBlock x:Name="RemainingText" HorizontalAlignment="Right" FontSize="16" FontWeight="Bold"/>
+            </Grid>
+
+            <Button Content="Confirmar Pago" Margin="0,20,0,0" Padding="10"
+                    Background="#28a745" Foreground="White" FontWeight="Bold" BorderThickness="0"
+                    Click="Confirm_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
