@@ -54,6 +54,7 @@ namespace POS_v0_1.ViewModels
         public ICommand StockAlertCommand { get; }
         public ICommand ClearFiltersCommand { get; }
         public ICommand ShowProductDetailCommand { get; }
+        public ICommand ManualAdjustmentCommand { get; }
 
         public ProductsViewModel(MainViewModel main, bool lowStockOnly = false)
         {
@@ -67,6 +68,29 @@ namespace POS_v0_1.ViewModels
             {
                 FilteredProducts = new ObservableCollection<Product>(_main.Products);
             }
+
+            ManualAdjustmentCommand = new RelayCommand(o =>
+            {
+                if (o is Product prod)
+                {
+                    if (!_main.RequestAdminValidation()) return;
+
+                    var dialog = new Views.StockAdjustmentDialog(prod);
+                    dialog.Owner = Application.Current.MainWindow;
+                    if (dialog.ShowDialog() == true)
+                    {
+                        prod.Stock += dialog.Adjustment;
+                        var dbProd = _main.Db.Products.Find(prod.Id);
+                        if (dbProd != null)
+                        {
+                            dbProd.Stock = prod.Stock;
+                            _main.Db.SaveChanges();
+                        }
+                        _main.RecordStockMovement(prod.Id, dialog.Adjustment, "Ajuste Manual", dialog.Reason);
+                        _main.ShowToast("Stock ajustado correctamente.");
+                    }
+                }
+            });
 
             ShowCreateProductCommand = new RelayCommand(o => _main.CurrentView = new CreateProductViewModel(_main));
 
@@ -338,7 +362,11 @@ namespace POS_v0_1.ViewModels
                     if (res == MessageBoxResult.No) return;
                 }
 
-                // Validación de Unicidad (Nombre y Barcode)
+                // Normalización para evitar errores de duplicidad en campos únicos
+                string finalBarcode = string.IsNullOrWhiteSpace(Barcode) ? null : Barcode.Trim();
+                string finalSKU = string.IsNullOrWhiteSpace(SKU) ? null : SKU.Trim();
+
+                // Validación de Unicidad (Nombre, Barcode y SKU)
                 bool nameExists = _main.Products.Any(p => p.Name.Equals(Name, StringComparison.OrdinalIgnoreCase) && p.Id != (_editingProduct?.Id ?? -1));
                 if (nameExists)
                 {
@@ -346,9 +374,9 @@ namespace POS_v0_1.ViewModels
                     return;
                 }
 
-                if (!string.IsNullOrWhiteSpace(Barcode))
+                if (finalBarcode != null)
                 {
-                    bool barcodeExists = _main.Products.Any(p => p.Barcode == Barcode && p.Id != (_editingProduct?.Id ?? -1));
+                    bool barcodeExists = _main.Products.Any(p => p.Barcode == finalBarcode && p.Id != (_editingProduct?.Id ?? -1));
                     if (barcodeExists)
                     {
                         MessageBox.Show("El código de barras ya está registrado en otro producto.", "Duplicado", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -356,52 +384,77 @@ namespace POS_v0_1.ViewModels
                     }
                 }
 
-                if (_editingProduct == null)
+                if (finalSKU != null)
                 {
-                    var newProd = new Product
+                    bool skuExists = _main.Products.Any(p => p.SKU == finalSKU && p.Id != (_editingProduct?.Id ?? -1));
+                    if (skuExists)
                     {
-                        Name = Name,
-                        Barcode = Barcode,
-                        SKU = SKU,
-                        Description = Description,
-                        PurchasePrice = PurchasePrice,
-                        SellingPrice = SellingPrice,
-                        Stock = Stock,
-                        MinStock = MinStock,
-                        Location = Location,
-                        Status = SelectedStatus,
-                        ImagePath = ImagePath,
-                        CategoryId = SelectedCategory.Id,
-                        Category = SelectedCategory,
-                        ProviderId = SelectedProvider?.Id,
-                        Provider = SelectedProvider
-                    };
-                    _main.Db.Products.Add(newProd);
-                    _main.Db.SaveChanges();
-                    _main.Products.Add(newProd);
+                        MessageBox.Show("El SKU ya está registrado en otro producto.", "Duplicado", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
                 }
-                else
-                {
-                    _editingProduct.Name = Name;
-                    _editingProduct.Barcode = Barcode;
-                    _editingProduct.SKU = SKU;
-                    _editingProduct.Description = Description;
-                    _editingProduct.PurchasePrice = PurchasePrice;
-                    _editingProduct.SellingPrice = SellingPrice;
-                    _editingProduct.Stock = Stock;
-                    _editingProduct.MinStock = MinStock;
-                    _editingProduct.Location = Location;
-                    _editingProduct.Status = SelectedStatus;
-                    _editingProduct.ImagePath = ImagePath;
-                    _editingProduct.CategoryId = SelectedCategory.Id;
-                    _editingProduct.Category = SelectedCategory;
-                    _editingProduct.ProviderId = SelectedProvider?.Id;
-                    _editingProduct.Provider = SelectedProvider;
 
-                    _main.Db.SaveChanges();
+                try
+                {
+                    if (_editingProduct == null)
+                    {
+                        var newProd = new Product
+                        {
+                            Name = Name,
+                            Barcode = finalBarcode,
+                            SKU = finalSKU,
+                            Description = Description,
+                            PurchasePrice = PurchasePrice,
+                            SellingPrice = SellingPrice,
+                            Stock = Stock,
+                            MinStock = MinStock,
+                            Location = Location,
+                            Status = SelectedStatus,
+                            ImagePath = string.IsNullOrWhiteSpace(ImagePath) ? null : ImagePath,
+                            CategoryId = SelectedCategory.Id,
+                            ProviderId = SelectedProvider?.Id,
+                            CategoryLegacy = SelectedCategory.Name // Satisfacer NOT NULL legacy
+                        };
+
+                        // Asegurar que CategoryLegacy nunca sea null para evitar Error 19
+                        if (string.IsNullOrEmpty(newProd.CategoryLegacy)) newProd.CategoryLegacy = "General";
+
+                        // Limpiar referencias para evitar re-inserción
+                        newProd.Category = null;
+                        newProd.Provider = null;
+
+                        _main.Db.Products.Add(newProd);
+                        _main.Db.SaveChanges();
+                        _main.Products.Add(newProd);
+                    }
+                    else
+                    {
+                        _editingProduct.Name = Name;
+                        _editingProduct.Barcode = finalBarcode;
+                        _editingProduct.SKU = finalSKU;
+                        _editingProduct.Description = Description;
+                        _editingProduct.PurchasePrice = PurchasePrice;
+                        _editingProduct.SellingPrice = SellingPrice;
+                        _editingProduct.Stock = Stock;
+                        _editingProduct.MinStock = MinStock;
+                        _editingProduct.Location = Location;
+                        _editingProduct.Status = SelectedStatus;
+                        _editingProduct.ImagePath = string.IsNullOrWhiteSpace(ImagePath) ? null : ImagePath;
+                        _editingProduct.CategoryId = SelectedCategory.Id;
+                        _editingProduct.ProviderId = SelectedProvider?.Id;
+                        _editingProduct.CategoryLegacy = SelectedCategory.Name;
+
+                        _main.Db.SaveChanges();
+                    }
+                    _main.ShowToast("Producto guardado con éxito.");
+                    _main.CurrentView = new ProductsViewModel(_main);
                 }
-                _main.ShowToast("Producto guardado con éxito.");
-                _main.CurrentView = new ProductsViewModel(_main);
+                catch (Exception ex)
+                {
+                    string msg = "Error al guardar: " + ex.Message;
+                    if (ex.InnerException != null) msg += "\nDetalle: " + ex.InnerException.Message;
+                    MessageBox.Show(msg, "Fallo de Base de Datos", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             });
 
             BackCommand = new RelayCommand(o =>

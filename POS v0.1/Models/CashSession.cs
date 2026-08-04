@@ -19,6 +19,11 @@ namespace POS_v0_1.Models
         public decimal TopupsTotal { get; set; }
         public decimal RepairsTotal { get; set; }
 
+        // Desglose por método (Solo ventas/servicios)
+        public decimal CashTotal { get; set; }
+        public decimal CardTotal { get; set; }
+        public decimal TransferTotal { get; set; }
+
         public decimal ClosingBalance { get; set; } // Actual money counted at closing
 
         public decimal TheoreticalBalance => OpeningBalance + SalesTotal + IncomesTotal + TopupsTotal + RepairsTotal - ExpensesTotal;

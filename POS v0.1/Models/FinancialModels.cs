@@ -23,6 +23,9 @@ namespace POS_v0_1.Models
         public string Type { get; set; } = "Gasto"; // Gasto, Ingreso
         public string Concept { get; set; } = string.Empty;
 
+        // Legacy property to satisfy NOT NULL constraint in database
+        public string Source { get; set; } = string.Empty;
+
         // New Foreign Key Relation
         public int SourceId { get; set; }
         public virtual FinancialSource? FinancialSource { get; set; }

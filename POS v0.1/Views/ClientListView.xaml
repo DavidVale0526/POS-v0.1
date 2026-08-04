@@ -122,8 +122,12 @@
                                             <TextBlock Grid.Column="1" Text="{Binding ContactSummary}" VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="2" Text="{Binding Address}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                             <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Content="✏️" Background="Transparent" BorderThickness="0" Margin="0,0,5,0"/>
-                                                <Button Content="🗑️" Background="Transparent" BorderThickness="0"/>
+                                                <Button Content="✏️" Background="Transparent" BorderThickness="0" Margin="0,0,5,0"
+                                                        Command="{Binding DataContext.EditClientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" ToolTip="Editar"/>
+                                                <Button Content="🗑️" Background="Transparent" BorderThickness="0"
+                                                        Command="{Binding DataContext.DeleteClientCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}" ToolTip="Eliminar"/>
                                             </StackPanel>
                                         </Grid>
                                     </Border>

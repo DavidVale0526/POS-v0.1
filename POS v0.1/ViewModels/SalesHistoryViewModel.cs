@@ -152,6 +152,9 @@ namespace POS_v0_1.ViewModels
                                     // Sincronización 4.5: Actualizar en memoria global para UI instantánea
                                     var memProd = _main.Products.FirstOrDefault(p => p.Id == item.ProductId);
                                     if (memProd != null) memProd.Stock = dbProd.Stock;
+
+                                    // REGISTRO EN KARDEX
+                                    _main.RecordStockMovement(item.ProductId, item.Quantity, "Anulación", $"Retorno por anulación de venta #{sale.Id}");
                                 }
                             }
 

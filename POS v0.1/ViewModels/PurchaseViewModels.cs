@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using POS_v0_1.Models;
 using System.Collections.Specialized;
@@ -11,7 +12,12 @@ namespace POS_v0_1.ViewModels
     public class PurchasesViewModel : BaseViewModel
     {
         private readonly MainViewModel _main;
-        public ObservableCollection<Purchase> Purchases { get; private set; }
+        private ObservableCollection<Purchase> _purchases;
+        public ObservableCollection<Purchase> Purchases
+        {
+            get => _purchases;
+            set { _purchases = value; OnPropertyChanged(); }
+        }
 
         private string _searchText;
         public string SearchText
@@ -64,7 +70,6 @@ namespace POS_v0_1.ViewModels
                     (p.InvoiceNumber != null && p.InvoiceNumber.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
                 Purchases = new ObservableCollection<Purchase>(filtered);
             }
-            OnPropertyChanged(nameof(Purchases));
         }
     }
 
@@ -277,7 +282,7 @@ namespace POS_v0_1.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(ProviderNameText) || !Items.Any()) return;
 
-                // Si no hay objeto seleccionado pero hay texto, intentar buscar por nombre o crear uno temporal
+                // Intentar buscar proveedor o crear uno nuevo
                 if (SelectedProvider == null || SelectedProvider.Name != ProviderNameText)
                 {
                     var existing = _main.Providers.FirstOrDefault(p => p.Name.Equals(ProviderNameText, StringComparison.OrdinalIgnoreCase));
@@ -287,7 +292,6 @@ namespace POS_v0_1.ViewModels
                     }
                     else
                     {
-                        // Crear proveedor rápido/temporal
                         var newProv = new Provider { Name = ProviderNameText, Description = "Proveedor registrado durante compra" };
                         _main.Db.Providers.Add(newProv);
                         _main.Db.SaveChanges();
@@ -296,8 +300,11 @@ namespace POS_v0_1.ViewModels
                     }
                 }
 
+                if (SelectedProvider == null) return;
+
                 if (_editingPurchase != null)
                 {
+                    // Deshacer stock previo si estamos editando
                     foreach (var oldItem in _editingPurchase.Items)
                     {
                         var prod = _main.Db.Products.Find(oldItem.ProductId);
@@ -333,6 +340,7 @@ namespace POS_v0_1.ViewModels
                     _main.Purchases.Add(purchase);
                 }
 
+                // Actualizar stock de los productos comprados
                 foreach (var item in Items)
                 {
                     var product = _main.Db.Products.FirstOrDefault(p => p.Id == item.ProductId);
@@ -341,18 +349,19 @@ namespace POS_v0_1.ViewModels
                         product.Stock += item.Quantity;
                         product.PurchasePrice = item.UnitPrice;
 
-                        // Sincronización 4.5: Actualizar en memoria global
                         var memProd = _main.Products.FirstOrDefault(p => p.Id == item.ProductId);
                         if (memProd != null)
                         {
                             memProd.Stock = product.Stock;
                             memProd.PurchasePrice = product.PurchasePrice;
                         }
+
+                        _main.RecordStockMovement(item.ProductId, item.Quantity, "Compra", $"Entrada por compra de {SelectedProvider.Name}");
                     }
                 }
 
-                // Si hubo productos creados rápidamente, asegurar que sus IDs estén vinculados
-                _main.Db.SaveChanges();
+                // Registrar movimiento financiero si se seleccionó una fuente
+                if (SelectedFinancialSource != null)
                 {
                     var movement = new FinancialMovement
                     {
@@ -361,6 +370,8 @@ namespace POS_v0_1.ViewModels
                         Concept = $"Compra a proveedor: {SelectedProvider.Name} (Fact: {InvoiceNumber})",
                         SourceId = SelectedFinancialSource.Id,
                         FinancialSource = SelectedFinancialSource,
+                        Source = SelectedFinancialSource.Name, // Populate legacy Source column
+
                         Amount = Total,
                         RegisteredBy = _main.CurrentUser?.Name ?? "Usuario",
                         Reference = InvoiceNumber
@@ -370,6 +381,7 @@ namespace POS_v0_1.ViewModels
                 }
 
                 _main.Db.SaveChanges();
+                _main.ShowToast("Compra registrada correctamente.");
                 _main.CurrentView = new PurchasesViewModel(_main);
             });
 

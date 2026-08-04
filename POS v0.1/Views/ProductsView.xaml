@@ -41,6 +41,10 @@
         <Grid Grid.Row="1" Margin="0,0,0,15">
             <TextBlock Text="Inventario de Productos" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="📊 Ver Kardex Global" Background="White" BorderBrush="#dee2e6" BorderThickness="1" Foreground="#666" Padding="15,8" Margin="0,0,10,0"
+                        Command="{Binding DataContext.ShowStockHistoryCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                    <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style></Button.Resources>
+                </Button>
                 <Button Content="⚠ Alertas de Stock" Background="#ffc107" Foreground="Black" Padding="15,8" Margin="0,0,10,0" BorderThickness="0"
                         Command="{Binding StockAlertCommand}">
                     <Button.Resources>
@@ -154,10 +158,14 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Acciones" Width="150">
+                <DataGridTemplateColumn Header="Acciones" Width="200">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
+                                <Button Content="📊" ToolTip="Kardex (Historial)" Margin="2" Padding="8,4" Background="White" BorderBrush="#6c757d" Foreground="#6c757d"
+                                        Command="{Binding DataContext.ShowStockHistoryCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding Id}"/>
+                                <Button Content="⚖️" ToolTip="Ajuste Manual" Margin="2" Padding="8,4" Background="White" BorderBrush="#ffc107" Foreground="#856404"
+                                        Command="{Binding DataContext.ManualAdjustmentCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
                                 <Button Content="👁" Margin="2" Padding="8,4" Background="White" BorderBrush="#0dcaf0" Foreground="#0dcaf0"
                                         Command="{Binding DataContext.ShowProductDetailCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
                                 <Button Content="✎" Margin="2" Padding="8,4" Background="White" BorderBrush="#007bff" Foreground="#007bff"

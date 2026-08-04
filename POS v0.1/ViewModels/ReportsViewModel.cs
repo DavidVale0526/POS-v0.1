@@ -123,6 +123,9 @@ namespace POS_v0_1.ViewModels
             // 1. Resumen General
             summary.GrossSales = sales.Sum(s => s.Total);
             summary.PosSalesIncome = summary.GrossSales;
+            summary.PosCashIncome = sales.Sum(s => s.AmountCash);
+            summary.PosCardIncome = sales.Sum(s => s.AmountCard);
+            summary.PosTransferIncome = sales.Sum(s => s.AmountTransfer);
 
             // Cálculo real del costo de venta basado en el costo histórico guardado en SaleItem
             summary.CostOfGoodsSold = sales.SelectMany(s => s.Items).Sum(i => i.PurchasePrice * i.Quantity);

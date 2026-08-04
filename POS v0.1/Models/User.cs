@@ -1,15 +1,36 @@
 using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace POS_v0_1.Models
 {
-    public class User
+    public class User : INotifyPropertyChanged
     {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string? Email { get; set; }
-        public string Role { get; set; } = "Usuario";
-        public DateTime RegistrationDate { get; set; } = DateTime.Now;
-        public string? Pin { get; set; } // 4-6 dígitos
-        public string? Password { get; set; }
+        private int _id;
+        public int Id { get => _id; set { _id = value; OnPropertyChanged(); } }
+
+        private string _name = string.Empty;
+        public string Name { get => _name; set { _name = value; OnPropertyChanged(); } }
+
+        private string? _email;
+        public string? Email { get => _email; set { _email = value; OnPropertyChanged(); } }
+
+        private string _role = "Usuario";
+        public string Role { get => _role; set { _role = value; OnPropertyChanged(); } }
+
+        private DateTime _registrationDate = DateTime.Now;
+        public DateTime RegistrationDate { get => _registrationDate; set { _registrationDate = value; OnPropertyChanged(); } }
+
+        private string? _pin;
+        public string? Pin { get => _pin; set { _pin = value; OnPropertyChanged(); } }
+
+        private string? _password;
+        public string? Password { get => _password; set { _password = value; OnPropertyChanged(); } }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged([CallerMemberName] string? name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
     }
 }

@@ -134,6 +134,7 @@ namespace POS_v0_1.ViewModels
                     _main.BusinessConfig = _config;
 
                     _main.ShowToast("Configuración guardada correctamente.", "Success");
+                    System.Windows.MessageBox.Show("Configuración guardada con éxito.", "Información", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {

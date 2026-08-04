@@ -18,6 +18,7 @@ namespace POS_v0_1.Data
         public DbSet<TopupPreset> TopupPresets { get; set; }
         public DbSet<RepairOrder> Repairs { get; set; }
         public DbSet<RepairStatusHistory> RepairStatusHistories { get; set; }
+        public DbSet<RepairPart> RepairParts { get; set; }
         public DbSet<RepairCategory> RepairCategories { get; set; }
         public DbSet<RepairType> RepairTypes { get; set; }
         public DbSet<FinancialMovement> FinancialMovements { get; set; }
@@ -27,6 +28,7 @@ namespace POS_v0_1.Data
         public DbSet<CashSession> CashSessions { get; set; }
         public DbSet<BusinessConfiguration> BusinessConfigs { get; set; }
         public DbSet<CreditNote> CreditNotes { get; set; }
+        public DbSet<StockMovement> StockMovements { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -35,6 +37,14 @@ namespace POS_v0_1.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Mapeo de compatibilidad para columna legacy 'Category' (string)
+            // Usamos un nombre interno para evitar choque con la propiedad de navegación
+            modelBuilder.Entity<Product>().Property<string>("CategoryLegacy")
+                .HasColumnName("Category")
+                .HasDefaultValue("");
+
+            modelBuilder.Entity<RepairCategory>().Property(r => r.Description).IsRequired(false);
+
             // Configurar Llaves Primarias para entidades anidadas
             modelBuilder.Entity<SaleItem>().HasKey(si => si.Id);
             modelBuilder.Entity<PurchaseDetail>().HasKey(pd => pd.Id);

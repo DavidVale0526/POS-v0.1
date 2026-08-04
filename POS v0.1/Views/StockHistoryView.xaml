@@ -33,6 +33,7 @@
                       Background="Transparent" BorderThickness="0" GridLinesVisibility="Horizontal" RowHeight="45">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Fecha / Hora" Binding="{Binding Date, StringFormat='\{0:dd/MM/yyyy HH:mm\}'}" Width="150"/>
+                    <DataGridTextColumn Header="Producto" Binding="{Binding Product.Name}" Width="200"/>
                     <DataGridTemplateColumn Header="Tipo" Width="120">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
@@ -56,20 +57,8 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding QuantityChange, StringFormat='{}{0:+0;-0;0}'}"
-                                           FontWeight="Bold" HorizontalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding QuantityChange, Converter={StaticResource DifferenceToBrushConverter}}" Value="Green">
-                                                    <Setter Property="Foreground" Value="#198754"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding QuantityChange, Converter={StaticResource DifferenceToBrushConverter}}" Value="Red">
-                                                    <Setter Property="Foreground" Value="#dc3545"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                           FontWeight="Bold" HorizontalAlignment="Center"
+                                           Foreground="{Binding QuantityChange, Converter={StaticResource DifferenceToBrushConverter}}"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>

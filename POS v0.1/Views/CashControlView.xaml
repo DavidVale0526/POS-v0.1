@@ -87,6 +87,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
                                 <TextBlock Text="Fondo Inicial:" Foreground="Gray"/>
@@ -95,8 +96,24 @@
                                 <TextBlock Grid.Row="1" Text="Ventas / Ingresos (+):" Foreground="Gray" Margin="0,5,0,0"/>
                                 <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Session.SalesTotal, StringFormat='C$ {0:N2}'}" Foreground="#198754" FontWeight="Bold" Margin="0,5,0,0"/>
 
-                                <TextBlock Grid.Row="2" Text="Gastos (-):" Foreground="Gray" Margin="0,5,0,0"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Session.ExpensesTotal, StringFormat='C$ {0:N2}'}" Foreground="#dc3545" FontWeight="Bold" Margin="0,5,0,0"/>
+                                <!-- Desglose de Métodos -->
+                                <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="15,5,0,10">
+                                    <DockPanel Margin="0,2">
+                                        <TextBlock Text="• Efectivo:" FontSize="11" Foreground="#666"/>
+                                        <TextBlock Text="{Binding Session.CashTotal, StringFormat='C$ {0:N2}'}" FontSize="11" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                                    </DockPanel>
+                                    <DockPanel Margin="0,2">
+                                        <TextBlock Text="• Tarjeta:" FontSize="11" Foreground="#666"/>
+                                        <TextBlock Text="{Binding Session.CardTotal, StringFormat='C$ {0:N2}'}" FontSize="11" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                                    </DockPanel>
+                                    <DockPanel Margin="0,2">
+                                        <TextBlock Text="• Transferencia:" FontSize="11" Foreground="#666"/>
+                                        <TextBlock Text="{Binding Session.TransferTotal, StringFormat='C$ {0:N2}'}" FontSize="11" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                                    </DockPanel>
+                                </StackPanel>
+
+                                <TextBlock Grid.Row="3" Text="Gastos (-):" Foreground="Gray" Margin="0,5,0,0"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Session.ExpensesTotal, StringFormat='C$ {0:N2}'}" Foreground="#dc3545" FontWeight="Bold" Margin="0,5,0,0"/>
                             </Grid>
 
                             <Border Background="#f8f9fa" Margin="0,20,0,20" Padding="15,10" CornerRadius="5">

@@ -17,6 +17,12 @@ namespace POS_v0_1.Models
         public string PaymentMethod { get; set; } = "Efectivo";
         public decimal ReceivedAmount { get; set; }
         public decimal ChangeAmount { get; set; }
+
+        // Desglose de pago (para pagos mixtos)
+        public decimal AmountCash { get; set; }
+        public decimal AmountCard { get; set; }
+        public decimal AmountTransfer { get; set; }
+
         public bool IsCancelled { get; set; }
         public string? CancellationReason { get; set; }
         public virtual ICollection<SaleItem> Items { get; set; } = new List<SaleItem>();

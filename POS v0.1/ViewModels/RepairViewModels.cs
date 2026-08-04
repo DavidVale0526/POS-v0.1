@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using POS_v0_1.Models;
 
@@ -119,12 +120,6 @@ namespace POS_v0_1.ViewModels
                         {
                             _main.Session.RepairsTotal += (repair.Total - oldTotal);
                         }
-                        else if (isSessionOpen && isDelivering && oldTotal == 0 && repair.Total == 0)
-                        {
-                            // Si se entrega con 0 no hace falta sumar, pero si se entrega con algo que ya estaba,
-                            // se asume que se cobra en ese momento si no se cobró antes.
-                            // En este sistema, RepairsTotal en sesión parece sumar el total de la orden al crearla.
-                        }
 
                         var history = new RepairStatusHistory
                         {
@@ -155,13 +150,9 @@ namespace POS_v0_1.ViewModels
                 var terms = q.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
                 filtered = filtered.Where(r =>
-                    // Allow search by Id as fallback
                     r.Id.ToString().Contains(q) ||
-                    // Search by client name (all terms must match)
                     (r.ClientName != null && terms.All(t => r.ClientName.Contains(t, StringComparison.OrdinalIgnoreCase))) ||
-                    // Search by phone
                     (r.ClientPhone != null && terms.All(t => r.ClientPhone.Contains(t, StringComparison.OrdinalIgnoreCase))) ||
-                    // Search by received model (brand + model combined)
                     (((r.DeviceBrand ?? string.Empty) + " " + (r.DeviceModel ?? string.Empty)).Trim() != string.Empty && terms.All(t => ((r.DeviceBrand ?? string.Empty) + " " + (r.DeviceModel ?? string.Empty)).Contains(t, StringComparison.OrdinalIgnoreCase))));
             }
 
@@ -208,40 +199,109 @@ namespace POS_v0_1.ViewModels
         }
 
         public ObservableCollection<User> Technicians => new ObservableCollection<User>(_main.Users);
+        public ObservableCollection<RepairPart> Parts { get; }
 
         public ICommand BackCommand { get; }
         public ICommand PrintCommand { get; }
         public ICommand SaveCommand { get; }
+        public ICommand AddPartCommand { get; }
+        public ICommand RemovePartCommand { get; }
 
         public RepairDetailViewModel(MainViewModel main, RepairOrder repair)
         {
             _main = main;
             Repair = repair;
+            Parts = new ObservableCollection<RepairPart>(repair.Parts ?? new List<RepairPart>());
 
-            // Cargar valores actuales a las propiedades de edición
             Status = repair.Status;
             Total = repair.Total;
             ReportedFailure = repair.ReportedFailure;
             SelectedTechnician = _main.Users.FirstOrDefault(u => u.Id == repair.TechnicianId);
 
             BackCommand = new RelayCommand(o => _main.CurrentView = new RepairListViewModel(_main));
-            PrintCommand = new RelayCommand(o => { /* printing not implemented */ });
+
+            PrintCommand = new RelayCommand(o =>
+            {
+                var printer = new Services.TicketPrinter();
+                printer.PrintRepairTicket(Repair);
+            });
+
+            AddPartCommand = new RelayCommand(o =>
+            {
+                var searchDialog = new Views.ProductSearchDialog(_main.Products.ToList());
+                searchDialog.Owner = Application.Current.MainWindow;
+                if (searchDialog.ShowDialog() == true)
+                {
+                    var prod = searchDialog.SelectedProduct;
+                    if (prod.Stock <= 0)
+                    {
+                        MessageBox.Show("No hay stock disponible para este producto.", "Sin Stock", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    var part = new RepairPart
+                    {
+                        RepairOrderId = Repair.Id,
+                        ProductId = prod.Id,
+                        ProductName = prod.Name,
+                        Quantity = 1,
+                        UnitPrice = prod.SellingPrice
+                    };
+                    Parts.Add(part);
+                    Total += part.Subtotal;
+                }
+            });
+
+            RemovePartCommand = new RelayCommand(o =>
+            {
+                if (o is RepairPart part)
+                {
+                    Parts.Remove(part);
+                    Total -= part.Subtotal;
+                }
+            });
 
             SaveCommand = new RelayCommand(o =>
             {
-                // VALIDACIÓN DE CAJA (Bloqueo si hay monto y caja cerrada)
                 bool isSessionOpen = _main.Session != null && _main.Session.IsOpen;
                 if (Total > 0 && !isSessionOpen)
                 {
-                    System.Windows.MessageBox.Show(
-                        "No se puede guardar una reparación con monto mayor a 0 sin una caja abierta.",
-                        "Caja Cerrada",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Warning);
+                    System.Windows.MessageBox.Show("No se puede guardar una reparación con monto mayor a 0 sin una caja abierta.", "Caja Cerrada", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                     return;
                 }
 
-                // Solo guardamos si el usuario presiona el botón
+                foreach (var oldPart in Repair.Parts.ToList())
+                {
+                    if (!Parts.Contains(oldPart))
+                    {
+                        var prod = _main.Db.Products.Find(oldPart.ProductId);
+                        if (prod != null)
+                        {
+                            prod.Stock += oldPart.Quantity;
+                            var memProd = _main.Products.FirstOrDefault(p => p.Id == prod.Id);
+                            if (memProd != null) memProd.Stock = prod.Stock;
+                            _main.RecordStockMovement(prod.Id, oldPart.Quantity, "Reparación", $"Retorno por eliminación de repuesto en Orden #{Repair.Id}");
+                        }
+                        _main.Db.RepairParts.Remove(oldPart);
+                    }
+                }
+
+                foreach (var part in Parts)
+                {
+                    if (!Repair.Parts.Contains(part))
+                    {
+                        var prod = _main.Db.Products.Find(part.ProductId);
+                        if (prod != null)
+                        {
+                            prod.Stock -= part.Quantity;
+                            var memProd = _main.Products.FirstOrDefault(p => p.Id == prod.Id);
+                            if (memProd != null) memProd.Stock = prod.Stock;
+                            _main.RecordStockMovement(prod.Id, -part.Quantity, "Reparación", $"Consumo de repuesto en Orden #{Repair.Id}");
+                        }
+                        Repair.Parts.Add(part);
+                    }
+                }
+
                 string oldStatus = Repair.Status;
                 decimal oldTotal = Repair.Total;
 
@@ -251,7 +311,6 @@ namespace POS_v0_1.ViewModels
                 Repair.TechnicianId = SelectedTechnician?.Id;
                 Repair.TechnicianName = SelectedTechnician?.Name;
 
-                // Actualizar sesión de caja si el total cambió
                 if (isSessionOpen && Repair.Total != oldTotal)
                 {
                     _main.Session.RepairsTotal += (Repair.Total - oldTotal);
@@ -273,7 +332,7 @@ namespace POS_v0_1.ViewModels
                 }
 
                 _main.Db.SaveChanges();
-                System.Windows.MessageBox.Show("Cambios guardados correctamente.", "Éxito");
+                _main.ShowToast("Reparación y repuestos guardados correctamente.");
                 _main.CurrentView = new RepairListViewModel(_main);
             });
         }
@@ -296,20 +355,14 @@ namespace POS_v0_1.ViewModels
         public string SellerPin
         {
             get => _sellerPin;
-            set
-            {
-                _sellerPin = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(SellerNamePreview));
-            }
+            set { _sellerPin = value; OnPropertyChanged(); OnPropertyChanged(nameof(SellerNamePreview)); }
         }
 
         public string SellerNamePreview
         {
             get
             {
-                if (string.IsNullOrWhiteSpace(SellerPin))
-                    return _main.CurrentUser?.Name ?? "Usuario";
+                if (string.IsNullOrWhiteSpace(SellerPin)) return _main.CurrentUser?.Name ?? "Usuario";
                 var user = _main.Users.FirstOrDefault(u => u.Pin == SellerPin.Trim());
                 return user?.Name ?? "PIN no válido";
             }
@@ -324,15 +377,7 @@ namespace POS_v0_1.ViewModels
 
         public ObservableCollection<User> Technicians => new ObservableCollection<User>(_main.Users);
 
-        public ObservableCollection<string> Categories { get; } = new ObservableCollection<string>
-        {
-            "Ninguna / No especificada",
-            "Pantalla",
-            "Batería",
-            "Centro de Carga",
-            "Software",
-            "Otros"
-        };
+        public ObservableCollection<string> Categories { get; } = new ObservableCollection<string> { "Ninguna / No especificada", "Pantalla", "Batería", "Centro de Carga", "Software", "Otros" };
 
         public ICommand SaveCommand { get; }
         public ICommand BackCommand { get; }
@@ -344,75 +389,32 @@ namespace POS_v0_1.ViewModels
 
             SaveCommand = new RelayCommand(o =>
             {
-                // Only ClientName and ClientPhone are required
                 if (string.IsNullOrWhiteSpace(ClientName) || string.IsNullOrWhiteSpace(ClientPhone)) return;
 
-                // VALIDACIÓN DE CAJA (Opción 1: Bloqueo si hay cobro sin caja abierta)
                 bool isSessionOpen = _main.Session != null && _main.Session.IsOpen;
                 if (Total > 0 && !isSessionOpen)
                 {
-                    System.Windows.MessageBox.Show(
-                        "No se puede registrar una reparación con monto mayor a 0 sin una caja abierta.\n\n" +
-                        "Por favor, abra caja primero o deje el total en 0.00 (solo diagnóstico).",
-                        "Caja Cerrada",
-                        System.Windows.MessageBoxButton.OK,
-                        System.Windows.MessageBoxImage.Warning);
+                    System.Windows.MessageBox.Show("No se puede registrar una reparación con monto mayor a 0 sin una caja abierta.\n\nPor favor, abra caja primero o deje el total en 0.00 (solo diagnóstico).", "Caja Cerrada", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                     return;
                 }
 
-                // Buscar usuario por PIN para auditoría
                 var seller = _main.Users.FirstOrDefault(u => u.Pin == SellerPin?.Trim());
                 int userId = seller?.Id ?? _main.CurrentUser?.Id ?? 1;
                 string userName = seller?.Name ?? _main.CurrentUser?.Name ?? "Usuario";
 
-                var repair = new RepairOrder
-                {
-                    EntryDate = DateTime.Now,
-                    ClientName = ClientName,
-                    ClientPhone = ClientPhone ?? "",
-                    DeviceBrand = DeviceBrand ?? "",
-                    DeviceModel = DeviceModel ?? "",
-                    IMEI = IMEI ?? "",
-                    FailureCategory = FailureCategory ?? "Ninguna",
-                    ReportedFailure = ReportedFailure ?? "",
-                    Total = Total,
-                    Status = "Recibido",
-                    ReceivedById = userId,
-                    ReceivedByName = userName,
-                    TechnicianId = SelectedTechnician?.Id,
-                    TechnicianName = SelectedTechnician?.Name
-                };
-
+                var repair = new RepairOrder { EntryDate = DateTime.Now, ClientName = ClientName, ClientPhone = ClientPhone ?? "", DeviceBrand = DeviceBrand ?? "", DeviceModel = DeviceModel ?? "", IMEI = IMEI ?? "", FailureCategory = FailureCategory ?? "Ninguna", ReportedFailure = ReportedFailure ?? "", Total = Total, Status = "Recibido", ReceivedById = userId, ReceivedByName = userName, TechnicianId = SelectedTechnician?.Id, TechnicianName = SelectedTechnician?.Name };
                 _main.Db.Repairs.Add(repair);
-
-                // Agregar historial inicial
-                var history = new RepairStatusHistory
-                {
-                    Status = "Recibido",
-                    ChangeDate = DateTime.Now,
-                    UserId = userId,
-                    UserName = userName,
-                    Notes = $"Equipo recibido por {userName}"
-                };
+                var history = new RepairStatusHistory { Status = "Recibido", ChangeDate = DateTime.Now, UserId = userId, UserName = userName, Notes = $"Equipo recibido por {userName}" };
                 repair.StatusHistory.Add(history);
-
                 _main.Db.SaveChanges();
                 _main.Repairs.Add(repair);
-
-                // Actualizar sesión de caja si hay una abierta
-                if (_main.Session != null && _main.Session.IsOpen)
-                {
-                    _main.Session.RepairsTotal += repair.Total;
-                }
-
-                // Show the detail view for the newly created repair
+                if (_main.Session != null && _main.Session.IsOpen) _main.Session.RepairsTotal += repair.Total;
                 _main.CurrentView = new RepairDetailViewModel(_main, repair);
             });
 
             BackCommand = new RelayCommand(o =>
             {
-                if (!string.IsNullOrWhiteSpace(ClientName) || !string.IsNullOrWhiteSpace(DeviceModel))
-                {
+                if (!string.IsNullOrWhiteSpace(ClientName) || !string.IsNullOrWhiteSpace(DeviceModel)) {
                     var res = System.Windows.MessageBox.Show("Hay una reparación en progreso. ¿Desea salir sin guardar?", "Confirmar", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
                     if (res == System.Windows.MessageBoxResult.No) return;
                 }
@@ -424,6 +426,7 @@ namespace POS_v0_1.ViewModels
     public class RepairCategoriesViewModel : BaseViewModel
     {
         private readonly MainViewModel _main;
+        private RepairCategory _editingCategory;
 
         public ObservableCollection<RepairCategory> Categories => _main.RepairCategories;
 
@@ -442,6 +445,8 @@ namespace POS_v0_1.ViewModels
         }
 
         public ICommand SaveCommand { get; }
+        public ICommand EditCommand { get; }
+        public ICommand DeleteCommand { get; }
         public ICommand BackCommand { get; }
 
         public RepairCategoriesViewModel(MainViewModel main)
@@ -452,17 +457,47 @@ namespace POS_v0_1.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(NewName)) return;
 
-                var category = new RepairCategory
+                if (_editingCategory == null)
                 {
-                    Name = NewName,
-                    Description = NewDescription
-                };
+                    var category = new RepairCategory { Name = NewName, Description = NewDescription ?? "" };
+                    _main.Db.RepairCategories.Add(category);
+                    _main.Db.SaveChanges();
+                    Categories.Add(category);
+                }
+                else
+                {
+                    _editingCategory.Name = NewName;
+                    _editingCategory.Description = NewDescription;
+                    _main.Db.SaveChanges();
+                    _editingCategory = null;
+                }
 
-                _main.Db.RepairCategories.Add(category);
-                _main.Db.SaveChanges();
-                Categories.Add(category);
                 NewName = string.Empty;
                 NewDescription = string.Empty;
+                _main.ShowToast("Categoría guardada.");
+            });
+
+            EditCommand = new RelayCommand(o =>
+            {
+                if (o is RepairCategory cat)
+                {
+                    _editingCategory = cat;
+                    NewName = cat.Name;
+                    NewDescription = cat.Description;
+                }
+            });
+
+            DeleteCommand = new RelayCommand(o =>
+            {
+                if (o is RepairCategory cat)
+                {
+                    if (MessageBox.Show($"¿Eliminar categoría {cat.Name}?", "Confirmar", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                    {
+                        _main.Db.RepairCategories.Remove(cat);
+                        _main.Db.SaveChanges();
+                        Categories.Remove(cat);
+                    }
+                }
             });
 
             BackCommand = new RelayCommand(o => _main.CurrentView = new RepairListViewModel(_main));
@@ -472,6 +507,7 @@ namespace POS_v0_1.ViewModels
     public class RepairTypesViewModel : BaseViewModel
     {
         private readonly MainViewModel _main;
+        private RepairType _editingType;
 
         public ObservableCollection<RepairType> Types => _main.RepairTypes;
         public ObservableCollection<RepairCategory> Categories => _main.RepairCategories;
@@ -505,6 +541,8 @@ namespace POS_v0_1.ViewModels
         }
 
         public ICommand SaveCommand { get; }
+        public ICommand EditCommand { get; }
+        public ICommand DeleteCommand { get; }
         public ICommand BackCommand { get; }
 
         public RepairTypesViewModel(MainViewModel main)
@@ -515,21 +553,54 @@ namespace POS_v0_1.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(NewName) || SelectedCategory == null) return;
 
-                var type = new RepairType
+                if (_editingType == null)
                 {
-                    CategoryId = SelectedCategory.Id,
-                    CategoryName = SelectedCategory.Name,
-                    Name = NewName,
-                    BasePrice = NewPrice,
-                    Description = NewDescription
-                };
+                    var type = new RepairType { CategoryId = SelectedCategory.Id, CategoryName = SelectedCategory.Name, Name = NewName, BasePrice = NewPrice, Description = NewDescription };
+                    _main.Db.RepairTypes.Add(type);
+                    _main.Db.SaveChanges();
+                    Types.Add(type);
+                }
+                else
+                {
+                    _editingType.Name = NewName;
+                    _editingType.BasePrice = NewPrice;
+                    _editingType.Description = NewDescription;
+                    _editingType.CategoryId = SelectedCategory.Id;
+                    _editingType.CategoryName = SelectedCategory.Name;
+                    _main.Db.SaveChanges();
+                    _editingType = null;
+                }
 
-                _main.Db.RepairTypes.Add(type);
-                _main.Db.SaveChanges();
-                Types.Add(type);
                 NewName = string.Empty;
                 NewPrice = 0;
                 NewDescription = string.Empty;
+                SelectedCategory = null;
+                _main.ShowToast("Tipo de reparación guardado.");
+            });
+
+            EditCommand = new RelayCommand(o =>
+            {
+                if (o is RepairType rt)
+                {
+                    _editingType = rt;
+                    NewName = rt.Name;
+                    NewPrice = rt.BasePrice;
+                    NewDescription = rt.Description;
+                    SelectedCategory = Categories.FirstOrDefault(c => c.Id == rt.CategoryId);
+                }
+            });
+
+            DeleteCommand = new RelayCommand(o =>
+            {
+                if (o is RepairType rt)
+                {
+                    if (MessageBox.Show($"¿Eliminar tipo {rt.Name}?", "Confirmar", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                    {
+                        _main.Db.RepairTypes.Remove(rt);
+                        _main.Db.SaveChanges();
+                        Types.Remove(rt);
+                    }
+                }
             });
 
             BackCommand = new RelayCommand(o => _main.CurrentView = new RepairListViewModel(_main));

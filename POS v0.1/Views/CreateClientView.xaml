@@ -127,7 +127,7 @@
             <Grid>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="👤" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Nuevo Cliente" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <Button Content="← Volver" HorizontalAlignment="Right"
@@ -150,7 +150,7 @@
                 <StackPanel>
                     <!-- Header Interno del Formulario -->
                     <TextBlock Text="Información del Cliente" FontSize="16" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,4"/>
-                    <TextBlock Text="Ingresa los datos para registrar un nuevo cliente en el sistema." FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,25"/>
+                    <TextBlock Text="Complete los datos del cliente en el sistema." FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,25"/>
 
                     <!-- Name -->
                     <StackPanel Margin="0,0,0,18">
@@ -195,7 +195,7 @@
                     </StackPanel>
 
                     <!-- Action Button -->
-                    <Button Content="💾 Guardar Cliente" 
+                    <Button Content="💾 Guardar"
                             Style="{StaticResource PrimaryButtonStyle}"
                             Command="{Binding SaveCommand}"/>
                 </StackPanel>

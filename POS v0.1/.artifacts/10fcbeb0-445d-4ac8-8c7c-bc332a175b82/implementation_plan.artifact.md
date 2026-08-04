@@ -1,45 +1,86 @@
-# Plan de Implementación: Optimización UX/UI (Fase 6)
+# Plan de Implementación: Historial de Stock y Costo Promedio Ponderado (CPP)
 
-Este plan aborda los puntos pendientes de la auditoría de Experiencia de Usuario para transformar el POS de una herramienta funcional a una profesional y eficiente.
+Este plan detalla la implementación de un sistema de seguimiento de movimientos de inventario y el cálculo automático del Costo Promedio Ponderado para una gestión contable precisa.
 
-## Estado Actual (Audit vs. Realidad)
+## User Review Required
 
-| Punto de Auditoría | Estado Actual | Acción Propuesta |
-| :--- | :--- | :--- |
-| **Sin confirmación al salir** | 🔴 Pendiente | Implementar diálogo en formularios de creación. |
-| **Sin feedback de carga** | 🔴 Pendiente | Añadir indicadores visuales (`ProgressBar`) en procesos pesados. |
-| **Sin paginación** | 🔴 Pendiente | Implementar carga diferida o "Ver más" en listas largas. |
-| **Sin atajos de teclado** | 🟡 Parcial | Mapear `F-keys` para navegación global y cobro. |
-| **Sin modo oscuro/claro** | 🟡 Parcial | Menú lateral ya es oscuro; resto de la app es claro. |
-| **Sidebar siempre visible** | 🔴 Pendiente | Implementar botón Hamburguesa para colapsar. |
-| **Botón "Switch User"** | 🟢 Hecho | Ya está integrado en la tarjeta de usuario inferior. |
-| **Notificaciones Toast** | 🔴 Pendiente | Crear un sistema de mensajes no intrusivos (Snackbar). |
+> [!IMPORTANT]
+> - **Impacto en Precios Existentes:** Al implementar CPP, el `PurchasePrice` de los productos se actualizará automáticamente con cada compra. Los usuarios ya no deberían editar este campo manualmente a menos que sea una corrección de error.
+> - **Usuarios:** El historial de stock requiere un usuario responsable. Asegurarse de que `_main.CurrentUser` siempre esté disponible en los ViewModels relevantes.
 
----
+## Proposed Changes
 
-## Cambios Propuestos
+### 1. Modelos y Datos
 
-### 1. Navegación y Sidebar Colapsable
-- **Botón Hamburguesa**: Añadir un botón en la parte superior del sidebar para alternar entre ancho completo (220px) y mini (60px, solo iconos).
-- **Atajos Globales**:
-    - `F1`: Punto de Venta (POS)
-    - `F2`: Inventario de Productos
-    - `F3`: Reparaciones
-    - `F4`: Caja
-    - `F8`: Finalizar Cobro (dentro del POS)
+#### [NEW] [StockMovement.cs](file:///C:/Users/HP Pavilioh Gaming/source/repos/POS v0.1/POS v0.1/Models/StockMovement.cs)
+Creación de la entidad para registrar cada cambio en el stock.
 
-### 2. Seguridad de Datos (Confirmaciones)
-- **Safe Exit**: Al dar clic en "Cancelar" o "Volver" en un formulario (`CreateProduct`, `CreatePurchase`, `CreateRepair`), el sistema detectará si hay texto ingresado y pedirá confirmación para no perder los datos.
+- `Id`: Identificador único.
+- `ProductId`: Referencia al producto.
+- `Date`: Fecha y hora del movimiento.
+- `Quantity`: Cantidad del movimiento (positivo para entradas, negativo para salidas).
+- `Type`: Tipo de movimiento ("Venta", "Compra", "Ajuste Manual", "Devolución").
+- `PreviousStock`: Stock antes del movimiento.
+- `NewStock`: Stock después del movimiento.
+- `User`: Nombre del usuario que realizó la acción.
+- `Reason`: Nota opcional sobre el motivo.
 
-### 3. Feedback Visual (Notificaciones Toast)
-- Reemplazar los `MessageBox` de "Éxito" (ej: "Producto guardado", "Venta realizada") por una pequeña barra en la parte inferior derecha que desaparece sola tras 3 segundos. Los errores seguirán siendo modales para llamar la atención.
-
-### 4. Paginación y Carga
-- Implementar un sistema de "Cargar 50 más" en el historial de ventas para evitar que la app se bloquee si el historial crece a miles de registros.
+#### [MODIFY] [AppDbContext.cs](file:///C:/Users/HP Pavilioh Gaming/source/repos/POS v0.1/POS v0.1/Data/AppDbContext.cs)
+- Agregar `DbSet<StockMovement> StockMovements`.
+- Configurar la relación en `OnModelCreating` para que `StockMovement` tenga un índice por `ProductId`.
 
 ---
 
-## Plan de Verificación
-- **Atajos**: Probar que las teclas de función cambian de vista desde cualquier parte de la app.
-- **Colapso**: Verificar que los iconos del sidebar sean legibles en modo compacto.
-- **Safe Exit**: Llenar un formulario a medias, intentar salir y confirmar que el aviso aparece.
+### 2. Lógica de Negocio (ViewModels)
+
+#### [MODIFY] [PurchaseViewModels.cs](file:///C:/Users/HP Pavilioh Gaming/source/repos/POS v0.1/POS v0.1/ViewModels/PurchaseViewModels.cs)
+Implementación de la lógica CPP y registro de movimiento de compra.
+
+- **CPP:** Antes de actualizar el stock, calcular:
+  ```csharp
+  decimal totalCostExisting = product.Stock * product.PurchasePrice;
+  decimal totalCostNew = item.Quantity * item.UnitPrice;
+  int totalStock = product.Stock + item.Quantity;
+  product.PurchasePrice = totalStock > 0 ? (totalCostExisting + totalCostNew) / totalStock : item.UnitPrice;
+  ```
+- **Movimiento:** Crear un `StockMovement` por cada item de la compra.
+
+#### [MODIFY] [MainViewModel.cs](file:///C:/Users/HP Pavilioh Gaming/source/repos/POS v0.1/POS v0.1/ViewModels/MainViewModel.cs)
+Registro de movimientos de salida por venta.
+
+- Al finalizar la venta (método `FinalizeSale`), crear un `StockMovement` por cada producto vendido con tipo "Venta".
+
+#### [MODIFY] [ProductViewModels.cs](file:///C:/Users/HP Pavilioh Gaming/source/repos/POS v0.1/POS v0.1/ViewModels/ProductViewModels.cs)
+Registro de ajustes manuales.
+
+- En la vista de "Agregar Stock" (Quick Adjust), registrar movimiento tipo "Ajuste Manual".
+- En el guardado general (Edición de producto), detectar si el `Stock` cambió manualmente y registrar la diferencia.
+
+#### [MODIFY] [SalesHistoryViewModel.cs](file:///C:/Users/HP Pavilioh Gaming/source/repos/POS v0.1/POS v0.1/ViewModels/SalesHistoryViewModel.cs)
+Registro de movimientos por devoluciones.
+
+- Al procesar una devolución/reintegro de stock, registrar movimiento tipo "Devolución".
+
+---
+
+### 3. Interfaz de Usuario (Opcional pero Sugerido)
+
+- **ProductDetailView:** Agregar una pestaña o sección "Historial" que muestre la tabla de `StockMovements` filtrada por el producto actual.
+
+## Verification Plan
+
+### Automated Tests
+- No hay suite de tests automatizados detectada, se recomienda realizar pruebas manuales siguiendo el flujo de datos.
+
+### Manual Verification
+1. **Prueba de CPP:**
+   - Producto A tiene Stock 10, Costo C10 (Total: C100).
+   - Comprar 10 unidades a C12 (Total: C120).
+   - Verificar que el nuevo `PurchasePrice` del producto sea C11 (Total: C220 / 20 unidades).
+2. **Prueba de Historial:**
+   - Realizar una venta de 2 unidades.
+   - Verificar en la base de datos (o nueva vista) que existe un registro con `Quantity = -2` y `Type = "Venta"`.
+   - Realizar un ajuste manual de +5.
+   - Verificar registro con `Quantity = 5` y `Type = "Ajuste Manual"`.
+3. **Verificación de Usuario:**
+   - Asegurar que el nombre del usuario logueado aparezca en el historial.

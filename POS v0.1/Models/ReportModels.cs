@@ -11,6 +11,10 @@ namespace POS_v0_1.Models
         public decimal DeliveredRepairsTotal { get; set; }
 
         public decimal PosSalesIncome { get; set; }
+        public decimal PosCashIncome { get; set; }
+        public decimal PosCardIncome { get; set; }
+        public decimal PosTransferIncome { get; set; }
+
         public decimal TopupIncome { get; set; }
         public decimal RepairIncome { get; set; }
         public decimal OtherExtraIncome { get; set; }

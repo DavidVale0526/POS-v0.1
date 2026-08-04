@@ -154,6 +154,7 @@ namespace POS_v0_1.ViewModels
                     Concept = Concept,
                     SourceId = SelectedSource.Id,
                     FinancialSource = SelectedSource,
+                    Source = SelectedSource.Name, // Populate legacy Source column
                     Amount = Amount,
                     RegisteredBy = _main.CurrentUser?.Name ?? "Sistema",
                     Reference = Reference,

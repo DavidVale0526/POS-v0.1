@@ -135,6 +135,9 @@
         <DataTemplate DataType="{x:Type viewModels:BackupViewModel}">
             <views:BackupView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:StockHistoryViewModel}">
+            <views:StockHistoryView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type viewModels:LoginViewModel}">
             <views:LoginView/>
         </DataTemplate>

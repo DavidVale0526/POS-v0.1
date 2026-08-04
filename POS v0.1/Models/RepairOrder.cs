@@ -25,6 +25,7 @@ namespace POS_v0_1.Models
         public string? TechnicianName { get; set; }
 
         public virtual ICollection<RepairStatusHistory> StatusHistory { get; set; } = new ObservableCollection<RepairStatusHistory>();
+        public virtual ICollection<RepairPart> Parts { get; set; } = new ObservableCollection<RepairPart>();
     }
 
     public class RepairStatusHistory

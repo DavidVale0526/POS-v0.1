@@ -55,7 +55,8 @@ namespace POS_v0_1.ViewModels
                 var filtered = Movements.Where(m =>
                     (m.MovementType != null && m.MovementType.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ||
                     (m.Reason != null && m.Reason.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ||
-                    (m.UserName != null && m.UserName.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+                    (m.UserName != null && m.UserName.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ||
+                    (m.Product != null && m.Product.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
                 );
                 FilteredMovements = new ObservableCollection<StockMovement>(filtered);
             }

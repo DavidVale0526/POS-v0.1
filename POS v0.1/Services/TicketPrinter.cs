@@ -16,6 +16,7 @@ namespace POS_v0_1.Services
     {
         private readonly BusinessConfiguration _config;
         private Sale _sale;
+        private RepairOrder _repair;
         private BusinessSummary _report;
         private bool _isReprint;
         private string _printMode = "Sale"; // "Sale", "Repair", "Report"
@@ -87,6 +88,36 @@ namespace POS_v0_1.Services
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show("Error al imprimir reporte: " + ex.Message);
+            }
+        }
+
+        public void PrintRepairTicket(RepairOrder repair, bool showPreview = true)
+        {
+            try
+            {
+                _repair = repair;
+                _printMode = "Repair";
+
+                PrintDocument pd = new PrintDocument();
+                int paperWidth = _config.TicketFormat == "80mm" ? 315 : 220;
+                int calculatedHeight = 500; // Suficiente para datos de cliente y diagnóstico
+
+                pd.DefaultPageSettings.PaperSize = new PaperSize("RepairTicket", paperWidth, calculatedHeight);
+                pd.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
+                pd.PrintPage += new PrintPageEventHandler(PrintPageEvent);
+
+                if (showPreview)
+                {
+                    ShowWpfPreview(pd, paperWidth, calculatedHeight, $"Orden de Servicio #{_repair.Id}");
+                }
+                else
+                {
+                    pd.Print();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show("Error al imprimir ticket de reparación: " + ex.Message);
             }
         }
 
@@ -217,6 +248,10 @@ namespace POS_v0_1.Services
             {
                 PrintReportPage(e);
             }
+            else if (_printMode == "Repair")
+            {
+                PrintRepairPage(e);
+            }
             else
             {
                 PrintSalePage(e);
@@ -253,6 +288,18 @@ namespace POS_v0_1.Services
             g.DrawString("Ventas POS:", fontRegular, System.Drawing.Brushes.Black, margin, y);
             g.DrawString(_report.PosSalesIncome.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
             y += 14f;
+
+            // Desglose de Ventas
+            g.DrawString("  • Efectivo:", fontRegular, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.PosCashIncome.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 14f;
+            g.DrawString("  • Tarjeta:", fontRegular, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.PosCardIncome.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 14f;
+            g.DrawString("  • Transferencia:", fontRegular, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.PosTransferIncome.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 14f;
+
             g.DrawString("Recargas:", fontRegular, System.Drawing.Brushes.Black, margin, y);
             g.DrawString(_report.TopupIncome.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
             y += 14f;
@@ -427,6 +474,101 @@ namespace POS_v0_1.Services
             y += 18f;
             g.DrawString("Favor revisar su mercadería.", fontRegular, System.Drawing.Brushes.Black, new RectangleF(0, y, paperWidth, 22), center);
             y += 30f;
+        }
+
+        private void PrintRepairPage(PrintPageEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            bool is80mm = _config.TicketFormat == "80mm";
+            float paperWidth = is80mm ? 315f : 220f;
+            float margin = 6f;
+
+            System.Drawing.Font fontRegular = new System.Drawing.Font("Consolas", 7.5f, System.Drawing.FontStyle.Regular);
+            System.Drawing.Font fontBold = new System.Drawing.Font("Consolas", 8f, System.Drawing.FontStyle.Bold);
+            System.Drawing.Font fontTitle = new System.Drawing.Font("Consolas", 10.5f, System.Drawing.FontStyle.Bold);
+            System.Drawing.Font fontHeader = new System.Drawing.Font("Consolas", 8f, System.Drawing.FontStyle.Bold);
+
+            float y = 10f;
+            StringFormat center = new StringFormat { Alignment = StringAlignment.Center };
+            StringFormat left = new StringFormat { Alignment = StringAlignment.Near };
+            string dashes = new string('-', is80mm ? 44 : 31);
+
+            // 1. Logo
+            if (!string.IsNullOrEmpty(_config.LogoPath) && System.IO.File.Exists(_config.LogoPath))
+            {
+                try
+                {
+                    using (System.Drawing.Image logo = System.Drawing.Image.FromFile(_config.LogoPath))
+                    {
+                        int imgWidth = (int)(paperWidth / 2.5f);
+                        int imgHeight = (logo.Height * imgWidth) / logo.Width;
+                        g.DrawImage(logo, (paperWidth - imgWidth) / 2f, y, imgWidth, imgHeight);
+                        y += imgHeight + 8f;
+                    }
+                }
+                catch { }
+            }
+
+            // 2. Encabezado
+            g.DrawString(_config.BusinessName ?? "Mi Tienda", fontTitle, System.Drawing.Brushes.Black, new RectangleF(0, y, paperWidth, 22), center);
+            y += 18f;
+            g.DrawString("ORDEN DE SERVICIO TÉCNICO", fontBold, System.Drawing.Brushes.Black, new RectangleF(0, y, paperWidth, 18), center);
+            y += 15f;
+
+            g.DrawString(dashes, fontRegular, System.Drawing.Brushes.Black, margin, y);
+            y += 14f;
+
+            // 3. Datos de la Orden
+            g.DrawString($"ORDEN: #{_repair.Id}", fontHeader, System.Drawing.Brushes.Black, margin, y);
+            y += 14f;
+            g.DrawString($"FECHA: {_repair.EntryDate:dd/MM/yyyy HH:mm}", fontRegular, System.Drawing.Brushes.Black, margin, y);
+            y += 14f;
+            g.DrawString($"CLIENTE: {_repair.ClientName}", fontBold, System.Drawing.Brushes.Black, margin, y);
+            y += 14f;
+            if (!string.IsNullOrEmpty(_repair.ClientPhone))
+            {
+                g.DrawString($"TEL: {_repair.ClientPhone}", fontRegular, System.Drawing.Brushes.Black, margin, y);
+                y += 14f;
+            }
+
+            g.DrawString(dashes, fontRegular, System.Drawing.Brushes.Black, margin, y);
+            y += 14f;
+
+            // 4. Datos del Equipo
+            g.DrawString("EQUIPO:", fontBold, System.Drawing.Brushes.Black, margin, y);
+            y += 14f;
+            g.DrawString($"{_repair.DeviceBrand} {_repair.DeviceModel}", fontRegular, System.Drawing.Brushes.Black, margin, y);
+            y += 14f;
+            if (!string.IsNullOrEmpty(_repair.IMEI))
+            {
+                g.DrawString($"IMEI/SN: {_repair.IMEI}", fontRegular, System.Drawing.Brushes.Black, margin, y);
+                y += 14f;
+            }
+
+            y += 10f;
+            g.DrawString("FALLA REPORTADA:", fontBold, System.Drawing.Brushes.Black, margin, y);
+            y += 14f;
+            RectangleF failureRect = new RectangleF(margin, y, paperWidth - (margin * 2), 60);
+            g.DrawString(_repair.ReportedFailure ?? "No especificada", fontRegular, System.Drawing.Brushes.Black, failureRect, left);
+            y += 45f;
+
+            g.DrawString(dashes, fontRegular, System.Drawing.Brushes.Black, margin, y);
+            y += 14f;
+
+            // 5. Términos y Firma
+            g.DrawString("CONDICIONES:", fontBold, System.Drawing.Brushes.Black, margin, y);
+            y += 14f;
+            string terms = "- No hay garantía por humedad o golpes.\n- 30 días para retirar, luego se declara abandono.";
+            g.DrawString(terms, new System.Drawing.Font("Consolas", 6.5f), System.Drawing.Brushes.Black, new RectangleF(margin, y, paperWidth - (margin * 2), 40), left);
+            y += 40f;
+
+            y += 20f;
+            g.DrawString("_______________________", fontRegular, System.Drawing.Brushes.Black, new RectangleF(0, y, paperWidth, 18), center);
+            y += 15f;
+            g.DrawString("Firma de Recibido", fontRegular, System.Drawing.Brushes.Black, new RectangleF(0, y, paperWidth, 18), center);
+            y += 25f;
+
+            g.DrawString("--- Fin de Orden ---", fontRegular, System.Drawing.Brushes.Black, new RectangleF(0, y, paperWidth, 20), center);
         }
     }
 }
