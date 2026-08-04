@@ -409,7 +409,15 @@ namespace POS_v0_1.ViewModels
                 _main.CurrentView = new RepairDetailViewModel(_main, repair);
             });
 
-            BackCommand = new RelayCommand(o => _main.CurrentView = new RepairListViewModel(_main));
+            BackCommand = new RelayCommand(o =>
+            {
+                if (!string.IsNullOrWhiteSpace(ClientName) || !string.IsNullOrWhiteSpace(DeviceModel))
+                {
+                    var res = System.Windows.MessageBox.Show("Hay una reparación en progreso. ¿Desea salir sin guardar?", "Confirmar", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+                    if (res == System.Windows.MessageBoxResult.No) return;
+                }
+                _main.CurrentView = new RepairListViewModel(_main);
+            });
         }
     }
 

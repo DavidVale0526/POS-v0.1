@@ -8,6 +8,15 @@
         xmlns:views="clr-namespace:POS_v0_1.Views"
         mc:Ignorable="d"
         Title="MainWindow" WindowState="Maximized">
+    <Window.InputBindings>
+        <KeyBinding Key="F1" Command="{Binding ShowPosCommand}"/>
+        <KeyBinding Key="F2" Command="{Binding ShowProductManagementCommand}"/>
+        <KeyBinding Key="F3" Command="{Binding ShowRepairsCommand}"/>
+        <KeyBinding Key="F4" Command="{Binding ShowOpenCashCommand}"/>
+        <KeyBinding Key="F5" Command="{Binding ShowSalesHistoryCommand}"/>
+        <KeyBinding Key="F6" Command="{Binding ShowTopupsCommand}"/>
+        <KeyBinding Key="F7" Command="{Binding ShowExpensesIncomesCommand}"/>
+    </Window.InputBindings>
     <Window.Resources>
         <DataTemplate DataType="{x:Type viewModels:SalesHistoryViewModel}">
             <views:SalesHistoryView/>
@@ -160,10 +169,15 @@
                                          FontFamily="Segoe MDL2 Assets" FontSize="16"
                                          Margin="0,0,15,0" VerticalAlignment="Center"
                                          Foreground="{StaticResource SidebarAccent}"/>
-                                <ContentPresenter VerticalAlignment="Center"/>
+                                <ContentPresenter x:Name="content" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding DataContext.IsSidebarCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                <Setter TargetName="icon" Property="Margin" Value="0"/>
+                                <Setter TargetName="content" Property="Visibility" Value="Collapsed"/>
+                                <Setter Property="ToolTip" Value="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}"/>
+                            </DataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="#2b2b40"/>
                                 <Setter Property="Foreground" Value="White"/>
@@ -186,8 +200,18 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Border Grid.Column="0" Background="{StaticResource SidebarBg}" Width="220"
+        <Border Grid.Column="0" Background="{StaticResource SidebarBg}"
                 Visibility="{Binding IsAuthenticated, Converter={StaticResource VisConverter}}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Width" Value="220"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                            <Setter Property="Width" Value="60"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/> <!-- Logo/Header -->
@@ -196,43 +220,120 @@
                 </Grid.RowDefinitions>
 
                 <!-- Header -->
-                <StackPanel Grid.Row="0" Margin="0,20,0,20">
-                    <TextBlock Text="M" FontSize="32" FontWeight="Black" Foreground="{StaticResource SidebarAccent}" HorizontalAlignment="Center"/>
+                <StackPanel Grid.Row="0" Margin="0,10,0,20">
+                    <Button Command="{Binding ToggleSidebarCommand}" Background="Transparent" BorderThickness="0"
+                            HorizontalAlignment="Right" Margin="0,0,10,0" Cursor="Hand">
+                        <TextBlock Text="&#xE700;" FontFamily="Segoe MDL2 Assets" Foreground="White" FontSize="18"/>
+                    </Button>
+
+                    <TextBlock x:Name="LargeLogo" Text="M" FontSize="32" FontWeight="Black"
+                               Foreground="{StaticResource SidebarAccent}" HorizontalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                        <Setter Property="FontSize" Value="24"/>
+                                        <Setter Property="Margin" Value="0,10,0,0"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                     <TextBlock Text="{Binding BusinessConfig.BusinessName}" FontSize="12" FontWeight="Bold"
-                               Foreground="White" HorizontalAlignment="Center" Margin="10,5" TextAlignment="Center" TextWrapping="Wrap"/>
+                               Foreground="White" HorizontalAlignment="Center" Margin="10,5" TextAlignment="Center" TextWrapping="Wrap">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </StackPanel>
 
                 <!-- Navigation -->
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden">
                     <StackPanel Margin="10,0">
-                        <TextBlock Text="VENTAS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,10,0,5"/>
+                        <TextBlock Text="VENTAS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,10,0,5">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                         <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8A1;" Content="Nueva Venta (POS)" Command="{Binding ShowPosCommand}"/>
                         <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE81C;" Content="Historial Ventas" Command="{Binding ShowSalesHistoryCommand}"
                                 Visibility="{Binding CanSeeSalesHistory, Converter={StaticResource VisConverter}}"/>
                         <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE722;" Content="Recargas" Command="{Binding ShowTopupsCommand}"/>
 
                         <StackPanel Visibility="{Binding CanSeeInventory, Converter={StaticResource VisConverter}}">
-                            <TextBlock Text="INVENTARIO" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
+                            <TextBlock Text="INVENTARIO" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                             <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE71D;" Content="Productos" Command="{Binding ShowProductManagementCommand}"/>
                             <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8FD;" Content="Categorías" Command="{Binding ShowCategoriesCommand}"/>
                             <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE7BA;" Content="Stock Bajo" Command="{Binding ShowLowStockCommand}"/>
                         </StackPanel>
 
                         <StackPanel Visibility="{Binding CanSeePurchases, Converter={StaticResource VisConverter}}">
-                            <TextBlock Text="COMPRAS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
+                            <TextBlock Text="COMPRAS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                             <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8F1;" Content="Proveedores" Command="{Binding ShowProvidersCommand}"/>
                             <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8D7;" Content="Compras" Command="{Binding ShowPurchasesCommand}"/>
                         </StackPanel>
 
                         <StackPanel Visibility="{Binding CanSeeRepairs, Converter={StaticResource VisConverter}}">
-                            <TextBlock Text="SERVICIOS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
+                            <TextBlock Text="SERVICIOS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                             <Button Style="{StaticResource ModernMenuButton}" Tag="&#xEBE8;" Content="Reparaciones" Command="{Binding ShowRepairsCommand}"/>
                             <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8FD;" Content="Categorías Rep." Command="{Binding ShowRepairCategoriesCommand}"/>
                             <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE943;" Content="Tipos Rep." Command="{Binding ShowRepairTypesCommand}"/>
                         </StackPanel>
 
                         <StackPanel Visibility="{Binding CanSeeTreasury, Converter={StaticResource VisConverter}}">
-                            <TextBlock Text="TESORERÍA" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
+                            <TextBlock Text="TESORERÍA" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                             <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8C7;" Content="Caja (Abrir/Cerrar)" Command="{Binding ShowOpenCashCommand}"/>
                             <Button Style="{StaticResource ModernMenuButton}" Tag="&#xEF20;" Content="Conteo Billetes" Command="{Binding ShowCashCountCommand}"/>
                             <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8D2;" Content="Gastos / Ingresos" Command="{Binding ShowExpensesIncomesCommand}"/>
@@ -240,7 +341,17 @@
                         </StackPanel>
 
                         <TextBlock Text="ADMIN" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"
-                                   Visibility="{Binding IsAdmin, Converter={StaticResource VisConverter}}"/>
+                                   Visibility="{Binding IsAdmin, Converter={StaticResource VisConverter}}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                         <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE716;" Content="Clientes" Command="{Binding ShowClientsCommand}"
                                 Visibility="{Binding CanSeeClients, Converter={StaticResource VisConverter}}"/>
                         <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE77B;" Content="Usuarios / Roles" Command="{Binding ShowUsersRolesCommand}"
@@ -258,18 +369,48 @@
                 <Border Grid.Row="2" Background="#2b2b40" CornerRadius="12" Margin="10,0,10,20" Padding="15">
                     <StackPanel>
                         <Grid Margin="0,0,0,10">
-                            <StackPanel>
+                            <StackPanel x:Name="UserInfo">
                                 <TextBlock Text="{Binding CurrentUser.Name}" Foreground="White" FontWeight="SemiBold" FontSize="13"/>
                                 <TextBlock Text="{Binding CurrentUser.Role}" Foreground="{StaticResource SidebarAccent}" FontSize="10"/>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
                             </StackPanel>
                             <Button Content="🚪" Command="{Binding LogoutCommand}" HorizontalAlignment="Right"
                                     Background="Transparent" BorderThickness="0" Foreground="#dc3545"
-                                    Cursor="Hand" ToolTip="Cerrar Sesión"/>
+                                    Cursor="Hand" ToolTip="Cerrar Sesión">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                <Setter Property="Margin" Value="0"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
                         </Grid>
 
-                        <Border Height="1" Background="#3e3e5a" Margin="0,5"/>
+                        <Border x:Name="FooterSeparator" Height="1" Background="#3e3e5a" Margin="0,5">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
 
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
+                        <StackPanel x:Name="CashStatus" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,5,0,0">
                             <Ellipse Width="8" Height="8" Margin="0,0,8,0">
                                 <Ellipse.Style>
                                     <Style TargetType="Ellipse">
@@ -278,18 +419,67 @@
                                             <DataTrigger Binding="{Binding Session.IsOpen}" Value="True">
                                                 <Setter Property="Fill" Value="#50cd89"/>
                                             </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                                <Setter Property="Margin" Value="0"/>
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Ellipse.Style>
                             </Ellipse>
                             <TextBlock Text="{Binding Session.IsOpen, Converter={StaticResource BoolToStatusConverter}}"
-                                       Foreground="White" FontSize="11" FontWeight="Medium"/>
+                                       Foreground="White" FontSize="11" FontWeight="Medium">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                         </StackPanel>
                     </StackPanel>
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Padding" Value="15"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                    <Setter Property="Padding" Value="5"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                 </Border>
             </Grid>
         </Border>
 
         <ContentControl Grid.Column="1" Content="{Binding CurrentView}"/>
+
+        <!-- Notificaciones Toast (Snackbar) -->
+        <Border Grid.Column="1" VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                Margin="0,0,30,30" Padding="20,12" CornerRadius="8"
+                Visibility="{Binding CurrentToast, Converter={StaticResource VisConverter}}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Background" Value="#2b2b40"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding CurrentToast.Type}" Value="Success">
+                            <Setter Property="Background" Value="#50cd89"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding CurrentToast.Type}" Value="Error">
+                            <Setter Property="Background" Value="#dc3545"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding CurrentToast.Type}" Value="Warning">
+                            <Setter Property="Background" Value="#ffc107"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="🔔" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding CurrentToast.Message}" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

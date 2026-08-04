@@ -1,67 +1,45 @@
-# Plan de Implementación: Validaciones de Modelo y de Negocio
+# Plan de Implementación: Optimización UX/UI (Fase 6)
 
-Este plan aborda las faltas de validación en el modelo de datos y las reglas de negocio críticas identificadas en la auditoría, garantizando la integridad de los datos y previniendo estados inconsistentes.
+Este plan aborda los puntos pendientes de la auditoría de Experiencia de Usuario para transformar el POS de una herramienta funcional a una profesional y eficiente.
 
-## User Review Required
+## Estado Actual (Audit vs. Realidad)
 
-> [!WARNING]
-> **Cambios en Reglas de Venta**: A partir de estos cambios, no se permitirá agregar productos sin stock o inactivos al carrito.
-> **Restricciones de Borrado**: No se podrán eliminar categorías o proveedores que tengan productos o compras asociadas (se deberá reasignar o eliminar los elementos vinculados primero).
-> **Unicidad de PIN**: Se bloqueará la creación de usuarios con PINes duplicados para evitar suplantaciones accidentales.
-
-## Proposed Changes
-
-### 1. Robustez del Modelo de Datos (DB level)
-
-#### [MODIFY] [AppDbContext.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/Data/AppDbContext.cs)
-- Marcar los índices de `Product.Name`, `Product.Barcode`, `User.Email` y `User.Pin` como **Unique**.
-
----
-
-### 2. Validaciones de Creación (ViewModels)
-
-#### [MODIFY] [ProductViewModels.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/ViewModels/ProductViewModels.cs)
-- En `SaveCommand`:
-  - Validar que `SellingPrice > 0`.
-  - Advertir o bloquear si `SellingPrice < PurchasePrice` (prevenir pérdida).
-  - Verificar unicidad de Nombre y Barcode antes de guardar (evitar excepción de DB).
-
-#### [MODIFY] [UserViewModels.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/ViewModels/UserViewModels.cs)
-- En `Save`:
-  - Validar formato de Email.
-  - Verificar que el PIN no esté en uso por otro usuario.
-- En `DeleteUserCommand`:
-  - Impedir que un usuario se elimine a sí mismo (usuario logueado).
+| Punto de Auditoría | Estado Actual | Acción Propuesta |
+| :--- | :--- | :--- |
+| **Sin confirmación al salir** | 🔴 Pendiente | Implementar diálogo en formularios de creación. |
+| **Sin feedback de carga** | 🔴 Pendiente | Añadir indicadores visuales (`ProgressBar`) en procesos pesados. |
+| **Sin paginación** | 🔴 Pendiente | Implementar carga diferida o "Ver más" en listas largas. |
+| **Sin atajos de teclado** | 🟡 Parcial | Mapear `F-keys` para navegación global y cobro. |
+| **Sin modo oscuro/claro** | 🟡 Parcial | Menú lateral ya es oscuro; resto de la app es claro. |
+| **Sidebar siempre visible** | 🔴 Pendiente | Implementar botón Hamburguesa para colapsar. |
+| **Botón "Switch User"** | 🟢 Hecho | Ya está integrado en la tarjeta de usuario inferior. |
+| **Notificaciones Toast** | 🔴 Pendiente | Crear un sistema de mensajes no intrusivos (Snackbar). |
 
 ---
 
-### 3. Reglas de Negocio en el POS
+## Cambios Propuestos
 
-#### [MODIFY] [MainViewModel.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/ViewModels/MainViewModel.cs) (PosViewModel)
-- En `AddProductToCart`:
-  - Validar que el producto esté en estado "Activo".
-  - Validar que el stock sea `> 0`.
-- En el setter de `Discount`:
-  - Asegurar que el descuento (monto o %) no resulte en un `Total < 0`.
+### 1. Navegación y Sidebar Colapsable
+- **Botón Hamburguesa**: Añadir un botón en la parte superior del sidebar para alternar entre ancho completo (220px) y mini (60px, solo iconos).
+- **Atajos Globales**:
+    - `F1`: Punto de Venta (POS)
+    - `F2`: Inventario de Productos
+    - `F3`: Reparaciones
+    - `F4`: Caja
+    - `F8`: Finalizar Cobro (dentro del POS)
 
-#### [MODIFY] [CashControlViewModel.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/ViewModels/CashControlViewModel.cs)
-- Validar un mínimo operativo en `OpeningBalance` (ej: no permitir abrir caja con montos negativos o absurdos si la lógica del negocio lo requiere).
+### 2. Seguridad de Datos (Confirmaciones)
+- **Safe Exit**: Al dar clic en "Cancelar" o "Volver" en un formulario (`CreateProduct`, `CreatePurchase`, `CreateRepair`), el sistema detectará si hay texto ingresado y pedirá confirmación para no perder los datos.
+
+### 3. Feedback Visual (Notificaciones Toast)
+- Reemplazar los `MessageBox` de "Éxito" (ej: "Producto guardado", "Venta realizada") por una pequeña barra en la parte inferior derecha que desaparece sola tras 3 segundos. Los errores seguirán siendo modales para llamar la atención.
+
+### 4. Paginación y Carga
+- Implementar un sistema de "Cargar 50 más" en el historial de ventas para evitar que la app se bloquee si el historial crece a miles de registros.
 
 ---
 
-### 4. Integridad Referencial en Borrados
-
-#### [MODIFY] [CategoryViewModels.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/ViewModels/CategoryViewModels.cs)
-- En el comando de eliminar: Bloquear si la categoría tiene productos vinculados (`ProductCount > 0`).
-
-#### [MODIFY] [ProviderViewModels.cs](file:///C:/Users/HP%20Pavilioh%20Gaming/source/repos/POS%20v0.1/POS%20v0.1/ViewModels/ProviderViewModels.cs)
-- En el comando de eliminar: Bloquear si el proveedor tiene compras registradas en el sistema.
-
-## Verification Plan
-
-### Manual Verification
-- **Unicidad**: Intentar crear dos productos con el mismo nombre y verificar el mensaje de error.
-- **Stock 0**: Intentar vender un producto con stock 0 desde el buscador del POS.
-- **Auto-eliminación**: Intentar eliminar el usuario con el que se inició sesión.
-- **Margen de ganancia**: Intentar guardar un producto con precio de venta menor al de compra y observar la validación.
-- **Borrado con dependencias**: Intentar borrar la categoría "Celulares" si tiene productos y verificar que se impida.
+## Plan de Verificación
+- **Atajos**: Probar que las teclas de función cambian de vista desde cualquier parte de la app.
+- **Colapso**: Verificar que los iconos del sidebar sean legibles en modo compacto.
+- **Safe Exit**: Llenar un formulario a medias, intentar salir y confirmar que el aviso aparece.

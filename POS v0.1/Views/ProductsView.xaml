@@ -102,7 +102,9 @@
                 <DataGridTemplateColumn Header="Imagen" Width="80">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border Width="40" Height="40" Background="#f0f0f0" CornerRadius="5" Margin="5"/>
+                            <Border Width="40" Height="40" Background="#f0f0f0" CornerRadius="5" Margin="5">
+                                <Image Source="{Binding ImagePath}" Stretch="UniformToFill"/>
+                            </Border>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

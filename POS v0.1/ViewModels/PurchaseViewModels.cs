@@ -373,7 +373,15 @@ namespace POS_v0_1.ViewModels
                 _main.CurrentView = new PurchasesViewModel(_main);
             });
 
-            BackCommand = new RelayCommand(o => _main.CurrentView = new PurchasesViewModel(_main));
+            BackCommand = new RelayCommand(o =>
+            {
+                if (Items.Any() || !string.IsNullOrWhiteSpace(InvoiceNumber))
+                {
+                    var res = System.Windows.MessageBox.Show("Hay una compra en progreso. ¿Desea cancelar y salir?", "Confirmar", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+                    if (res == System.Windows.MessageBoxResult.No) return;
+                }
+                _main.CurrentView = new PurchasesViewModel(_main);
+            });
         }
 
         public void RefreshTotal() => OnPropertyChanged(nameof(Total));

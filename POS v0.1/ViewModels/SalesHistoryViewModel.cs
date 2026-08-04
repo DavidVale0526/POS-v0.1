@@ -44,11 +44,25 @@ namespace POS_v0_1.ViewModels
         public decimal TotalSold => Sales.Sum(s => s.Total);
         public int TransactionCount => Sales.Count;
 
+        private int _pageSize = 50;
+        public int PageSize
+        {
+            get => _pageSize;
+            set { _pageSize = value; OnPropertyChanged(); }
+        }
+
+        public bool HasMoreItems => FilteredSales?.Count < Sales.Count(s =>
+            (string.IsNullOrEmpty(SearchText) || s.Id.ToString().Contains(SearchText) || (s.CustomerName != null && s.CustomerName.Contains(SearchText, StringComparison.OrdinalIgnoreCase))) &&
+            (!SelectedDate.HasValue || s.Date.Date == SelectedDate.Value.Date) &&
+            (!ShowOnlyCancelled || s.IsCancelled)
+        );
+
         public ICommand FilterCommand { get; }
         public ICommand ClearFiltersCommand { get; }
         public ICommand ShowPosCommand { get; }
         public ICommand ReprintCommand { get; }
         public ICommand CancelSaleCommand { get; }
+        public ICommand LoadMoreCommand { get; }
 
         public SalesHistoryViewModel(MainViewModel main)
         {
@@ -68,6 +82,12 @@ namespace POS_v0_1.ViewModels
                 SearchText = string.Empty;
                 SelectedDate = null;
                 ShowOnlyCancelled = false;
+                PageSize = 50;
+                ApplyFilter();
+            });
+            LoadMoreCommand = new RelayCommand(o =>
+            {
+                PageSize += 50;
                 ApplyFilter();
             });
             ShowPosCommand = _main.ShowPosCommand;
@@ -170,7 +190,9 @@ namespace POS_v0_1.ViewModels
                 filtered = filtered.Where(s => s.IsCancelled);
             }
 
-            FilteredSales = new ObservableCollection<Sale>(filtered.OrderByDescending(s => s.Date));
+            var result = filtered.OrderByDescending(s => s.Date).Take(PageSize).ToList();
+            FilteredSales = new ObservableCollection<Sale>(result);
+            OnPropertyChanged(nameof(HasMoreItems));
         }
     }
 }

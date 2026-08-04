@@ -279,8 +279,12 @@ namespace POS_v0_1.ViewModels
         private string _selectedStatus = "Activo";
         public string SelectedStatus { get => _selectedStatus; set { _selectedStatus = value; OnPropertyChanged(); } }
 
+        private string _imagePath;
+        public string ImagePath { get => _imagePath; set { _imagePath = value; OnPropertyChanged(); } }
+
         public ICommand SaveCommand { get; }
         public ICommand BackCommand { get; }
+        public ICommand ChooseImageCommand { get; }
 
         public CreateProductViewModel(MainViewModel main, Product product = null)
         {
@@ -299,10 +303,23 @@ namespace POS_v0_1.ViewModels
                 MinStock = _editingProduct.MinStock;
                 Location = _editingProduct.Location;
                 SelectedStatus = _editingProduct.Status;
+                ImagePath = _editingProduct.ImagePath;
 
                 SelectedCategory = _main.Categories.FirstOrDefault(c => c.Id == _editingProduct.CategoryId);
                 SelectedProvider = _main.Providers.FirstOrDefault(p => p.Id == _editingProduct.ProviderId);
             }
+
+            ChooseImageCommand = new RelayCommand(o =>
+            {
+                var dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp"
+                };
+                if (dialog.ShowDialog() == true)
+                {
+                    ImagePath = dialog.FileName;
+                }
+            });
 
             SaveCommand = new RelayCommand(o =>
             {
@@ -353,6 +370,7 @@ namespace POS_v0_1.ViewModels
                         MinStock = MinStock,
                         Location = Location,
                         Status = SelectedStatus,
+                        ImagePath = ImagePath,
                         CategoryId = SelectedCategory.Id,
                         Category = SelectedCategory,
                         ProviderId = SelectedProvider?.Id,
@@ -374,6 +392,7 @@ namespace POS_v0_1.ViewModels
                     _editingProduct.MinStock = MinStock;
                     _editingProduct.Location = Location;
                     _editingProduct.Status = SelectedStatus;
+                    _editingProduct.ImagePath = ImagePath;
                     _editingProduct.CategoryId = SelectedCategory.Id;
                     _editingProduct.Category = SelectedCategory;
                     _editingProduct.ProviderId = SelectedProvider?.Id;
@@ -381,10 +400,28 @@ namespace POS_v0_1.ViewModels
 
                     _main.Db.SaveChanges();
                 }
+                _main.ShowToast("Producto guardado con éxito.");
                 _main.CurrentView = new ProductsViewModel(_main);
             });
 
-            BackCommand = new RelayCommand(o => _main.CurrentView = new ProductsViewModel(_main));
+            BackCommand = new RelayCommand(o =>
+            {
+                if (IsDirty())
+                {
+                    var res = MessageBox.Show("Hay cambios sin guardar. ¿Está seguro de que desea salir?", "Confirmar salida", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                    if (res == MessageBoxResult.No) return;
+                }
+                _main.CurrentView = new ProductsViewModel(_main);
+            });
+        }
+
+        private bool IsDirty()
+        {
+            if (_editingProduct == null)
+            {
+                return !string.IsNullOrWhiteSpace(Name) || !string.IsNullOrWhiteSpace(Barcode) || SellingPrice > 0;
+            }
+            return Name != _editingProduct.Name || Barcode != _editingProduct.Barcode || SellingPrice != _editingProduct.SellingPrice;
         }
     }
 }

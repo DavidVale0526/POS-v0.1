@@ -8,9 +8,10 @@
              d:DesignHeight="600" d:DesignWidth="800">
     <Grid Background="White" Margin="20">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="Auto"/> <!-- Back Button -->
+            <RowDefinition Height="*"/>    <!-- Form Content -->
+            <RowDefinition Height="Auto"/> <!-- Footer -->
         </Grid.RowDefinitions>
 
         <!-- Header -->
@@ -37,29 +38,21 @@
             </Grid>
         </Border>
 
-        <!-- Title and Back Action -->
-        <Grid Grid.Row="1" Margin="0,0,0,15" Visibility="Collapsed"> <!-- Hidden as it's now in header, but keeping Grid for Row index consistency if needed -->
-        </Grid>
-
-        <!-- Re-adjusting the content to follow the header -->
-        <StackPanel Grid.Row="1" Margin="0,0,0,20">
+        <!-- Back Action -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,10">
             <Button Content="← Volver a Proveedores" HorizontalAlignment="Left"
                     Background="Transparent" BorderThickness="0" Foreground="#007bff"
                     Command="{Binding BackCommand}" Cursor="Hand"/>
         </StackPanel>
 
         <!-- Form -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
@@ -93,7 +86,7 @@
         </ScrollViewer>
 
         <!-- Footer -->
-        <Border Grid.Row="2" BorderThickness="0,1,0,0" BorderBrush="#eee" Padding="0,20,0,0">
+        <Border Grid.Row="3" BorderThickness="0,1,0,0" BorderBrush="#eee" Padding="0,20,0,0">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="Cancelar" Margin="10,0" Padding="20,10" Background="#f8f9fa"
                         Command="{Binding BackCommand}"/>

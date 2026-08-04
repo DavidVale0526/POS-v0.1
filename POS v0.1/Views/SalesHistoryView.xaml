@@ -201,6 +201,17 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
+                        <!-- Botón Cargar Más (Paginación) -->
+                        <Button Content="Cargar más registros..."
+                                Command="{Binding LoadMoreCommand}"
+                                Visibility="{Binding HasMoreItems, Converter={StaticResource VisConverter}}"
+                                Margin="20" Padding="15,10"
+                                Background="White" BorderBrush="#dee2e6" BorderThickness="1">
+                            <Button.Resources>
+                                <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                            </Button.Resources>
+                        </Button>
+
                         <!-- Empty State -->
                         <Grid Margin="40" Visibility="{Binding FilteredSales.Count, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}">
                             <TextBlock Text="No se han registrado ventas." HorizontalAlignment="Center" Foreground="#adb5bd" FontSize="16"/>

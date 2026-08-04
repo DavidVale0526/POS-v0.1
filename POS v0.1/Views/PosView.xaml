@@ -81,7 +81,14 @@
                                         </ControlTemplate>
                                     </Button.Template>
                                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                        <TextBlock Text="Item" FontSize="20" HorizontalAlignment="Center" Foreground="#adb5bd" Margin="0,0,0,10"/>
+                                        <Border Width="60" Height="60" Background="#f8f9fa" CornerRadius="5" Margin="0,0,0,10">
+                                            <Grid>
+                                                <TextBlock Text="📷" FontSize="24" Foreground="#dee2e6" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           Visibility="{Binding ImagePath, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}"/>
+                                                <Image Source="{Binding ImagePath}" Stretch="UniformToFill"
+                                                       Visibility="{Binding ImagePath, Converter={StaticResource VisConverter}}"/>
+                                            </Grid>
+                                        </Border>
                                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxHeight="40"/>
                                         <TextBlock Text="{Binding SellingPrice, StringFormat={}{0:C}}" Foreground="#28a745" FontWeight="Bold" HorizontalAlignment="Center" FontSize="16" Margin="0,5"/>
                                         <TextBlock Text="{Binding Stock, StringFormat={}Stock: {0}}" FontSize="11" Foreground="#dc3545" HorizontalAlignment="Center"/>

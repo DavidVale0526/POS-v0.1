@@ -133,7 +133,7 @@ namespace POS_v0_1.ViewModels
                     // Actualizar en el MainViewModel para que se refleje en la vista principal
                     _main.BusinessConfig = _config;
 
-                    System.Windows.MessageBox.Show("Configuración guardada correctamente.", "Éxito", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                    _main.ShowToast("Configuración guardada correctamente.", "Success");
                 }
                 catch (Exception ex)
                 {

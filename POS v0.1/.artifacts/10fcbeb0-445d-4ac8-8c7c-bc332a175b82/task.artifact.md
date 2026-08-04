@@ -1,14 +1,15 @@
-# Tareas: Autorizaciones de Administrador (PIN)
+# Tareas: Optimización UX/UI
 
-- [x] **Fase 1: Seguridad en Historial de Ventas**
-    - [x] Implementar validación de PIN de Administrador al anular una venta en `SalesHistoryViewModel`.
-- [x] **Fase 2: Control de Descuentos en POS**
-    - [x] Definir umbral de "Descuento Grande" (> 15%).
-    - [x] Implementar validación de PIN al intentar finalizar una venta con descuento alto en `PosViewModel`.
-- [x] **Fase 3: Refuerzo de Mensajes**
-    - [x] Asegurar que el diálogo indique claramente que se requiere autorización de supervisor.
-- [ ] **Fase 4: Verificación**
-    - [ ] Probar anulación con usuario normal (debe pedir PIN).
-    - [ ] Probar descuento del 5% (debe permitir).
-    - [ ] Probar descuento del 20% (debe pedir PIN).
-    - [ ] Probar las mismas acciones siendo Administrador (no debe pedir nada).
+- [x] **Fase 1: Atajos de Teclado y Sidebar**
+    - [x] Implementar `InputBindings` en `MainWindow.xaml` para atajos de función (`F1`-`F7`).
+    - [x] Añadir botón Hamburguesa y estado `IsSidebarCollapsed` en `MainViewModel`.
+    - [x] Crear triggers visuales para reducir el ancho del menú y ocultar textos.
+- [x] **Fase 2: Confirmación de Salida (Formularios)**
+    - [x] Implementar lógica de validación en comandos `Back`.
+    - [x] Aplicar en: Creación de Productos, Compras y Reparaciones.
+- [x] **Fase 3: Notificaciones Toast**
+    - [x] Diseñar un componente `Snackbar` global en `MainWindow`.
+    - [x] Implementar servicio de notificaciones en `MainViewModel`.
+    - [x] Reemplazar `MessageBox` de éxito en Configuración, POS y Productos.
+- [x] **Fase 4: Optimización de Listas**
+    - [x] Implementar paginación básica en Historial de Ventas (primeros 50 y botón "Cargar más").

@@ -160,10 +160,19 @@
 
                         <StackPanel Grid.Column="0" Margin="0,0,15,0">
                             <TextBlock Text="Imagen del Producto (Opcional)" Margin="0,0,0,5"/>
-                            <DockPanel>
-                                <Button Content="Choose File" Padding="10,5" DockPanel.Dock="Left"/>
+                            <DockPanel Margin="0,0,0,10">
+                                <Button Content="Choose File" Padding="10,5" DockPanel.Dock="Left" Command="{Binding ChooseImageCommand}"/>
                                 <TextBox Text="{Binding ImagePath}" IsReadOnly="True" Padding="8" Margin="5,0,0,0" VerticalContentAlignment="Center"/>
                             </DockPanel>
+                            <!-- Preview -->
+                            <Border Width="100" Height="100" Background="#f8f9fa" HorizontalAlignment="Left" CornerRadius="5" BorderBrush="#dee2e6" BorderThickness="1">
+                                <Grid>
+                                    <TextBlock Text="📷" FontSize="32" Foreground="#dee2e6" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Visibility="{Binding ImagePath, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}"/>
+                                    <Image Source="{Binding ImagePath}" Stretch="UniformToFill"
+                                           Visibility="{Binding ImagePath, Converter={StaticResource VisConverter}}"/>
+                                </Grid>
+                            </Border>
                         </StackPanel>
 
                         <StackPanel Grid.Column="1">

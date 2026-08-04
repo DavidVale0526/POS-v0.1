@@ -97,6 +97,49 @@ namespace POS_v0_1.ViewModels
             set { _session = value; OnPropertyChanged(); }
         }
 
+        private PosViewModel _posViewModel;
+        public PosViewModel PosViewModel
+        {
+            get
+            {
+                if (_posViewModel == null) _posViewModel = new PosViewModel(this);
+                return _posViewModel;
+            }
+        }
+
+        public void ResetPosViewModel()
+        {
+            _posViewModel = new PosViewModel(this);
+            OnPropertyChanged(nameof(PosViewModel));
+        }
+
+        private bool _isSidebarCollapsed;
+        public bool IsSidebarCollapsed
+        {
+            get => _isSidebarCollapsed;
+            set { _isSidebarCollapsed = value; OnPropertyChanged(); }
+        }
+
+        private ToastMessage _currentToast;
+        public ToastMessage CurrentToast
+        {
+            get => _currentToast;
+            set { _currentToast = value; OnPropertyChanged(); }
+        }
+
+        public void ShowToast(string message, string type = "Success")
+        {
+            CurrentToast = new ToastMessage { Message = message, Type = type };
+            var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+            timer.Tick += (s, e) =>
+            {
+                CurrentToast = null;
+                timer.Stop();
+            };
+            timer.Start();
+        }
+
+        public ICommand ToggleSidebarCommand { get; }
         public ICommand ShowProductManagementCommand { get; }
         public ICommand ShowOpenCashCommand { get; }
         public ICommand ShowPosCommand { get; }
@@ -121,15 +164,20 @@ namespace POS_v0_1.ViewModels
 
         public MainViewModel()
         {
+            ToggleSidebarCommand = new RelayCommand(o => IsSidebarCollapsed = !IsSidebarCollapsed);
             SwitchUserCommand = new RelayCommand(o => SwitchUser());
             ShowProductManagementCommand = new RelayCommand(o => CurrentView = new ProductsViewModel(this));
             ShowOpenCashCommand = new RelayCommand(o => CurrentView = new CashControlViewModel(this));
             ShowPosCommand = new RelayCommand(o =>
             {
                 if (Session != null && Session.IsOpen)
-                    CurrentView = new PosViewModel(this);
+                {
+                    CurrentView = PosViewModel;
+                }
                 else
+                {
                     CurrentView = new CashControlViewModel(this);
+                }
             });
 
             // New Commands
@@ -467,7 +515,7 @@ namespace POS_v0_1.ViewModels
             {
                 // Redirigir a una vista siempre segura (POS si hay caja, si no a Reparaciones)
                 if (Session != null && Session.IsOpen)
-                    CurrentView = new PosViewModel(this);
+                    CurrentView = PosViewModel;
                 else
                     CurrentView = new RepairListViewModel(this);
 
@@ -580,7 +628,8 @@ namespace POS_v0_1.ViewModels
 
                 _main.CashSessions.Add(newSession);
                 _main.Session = newSession;
-                _main.CurrentView = new PosViewModel(_main);
+                _main.ResetPosViewModel();
+                _main.CurrentView = _main.PosViewModel;
             });
 
             CloseCommand = new RelayCommand(o =>
@@ -702,7 +751,8 @@ namespace POS_v0_1.ViewModels
                     OpeningBalance = Amount,
                     OpeningTime = DateTime.Now
                 };
-                _main.CurrentView = new PosViewModel(_main);
+                _main.ResetPosViewModel();
+                _main.CurrentView = _main.PosViewModel;
             });
         }
     }
@@ -851,6 +901,13 @@ namespace POS_v0_1.ViewModels
         public PosViewModel(MainViewModel main)
         {
             _main = main;
+
+            // Refrescar nombre de vendedor si cambia el usuario global
+            _main.PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(_main.CurrentUser))
+                    OnPropertyChanged(nameof(SellerNamePreview));
+            };
 
             // Cargar tasa de impuesto desde configuración
             var config = _main.Db.BusinessConfigs.FirstOrDefault();
@@ -1014,6 +1071,7 @@ namespace POS_v0_1.ViewModels
                 IsPercentageDiscount = false;
                 SelectedClient = null;
                 CustomerNameText = "Consumidor Final";
+                _main.ShowToast("Venta realizada con éxito.");
                 ClearCartCommand.Execute(null);
             });
 
