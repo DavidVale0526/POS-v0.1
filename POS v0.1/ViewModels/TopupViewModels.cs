@@ -24,14 +24,14 @@ namespace POS_v0_1.ViewModels
         public string SearchText
         {
             get => _searchText;
-            set { _searchText = value; OnPropertyChanged(); }
+            set { _searchText = value; OnPropertyChanged(); ApplyFilter(); }
         }
 
         private DateTime? _selectedDate;
         public DateTime? SelectedDate
         {
             get => _selectedDate;
-            set { _selectedDate = value; OnPropertyChanged(); }
+            set { _selectedDate = value; OnPropertyChanged(); ApplyFilter(); }
         }
 
         public decimal TotalSoldToday => Topups.Where(t => t.DateTime.Date == DateTime.Today).Sum(t => t.Amount);

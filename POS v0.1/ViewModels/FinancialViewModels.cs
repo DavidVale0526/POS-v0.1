@@ -19,6 +19,9 @@ namespace POS_v0_1.ViewModels
             set { _filteredMovements = value; OnPropertyChanged(); }
         }
 
+        private string _searchText;
+        public string SearchText { get => _searchText; set { _searchText = value; OnPropertyChanged(); ApplyFilter(); } }
+
         public ObservableCollection<string> TypeFilters { get; } = new ObservableCollection<string> { "Tipo de Movimiento", "Gasto", "Ingreso" };
         public ObservableCollection<FinancialSource> SourceFilters { get; }
 
@@ -58,6 +61,11 @@ namespace POS_v0_1.ViewModels
         private void ApplyFilter()
         {
             var filtered = Movements.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(SearchText))
+                filtered = filtered.Where(m =>
+                    (m.Concept != null && m.Concept.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ||
+                    (m.Reference != null && m.Reference.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
 
             if (SelectedType != "Tipo de Movimiento")
                 filtered = filtered.Where(m => m.Type == SelectedType);

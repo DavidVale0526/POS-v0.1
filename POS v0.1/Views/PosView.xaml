@@ -52,7 +52,8 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Buscar:" VerticalAlignment="Center" Margin="5,0,10,0" Foreground="#adb5bd"/>
                         <TextBox Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                 BorderThickness="0" VerticalContentAlignment="Center" FontSize="14"/>
+                                 BorderThickness="0" VerticalContentAlignment="Center" FontSize="14"
+                                 Tag="Escribe nombre o escanea código..."/>
                     </Grid>
                 </Border>
 
@@ -146,6 +147,7 @@
                         <StackPanel>
                             <TextBlock Text="PIN Usuario:" FontSize="10" Foreground="Gray" Margin="2,0,0,0"/>
                             <TextBox BorderThickness="0" VerticalContentAlignment="Center" FontSize="14" FontWeight="Bold"
+                                     Tag="Ingresa tu PIN..."
                                      Text="{Binding SellerPin, UpdateSourceTrigger=PropertyChanged}"/>
                             <TextBlock Text="{Binding SellerNamePreview, StringFormat='Atendido por: {0}'}"
                                        FontSize="12" Foreground="#007bff" FontWeight="SemiBold" Margin="2,2,0,0"/>

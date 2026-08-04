@@ -38,8 +38,18 @@
 
         <!-- Title and Action -->
         <Grid Grid.Row="1" Margin="0,0,0,15">
-            <TextBlock Text="Gestión de Categorías" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
-            <Button Content="+ Nueva Categoría" HorizontalAlignment="Right" Padding="15,8"
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Gestión de Categorías" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,20,0"/>
+
+            <TextBox Grid.Column="1" Padding="8" VerticalContentAlignment="Center"
+                     Tag="Buscar por nombre o descripción..."
+                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <Button Grid.Column="2" Content="+ Nueva Categoría" HorizontalAlignment="Right" Padding="15,8"
                     Background="#007bff" Foreground="White" BorderThickness="0"
                     Command="{Binding ShowCreateCategoryCommand}">
                 <Button.Resources>

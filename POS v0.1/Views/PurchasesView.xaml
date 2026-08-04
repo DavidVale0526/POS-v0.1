@@ -34,16 +34,26 @@
         </Border>
 
         <!-- Historial Header -->
-        <DockPanel Grid.Row="1" Margin="0,0,0,15">
-            <TextBlock Text="Historial de Compras" FontSize="22" FontWeight="Bold" VerticalAlignment="Center"/>
-            <Button Content="🛒 Registrar Compra" HorizontalAlignment="Right" Padding="15,8"
+        <Grid Grid.Row="1" Margin="0,0,0,15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Historial de Compras" FontSize="22" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,20,0"/>
+
+            <TextBox Grid.Column="1" Padding="8" VerticalContentAlignment="Center"
+                     Tag="Buscar por proveedor o factura..."
+                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <Button Grid.Column="2" Content="🛒 Registrar Compra" HorizontalAlignment="Right" Padding="15,8"
                     Background="#007bff" Foreground="White" BorderThickness="0"
                     Command="{Binding ShowCreatePurchaseCommand}">
                 <Button.Resources>
                     <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
                 </Button.Resources>
             </Button>
-        </DockPanel>
+        </Grid>
 
         <!-- DataGrid -->
         <DataGrid Grid.Row="2" ItemsSource="{Binding Purchases}" AutoGenerateColumns="False"
@@ -60,7 +70,7 @@
             </DataGrid.ColumnHeaderStyle>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Fecha" Binding="{Binding Date, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="150"/>
-                <DataGridTextColumn Header="Proveedor" Binding="{Binding ProviderName}" Width="*"/>
+                <DataGridTextColumn Header="Proveedor" Binding="{Binding Provider.Name}" Width="*"/>
                 <DataGridTextColumn Header="Factura" Binding="{Binding InvoiceNumber}" Width="150"/>
                 <DataGridTemplateColumn Header="Estado" Width="120">
                     <DataGridTemplateColumn.CellTemplate>

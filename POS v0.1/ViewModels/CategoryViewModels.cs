@@ -10,7 +10,19 @@ namespace POS_v0_1.ViewModels
     public class CategoriesViewModel : BaseViewModel
     {
         private readonly MainViewModel _main;
-        public ObservableCollection<Category> Categories => _main.Categories;
+        public ObservableCollection<Category> Categories { get; private set; }
+
+        private string _searchText;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                _searchText = value;
+                OnPropertyChanged();
+                ApplyFilter();
+            }
+        }
 
         public ICommand ShowCreateCategoryCommand { get; }
         public ICommand DeleteCategoryCommand { get; }
@@ -19,6 +31,7 @@ namespace POS_v0_1.ViewModels
         public CategoriesViewModel(MainViewModel main)
         {
             _main = main;
+            Categories = new ObservableCollection<Category>(_main.Categories);
 
             ShowCreateCategoryCommand = new RelayCommand(o => _main.CurrentView = new CreateCategoryViewModel(_main));
 
@@ -40,6 +53,7 @@ namespace POS_v0_1.ViewModels
                         var dbCat = _main.Db.Categories.Find(cat.Id);
                         if (dbCat != null) _main.Db.Categories.Remove(dbCat);
                         _main.Db.SaveChanges();
+                        ApplyFilter();
                     }
                 }
             });
@@ -48,6 +62,22 @@ namespace POS_v0_1.ViewModels
             {
                 if (o is Category cat) _main.CurrentView = new CreateCategoryViewModel(_main, cat);
             });
+        }
+
+        private void ApplyFilter()
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                Categories = new ObservableCollection<Category>(_main.Categories);
+            }
+            else
+            {
+                var filtered = _main.Categories.Where(c =>
+                    (c.Name != null && c.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ||
+                    (c.Description != null && c.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
+                Categories = new ObservableCollection<Category>(filtered);
+            }
+            OnPropertyChanged(nameof(Categories));
         }
     }
 

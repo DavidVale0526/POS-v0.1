@@ -34,8 +34,18 @@
 
         <StackPanel Grid.Row="1" Margin="20">
             <Grid Margin="0,0,0,15">
-                <TextBlock Text="Usuarios y Roles" FontSize="22" FontWeight="Bold" Foreground="#333" VerticalAlignment="Center"/>
-                <Button Content="+ Nuevo Usuario" HorizontalAlignment="Right"
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Usuarios y Roles" FontSize="22" FontWeight="Bold" Foreground="#333" VerticalAlignment="Center" Margin="0,0,20,0"/>
+
+                <TextBox Grid.Column="1" Padding="8" VerticalContentAlignment="Center"
+                         Tag="Buscar por nombre o email..."
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <Button Grid.Column="2" Content="+ Nuevo Usuario" HorizontalAlignment="Right"
                         Background="#0d6efd" Foreground="White" Padding="15,8"
                         BorderThickness="0" FontWeight="SemiBold"
                         Command="{Binding ShowCreateUserCommand}">

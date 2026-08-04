@@ -11,7 +11,19 @@ namespace POS_v0_1.ViewModels
     {
         private readonly MainViewModel _main;
 
-        public ObservableCollection<User> Users => _main.Users;
+        public ObservableCollection<User> Users { get; private set; }
+
+        private string _searchText;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                _searchText = value;
+                OnPropertyChanged();
+                ApplyFilter();
+            }
+        }
 
         public ICommand ShowCreateUserCommand { get; }
         public ICommand EditUserCommand { get; }
@@ -20,6 +32,8 @@ namespace POS_v0_1.ViewModels
         public UserManagementViewModel(MainViewModel main)
         {
             _main = main;
+            Users = new ObservableCollection<User>(_main.Users);
+
             ShowCreateUserCommand = new RelayCommand(o => _main.CurrentView = new CreateUserViewModel(_main));
             EditUserCommand = new RelayCommand(o =>
             {
@@ -49,9 +63,26 @@ namespace POS_v0_1.ViewModels
                             _main.Db.Users.Remove(dbUser);
                             _main.Db.SaveChanges();
                         }
+                        ApplyFilter();
                     }
                 }
             });
+        }
+
+        private void ApplyFilter()
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                Users = new ObservableCollection<User>(_main.Users);
+            }
+            else
+            {
+                var filtered = _main.Users.Where(u =>
+                    (u.Name != null && u.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ||
+                    (u.Email != null && u.Email.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
+                Users = new ObservableCollection<User>(filtered);
+            }
+            OnPropertyChanged(nameof(Users));
         }
     }
 

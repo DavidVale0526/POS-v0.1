@@ -87,6 +87,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" Margin="0,0,10,0" Padding="10,8"
+                                 Tag="Buscar por Ticket o Cliente..."
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                  BorderBrush="#dee2e6"/>
                         <DatePicker Grid.Column="1" Margin="0,0,10,0" Padding="5"

@@ -11,7 +11,19 @@ namespace POS_v0_1.ViewModels
     public class PurchasesViewModel : BaseViewModel
     {
         private readonly MainViewModel _main;
-        public ObservableCollection<Purchase> Purchases => _main.Purchases;
+        public ObservableCollection<Purchase> Purchases { get; private set; }
+
+        private string _searchText;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                _searchText = value;
+                OnPropertyChanged();
+                ApplyFilter();
+            }
+        }
 
         public ICommand ShowCreatePurchaseCommand { get; }
         public ICommand ShowPurchaseDetailCommand { get; }
@@ -20,6 +32,8 @@ namespace POS_v0_1.ViewModels
         public PurchasesViewModel(MainViewModel main)
         {
             _main = main;
+            Purchases = new ObservableCollection<Purchase>(_main.Purchases);
+
             ShowCreatePurchaseCommand = new RelayCommand(o => _main.CurrentView = new CreatePurchaseViewModel(_main));
             ShowEditPurchaseCommand = new RelayCommand(o =>
             {
@@ -35,6 +49,22 @@ namespace POS_v0_1.ViewModels
                     _main.CurrentView = new PurchaseDetailViewModel(_main, p);
                 }
             });
+        }
+
+        private void ApplyFilter()
+        {
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                Purchases = new ObservableCollection<Purchase>(_main.Purchases);
+            }
+            else
+            {
+                var filtered = _main.Purchases.Where(p =>
+                    (p.Provider?.Name != null && p.Provider.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ||
+                    (p.InvoiceNumber != null && p.InvoiceNumber.Contains(SearchText, StringComparison.OrdinalIgnoreCase)));
+                Purchases = new ObservableCollection<Purchase>(filtered);
+            }
+            OnPropertyChanged(nameof(Purchases));
         }
     }
 
