@@ -87,8 +87,8 @@
 
                         <StackPanel Grid.Column="0">
                             <TextBlock Text="Formato de Ticket (Impresora Térmica) *" Margin="0,0,0,5"/>
-                            <ComboBox SelectedValue="{Binding TicketFormat}" Padding="10">
-                                <ComboBoxItem Content="58 mm (Pequeña)" Tag="58mm" IsSelected="True"/>
+                            <ComboBox SelectedValue="{Binding TicketFormat}" SelectedValuePath="Tag" Padding="10">
+                                <ComboBoxItem Content="58 mm (Pequeña)" Tag="58mm"/>
                                 <ComboBoxItem Content="80 mm (Estándar)" Tag="80mm"/>
                             </ComboBox>
                         </StackPanel>
@@ -102,6 +102,26 @@
                             <TextBlock Text="Dejar en 0 si no se aplica IVA por defecto." FontSize="11" Foreground="Gray" Margin="0,5,0,0"/>
                         </StackPanel>
                     </Grid>
+
+                    <!-- Sección: Permisos para Rol Usuario -->
+                    <TextBlock Text="PERMISOS PARA ROL 'USUARIO'" FontWeight="Bold" Foreground="#666" Margin="0,0,0,15"/>
+                    <Border Background="#fff3cd" CornerRadius="5" Padding="15" Margin="0,0,0,20" BorderBrush="#ffe69c" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚠️" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Marca las vistas que estarán visibles para los usuarios normales al usar el cambio de PIN."
+                                       VerticalAlignment="Center" Foreground="#664d03" FontSize="12"/>
+                        </StackPanel>
+                    </Border>
+
+                    <UniformGrid Columns="2" Margin="0,0,0,30">
+                        <CheckBox Content="Ver Historial de Ventas" IsChecked="{Binding AllowUserSalesHistory}" Margin="0,5"/>
+                        <CheckBox Content="Ver Inventario (Productos/Categorías)" IsChecked="{Binding AllowUserInventory}" Margin="0,5"/>
+                        <CheckBox Content="Ver Compras y Proveedores" IsChecked="{Binding AllowUserPurchases}" Margin="0,5"/>
+                        <CheckBox Content="Ver Reparaciones" IsChecked="{Binding AllowUserRepairs}" Margin="0,5"/>
+                        <CheckBox Content="Ver Tesorería (Caja/Banco)" IsChecked="{Binding AllowUserTreasury}" Margin="0,5"/>
+                        <CheckBox Content="Ver Clientes" IsChecked="{Binding AllowUserClients}" Margin="0,5"/>
+                        <CheckBox Content="Ver Reportes" IsChecked="{Binding AllowUserReports}" Margin="0,5"/>
+                    </UniformGrid>
 
                     <!-- Sección: Mantenimiento -->
                     <TextBlock Text="MANTENIMIENTO DE DATOS" FontWeight="Bold" Foreground="#666" Margin="0,0,0,10"/>

@@ -37,6 +37,7 @@ namespace POS_v0_1.ViewModels
         public decimal TotalSoldToday => Topups.Where(t => t.DateTime.Date == DateTime.Today).Sum(t => t.Amount);
 
         public ICommand FilterCommand { get; }
+        public ICommand ClearFiltersCommand { get; }
         public ICommand ShowCreateTopupCommand { get; }
         public ICommand ManageCompaniesCommand { get; }
 
@@ -51,6 +52,12 @@ namespace POS_v0_1.ViewModels
             };
 
             FilterCommand = new RelayCommand(o => ApplyFilter());
+            ClearFiltersCommand = new RelayCommand(o =>
+            {
+                SearchText = string.Empty;
+                SelectedDate = null;
+                ApplyFilter();
+            });
             ShowCreateTopupCommand = new RelayCommand(o => _main.CurrentView = new CreateTopupViewModel(_main));
             ManageCompaniesCommand = new RelayCommand(o =>
             {

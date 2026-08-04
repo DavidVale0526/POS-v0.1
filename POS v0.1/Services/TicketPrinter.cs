@@ -347,6 +347,12 @@ namespace POS_v0_1.Services
                 y += 15f;
             }
 
+            if (!string.IsNullOrEmpty(_config.Email))
+            {
+                g.DrawString(_config.Email, fontRegular, System.Drawing.Brushes.Black, new RectangleF(0, y, paperWidth, 18), center);
+                y += 15f;
+            }
+
             g.DrawString(dashes, fontRegular, System.Drawing.Brushes.Black, margin, y);
             y += 14f;
 

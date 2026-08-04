@@ -111,7 +111,7 @@ namespace POS_v0_1.ViewModels
         private string _confirmPassword;
         public string ConfirmPassword { get => _confirmPassword; set { _confirmPassword = value; OnPropertyChanged(); } }
 
-        public ObservableCollection<string> Roles { get; } = new ObservableCollection<string> { "Usuario" };
+        public ObservableCollection<string> Roles { get; } = new ObservableCollection<string> { "Usuario", "Administrador" };
 
         public ICommand SaveCommand { get; }
         public ICommand BackCommand { get; }

@@ -13,5 +13,14 @@ namespace POS_v0_1.Models
         public string? LogoPath { get; set; } = "";
         public string TicketFormat { get; set; } = "58mm";
         public decimal TaxRate { get; set; }
+
+        // Permisos para el rol "Usuario"
+        public bool AllowUserSalesHistory { get; set; } = false;
+        public bool AllowUserInventory { get; set; } = false;
+        public bool AllowUserPurchases { get; set; } = false;
+        public bool AllowUserRepairs { get; set; } = true;
+        public bool AllowUserTreasury { get; set; } = false;
+        public bool AllowUserClients { get; set; } = false;
+        public bool AllowUserReports { get; set; } = false;
     }
 }

@@ -34,10 +34,18 @@ namespace POS_v0_1.ViewModels
             set { _selectedDate = value; OnPropertyChanged(); ApplyFilter(); }
         }
 
+        private bool _showOnlyCancelled;
+        public bool ShowOnlyCancelled
+        {
+            get => _showOnlyCancelled;
+            set { _showOnlyCancelled = value; OnPropertyChanged(); ApplyFilter(); }
+        }
+
         public decimal TotalSold => Sales.Sum(s => s.Total);
         public int TransactionCount => Sales.Count;
 
         public ICommand FilterCommand { get; }
+        public ICommand ClearFiltersCommand { get; }
         public ICommand ShowPosCommand { get; }
         public ICommand ReprintCommand { get; }
         public ICommand CancelSaleCommand { get; }
@@ -55,6 +63,13 @@ namespace POS_v0_1.ViewModels
             };
 
             FilterCommand = new RelayCommand(o => ApplyFilter());
+            ClearFiltersCommand = new RelayCommand(o =>
+            {
+                SearchText = string.Empty;
+                SelectedDate = null;
+                ShowOnlyCancelled = false;
+                ApplyFilter();
+            });
             ShowPosCommand = _main.ShowPosCommand;
 
             ReprintCommand = new RelayCommand(o =>
@@ -82,6 +97,9 @@ namespace POS_v0_1.ViewModels
                         System.Windows.MessageBox.Show("Esta venta ya ha sido anulada.", "Aviso", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                         return;
                     }
+
+                    // Requerir validación de Administrador para anular ventas
+                    if (!_main.RequestAdminValidation()) return;
 
                     var result = System.Windows.MessageBox.Show($"¿Está seguro que desea anular la venta #{sale.Id}?\nEl stock de los productos será devuelto.", "Confirmar Anulación", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
 
@@ -145,6 +163,11 @@ namespace POS_v0_1.ViewModels
             if (SelectedDate.HasValue)
             {
                 filtered = filtered.Where(s => s.Date.Date == SelectedDate.Value.Date);
+            }
+
+            if (ShowOnlyCancelled)
+            {
+                filtered = filtered.Where(s => s.IsCancelled);
             }
 
             FilteredSales = new ObservableCollection<Sale>(filtered.OrderByDescending(s => s.Date));

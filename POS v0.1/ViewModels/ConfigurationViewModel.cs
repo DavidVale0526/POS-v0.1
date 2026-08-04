@@ -60,6 +60,28 @@ namespace POS_v0_1.ViewModels
             set { _taxRate = value; OnPropertyChanged(); }
         }
 
+        // Permisos para el rol "Usuario"
+        private bool _allowUserSalesHistory;
+        public bool AllowUserSalesHistory { get => _allowUserSalesHistory; set { _allowUserSalesHistory = value; OnPropertyChanged(); } }
+
+        private bool _allowUserInventory;
+        public bool AllowUserInventory { get => _allowUserInventory; set { _allowUserInventory = value; OnPropertyChanged(); } }
+
+        private bool _allowUserPurchases;
+        public bool AllowUserPurchases { get => _allowUserPurchases; set { _allowUserPurchases = value; OnPropertyChanged(); } }
+
+        private bool _allowUserRepairs;
+        public bool AllowUserRepairs { get => _allowUserRepairs; set { _allowUserRepairs = value; OnPropertyChanged(); } }
+
+        private bool _allowUserTreasury;
+        public bool AllowUserTreasury { get => _allowUserTreasury; set { _allowUserTreasury = value; OnPropertyChanged(); } }
+
+        private bool _allowUserClients;
+        public bool AllowUserClients { get => _allowUserClients; set { _allowUserClients = value; OnPropertyChanged(); } }
+
+        private bool _allowUserReports;
+        public bool AllowUserReports { get => _allowUserReports; set { _allowUserReports = value; OnPropertyChanged(); } }
+
         public ICommand SaveCommand { get; }
         public ICommand ChooseLogoCommand { get; }
         public ICommand ShowBackupCommand { get; }
@@ -87,6 +109,15 @@ namespace POS_v0_1.ViewModels
                     _config.LogoPath = LogoPath ?? "";
                     _config.TicketFormat = TicketFormat ?? "58mm";
                     _config.TaxRate = TaxRate;
+
+                    // Guardar permisos
+                    _config.AllowUserSalesHistory = AllowUserSalesHistory;
+                    _config.AllowUserInventory = AllowUserInventory;
+                    _config.AllowUserPurchases = AllowUserPurchases;
+                    _config.AllowUserRepairs = AllowUserRepairs;
+                    _config.AllowUserTreasury = AllowUserTreasury;
+                    _config.AllowUserClients = AllowUserClients;
+                    _config.AllowUserReports = AllowUserReports;
 
                     if (_config.Id == 0)
                     {
@@ -142,6 +173,15 @@ namespace POS_v0_1.ViewModels
                 LogoPath = _config.LogoPath;
                 TicketFormat = _config.TicketFormat;
                 TaxRate = _config.TaxRate;
+
+                // Cargar permisos
+                AllowUserSalesHistory = _config.AllowUserSalesHistory;
+                AllowUserInventory = _config.AllowUserInventory;
+                AllowUserPurchases = _config.AllowUserPurchases;
+                AllowUserRepairs = _config.AllowUserRepairs;
+                AllowUserTreasury = _config.AllowUserTreasury;
+                AllowUserClients = _config.AllowUserClients;
+                AllowUserReports = _config.AllowUserReports;
             }
             catch { }
         }

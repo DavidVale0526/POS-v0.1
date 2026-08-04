@@ -30,8 +30,37 @@ namespace POS_v0_1.ViewModels
         public User CurrentUser
         {
             get => _currentUser;
-            set { _currentUser = value; OnPropertyChanged(); }
+            set
+            {
+                _currentUser = value;
+                OnPropertyChanged();
+                RefreshPermissions();
+            }
         }
+
+        private void RefreshPermissions()
+        {
+            OnPropertyChanged(nameof(IsAdmin));
+            OnPropertyChanged(nameof(CanSeeSalesHistory));
+            OnPropertyChanged(nameof(CanSeeInventory));
+            OnPropertyChanged(nameof(CanSeePurchases));
+            OnPropertyChanged(nameof(CanSeeRepairs));
+            OnPropertyChanged(nameof(CanSeeTreasury));
+            OnPropertyChanged(nameof(CanSeeClients));
+            OnPropertyChanged(nameof(CanSeeReports));
+            OnPropertyChanged(nameof(CanSeeAdmin));
+        }
+
+        public bool IsAdmin => CurrentUser?.Role == "Administrador";
+
+        public bool CanSeeSalesHistory => IsAdmin || (BusinessConfig?.AllowUserSalesHistory ?? false);
+        public bool CanSeeInventory => IsAdmin || (BusinessConfig?.AllowUserInventory ?? false);
+        public bool CanSeePurchases => IsAdmin || (BusinessConfig?.AllowUserPurchases ?? false);
+        public bool CanSeeRepairs => IsAdmin || (BusinessConfig?.AllowUserRepairs ?? false);
+        public bool CanSeeTreasury => IsAdmin || (BusinessConfig?.AllowUserTreasury ?? false);
+        public bool CanSeeClients => IsAdmin || (BusinessConfig?.AllowUserClients ?? false);
+        public bool CanSeeReports => IsAdmin || (BusinessConfig?.AllowUserReports ?? false);
+        public bool CanSeeAdmin => IsAdmin;
 
         private BusinessConfiguration _businessConfig;
         public BusinessConfiguration BusinessConfig
@@ -164,6 +193,15 @@ namespace POS_v0_1.ViewModels
             AddColumnIfMissing("Purchases", "ProviderId", "INTEGER");
             AddColumnIfMissing("FinancialMovements", "SourceId", "INTEGER DEFAULT 0");
 
+            // Permisos de Rol Usuario
+            AddColumnIfMissing("BusinessConfigs", "AllowUserSalesHistory", "INTEGER DEFAULT 0");
+            AddColumnIfMissing("BusinessConfigs", "AllowUserInventory", "INTEGER DEFAULT 0");
+            AddColumnIfMissing("BusinessConfigs", "AllowUserPurchases", "INTEGER DEFAULT 0");
+            AddColumnIfMissing("BusinessConfigs", "AllowUserRepairs", "INTEGER DEFAULT 1");
+            AddColumnIfMissing("BusinessConfigs", "AllowUserTreasury", "INTEGER DEFAULT 0");
+            AddColumnIfMissing("BusinessConfigs", "AllowUserClients", "INTEGER DEFAULT 0");
+            AddColumnIfMissing("BusinessConfigs", "AllowUserReports", "INTEGER DEFAULT 0");
+
             // Migración: Llenar PurchasePrice para ventas viejas que no lo tienen (usando el costo actual del producto)
             try
             {
@@ -257,9 +295,9 @@ namespace POS_v0_1.ViewModels
             if (!dbUsers.Any())
             {
                 // Seed default users if none exist
-                var admin = new User { Name = "Usuario Principal", Email = "admin@admin.com", Password = "admin", Role = "Usuario", Pin = "1234" };
-                var seller = new User { Name = "Vendedor Juan", Email = "vendedor@admin.com", Password = "123", Role = "Usuario", Pin = "4321" };
-                var miki = new User { Name = "Miki", Email = "miki@admin.com", Password = "miki", Role = "Usuario", Pin = "7845" };
+                var admin = new User { Name = "Administrador", Email = "admin@admin.com", Password = "admin", Role = "Administrador", Pin = "1234", RegistrationDate = DateTime.Now };
+                var seller = new User { Name = "Vendedor Juan", Email = "vendedor@admin.com", Password = "123", Role = "Usuario", Pin = "4321", RegistrationDate = DateTime.Now };
+                var miki = new User { Name = "Miki", Email = "miki@admin.com", Password = "miki", Role = "Usuario", Pin = "7845", RegistrationDate = DateTime.Now };
                 Db.Users.AddRange(admin, seller, miki);
                 Db.SaveChanges();
                 dbUsers = Db.Users.ToList();
@@ -373,6 +411,10 @@ namespace POS_v0_1.ViewModels
                 if (user != null)
                 {
                     CurrentUser = user;
+
+                    // SEGURIDAD: Validar si el nuevo usuario tiene acceso a la vista actual
+                    ValidateCurrentViewAccess();
+
                     // Forzar actualización de comandos si es necesario
                     CommandManager.InvalidateRequerySuggested();
                 }
@@ -381,6 +423,76 @@ namespace POS_v0_1.ViewModels
                     System.Windows.MessageBox.Show("PIN no reconocido.", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 }
             }
+        }
+
+        private void ValidateCurrentViewAccess()
+        {
+            if (IsAdmin) return; // Si es Admin, tiene acceso total
+
+            bool needsRedirect = false;
+
+            // Bloqueo total de vistas Administrativas (Solo Admin)
+            if (CurrentView is UserManagementViewModel || CurrentView is CreateUserViewModel ||
+                CurrentView is ConfigurationViewModel || CurrentView is BackupViewModel)
+            {
+                needsRedirect = true;
+            }
+            // Bloqueos basados en la configuración dinámica de permisos
+            else if (CurrentView is ReportsViewModel)
+                needsRedirect = !CanSeeReports;
+            else if (CurrentView is SalesHistoryViewModel)
+                needsRedirect = !CanSeeSalesHistory;
+            else if (CurrentView is ProductsViewModel || CurrentView is CategoriesViewModel ||
+                     CurrentView is LowStockViewModel || CurrentView is ProductDetailViewModel ||
+                     CurrentView is CreateProductViewModel || CurrentView is RestockViewModel)
+                needsRedirect = !CanSeeInventory;
+            else if (CurrentView is ProvidersViewModel || CurrentView is CreateProviderViewModel ||
+                     CurrentView is PurchasesViewModel || CurrentView is CreatePurchaseViewModel ||
+                     CurrentView is PurchaseDetailViewModel)
+                needsRedirect = !CanSeePurchases;
+            else if (CurrentView is RepairListViewModel || CurrentView is CreateRepairViewModel ||
+                     CurrentView is RepairDetailViewModel || CurrentView is RepairCategoriesViewModel ||
+                     CurrentView is RepairTypesViewModel)
+                needsRedirect = !CanSeeRepairs;
+            else if (CurrentView is CashControlViewModel || CurrentView is OpenCashViewModel ||
+                     CurrentView is CashCountHistoryViewModel || CurrentView is NewCashCountViewModel ||
+                     CurrentView is FinancialMovementsViewModel || CurrentView is CreateFinancialMovementViewModel ||
+                     CurrentView is FinancialSourcesViewModel || CurrentView is BankHistoryViewModel ||
+                     CurrentView is NewBankTransactionViewModel)
+                needsRedirect = !CanSeeTreasury;
+            else if (CurrentView is ClientListViewModel || CurrentView is CreateClientViewModel)
+                needsRedirect = !CanSeeClients;
+
+            if (needsRedirect)
+            {
+                // Redirigir a una vista siempre segura (POS si hay caja, si no a Reparaciones)
+                if (Session != null && Session.IsOpen)
+                    CurrentView = new PosViewModel(this);
+                else
+                    CurrentView = new RepairListViewModel(this);
+
+                System.Windows.MessageBox.Show("Tu perfil no tiene acceso a la vista anterior. Has sido redirigido.", "Control de Acceso", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            }
+        }
+
+        public bool RequestAdminValidation()
+        {
+            if (IsAdmin) return true;
+
+            var pinDialog = new Views.PinValidationDialog();
+            if (pinDialog.ShowDialog() == true)
+            {
+                var user = Users.FirstOrDefault(u => u.Pin == pinDialog.Pin);
+                if (user != null && user.Role == "Administrador")
+                {
+                    return true;
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show("Acceso denegado. Se requiere PIN de Administrador.", "Seguridad", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Stop);
+                }
+            }
+            return false;
         }
     }
 
@@ -441,6 +553,8 @@ namespace POS_v0_1.ViewModels
 
             OpenCommand = new RelayCommand(o =>
             {
+                if (!_main.RequestAdminValidation()) return;
+
                 if (OpeningAmount < 0)
                 {
                     System.Windows.MessageBox.Show("El monto de apertura no puede ser negativo.", "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
@@ -472,6 +586,7 @@ namespace POS_v0_1.ViewModels
             CloseCommand = new RelayCommand(o =>
             {
                 if (Session == null) return;
+                if (!_main.RequestAdminValidation()) return;
 
                 var result = System.Windows.MessageBox.Show("¿Está seguro de cerrar la caja?", "Confirmar Cierre", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
                 if (result != System.Windows.MessageBoxResult.Yes) return;
@@ -814,6 +929,13 @@ namespace POS_v0_1.ViewModels
             SellCommand = new RelayCommand(o =>
             {
                 if (!Cart.Any()) return;
+
+                // Validación de Descuento Grande (> 15%)
+                decimal discountThreshold = Subtotal * 0.15m;
+                if (DiscountValue > discountThreshold)
+                {
+                    if (!_main.RequestAdminValidation()) return;
+                }
 
                 if (PaymentMethod == "Efectivo" && ReceivedAmount < Total)
                 {

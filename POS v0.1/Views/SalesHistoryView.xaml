@@ -83,7 +83,8 @@
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" Margin="0,0,10,0" Padding="10,8"
@@ -93,23 +94,38 @@
                         <DatePicker Grid.Column="1" Margin="0,0,10,0" Padding="5"
                                     SelectedDate="{Binding SelectedDate}"
                                     VerticalContentAlignment="Center" BorderBrush="#dee2e6"/>
-                        <Button Grid.Column="2" Content="🔍 Filtrar" Padding="30,8"
-                                Background="#6c757d" Foreground="White" BorderThickness="0"
-                                Command="{Binding FilterCommand}">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}" CornerRadius="5">
-                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </Button.Style>
-                        </Button>
+
+                        <CheckBox Grid.Column="2" Content="Ver solo anuladas"
+                                  IsChecked="{Binding ShowOnlyCancelled}"
+                                  VerticalAlignment="Center"
+                                  Margin="10,0,20,0" Foreground="#dc3545" FontWeight="SemiBold"/>
+
+                        <StackPanel Grid.Column="3" Orientation="Horizontal">
+                            <Button Content="🔍 Filtrar" Padding="25,8"
+                                    Background="#6c757d" Foreground="White" BorderThickness="0"
+                                    Command="{Binding FilterCommand}">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="🔄 Ver Todo" Padding="15,8" Margin="10,0,0,0"
+                                    Background="White" BorderBrush="#dee2e6" BorderThickness="1"
+                                    Command="{Binding ClearFiltersCommand}">
+                                <Button.Resources>
+                                    <Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style>
+                                </Button.Resources>
+                            </Button>
+                        </StackPanel>
                     </Grid>
                 </Border>
 

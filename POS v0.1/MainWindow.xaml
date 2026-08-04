@@ -207,32 +207,48 @@
                     <StackPanel Margin="10,0">
                         <TextBlock Text="VENTAS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,10,0,5"/>
                         <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8A1;" Content="Nueva Venta (POS)" Command="{Binding ShowPosCommand}"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE81C;" Content="Historial Ventas" Command="{Binding ShowSalesHistoryCommand}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE81C;" Content="Historial Ventas" Command="{Binding ShowSalesHistoryCommand}"
+                                Visibility="{Binding CanSeeSalesHistory, Converter={StaticResource VisConverter}}"/>
                         <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE722;" Content="Recargas" Command="{Binding ShowTopupsCommand}"/>
 
-                        <TextBlock Text="INVENTARIO" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE71D;" Content="Productos" Command="{Binding ShowProductManagementCommand}"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8FD;" Content="Categorías" Command="{Binding ShowCategoriesCommand}"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE7BA;" Content="Stock Bajo" Command="{Binding ShowLowStockCommand}"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8F1;" Content="Proveedores" Command="{Binding ShowProvidersCommand}"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8D7;" Content="Compras" Command="{Binding ShowPurchasesCommand}"/>
+                        <StackPanel Visibility="{Binding CanSeeInventory, Converter={StaticResource VisConverter}}">
+                            <TextBlock Text="INVENTARIO" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
+                            <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE71D;" Content="Productos" Command="{Binding ShowProductManagementCommand}"/>
+                            <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8FD;" Content="Categorías" Command="{Binding ShowCategoriesCommand}"/>
+                            <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE7BA;" Content="Stock Bajo" Command="{Binding ShowLowStockCommand}"/>
+                        </StackPanel>
 
-                        <TextBlock Text="SERVICIOS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xEBE8;" Content="Reparaciones" Command="{Binding ShowRepairsCommand}"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8FD;" Content="Categorías Rep." Command="{Binding ShowRepairCategoriesCommand}"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE943;" Content="Tipos Rep." Command="{Binding ShowRepairTypesCommand}"/>
+                        <StackPanel Visibility="{Binding CanSeePurchases, Converter={StaticResource VisConverter}}">
+                            <TextBlock Text="COMPRAS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
+                            <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8F1;" Content="Proveedores" Command="{Binding ShowProvidersCommand}"/>
+                            <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8D7;" Content="Compras" Command="{Binding ShowPurchasesCommand}"/>
+                        </StackPanel>
 
-                        <TextBlock Text="TESORERÍA" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8C7;" Content="Caja (Abrir/Cerrar)" Command="{Binding ShowOpenCashCommand}"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xEF20;" Content="Conteo Billetes" Command="{Binding ShowCashCountCommand}"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8D2;" Content="Gastos / Ingresos" Command="{Binding ShowExpensesIncomesCommand}"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE80F;" Content="Banco" Command="{Binding ShowBankCommand}"/>
+                        <StackPanel Visibility="{Binding CanSeeRepairs, Converter={StaticResource VisConverter}}">
+                            <TextBlock Text="SERVICIOS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
+                            <Button Style="{StaticResource ModernMenuButton}" Tag="&#xEBE8;" Content="Reparaciones" Command="{Binding ShowRepairsCommand}"/>
+                            <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8FD;" Content="Categorías Rep." Command="{Binding ShowRepairCategoriesCommand}"/>
+                            <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE943;" Content="Tipos Rep." Command="{Binding ShowRepairTypesCommand}"/>
+                        </StackPanel>
 
-                        <TextBlock Text="ADMIN" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE716;" Content="Clientes" Command="{Binding ShowClientsCommand}"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE77B;" Content="Usuarios / Roles" Command="{Binding ShowUsersRolesCommand}"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE99A;" Content="Reportes" Command="{Binding ShowReportsCommand}"/>
-                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE713;" Content="Configuración" Command="{Binding ShowConfigurationCommand}"/>
+                        <StackPanel Visibility="{Binding CanSeeTreasury, Converter={StaticResource VisConverter}}">
+                            <TextBlock Text="TESORERÍA" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"/>
+                            <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8C7;" Content="Caja (Abrir/Cerrar)" Command="{Binding ShowOpenCashCommand}"/>
+                            <Button Style="{StaticResource ModernMenuButton}" Tag="&#xEF20;" Content="Conteo Billetes" Command="{Binding ShowCashCountCommand}"/>
+                            <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE8D2;" Content="Gastos / Ingresos" Command="{Binding ShowExpensesIncomesCommand}"/>
+                            <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE80F;" Content="Banco" Command="{Binding ShowBankCommand}"/>
+                        </StackPanel>
+
+                        <TextBlock Text="ADMIN" FontSize="10" FontWeight="Bold" Foreground="{StaticResource SidebarTextMuted}" Margin="15,20,0,5"
+                                   Visibility="{Binding IsAdmin, Converter={StaticResource VisConverter}}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE716;" Content="Clientes" Command="{Binding ShowClientsCommand}"
+                                Visibility="{Binding CanSeeClients, Converter={StaticResource VisConverter}}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE77B;" Content="Usuarios / Roles" Command="{Binding ShowUsersRolesCommand}"
+                                Visibility="{Binding IsAdmin, Converter={StaticResource VisConverter}}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE99A;" Content="Reportes" Command="{Binding ShowReportsCommand}"
+                                Visibility="{Binding CanSeeReports, Converter={StaticResource VisConverter}}"/>
+                        <Button Style="{StaticResource ModernMenuButton}" Tag="&#xE713;" Content="Configuración" Command="{Binding ShowConfigurationCommand}"
+                                Visibility="{Binding IsAdmin, Converter={StaticResource VisConverter}}"/>
 
                         <Border Height="20"/> <!-- Spacer -->
                     </StackPanel>
