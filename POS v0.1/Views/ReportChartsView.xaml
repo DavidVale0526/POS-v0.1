@@ -1,0 +1,85 @@
+<UserControl x:Class="POS_v0_1.Views.ReportChartsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="600" d:DesignWidth="800">
+    <StackPanel Margin="10">
+        <!-- Gráfica de Ventas Semanal -->
+        <Border Background="White" CornerRadius="12" Padding="25" Margin="0,0,0,25" BorderBrush="#eee" BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="15" ShadowDepth="1" Opacity="0.05"/>
+            </Border.Effect>
+            <StackPanel>
+                <TextBlock Text="Ventas de los Últimos 7 Días" FontSize="18" FontWeight="Bold" Margin="0,0,0,20" Foreground="#333"/>
+                <ItemsControl ItemsSource="{Binding Summary.DailySalesHistory}" Height="250">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="7" VerticalAlignment="Bottom"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="10,0">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Barra -->
+                                <Border Grid.Row="0" VerticalAlignment="Bottom" Background="#0d6efd" CornerRadius="4,4,0,0" ToolTip="{Binding Total, StringFormat='C$ \{0:N2\}'}">
+                                    <Border.Height>
+                                        <!-- Simulación de escala: Usamos el valor directamente pero limitado -->
+                                        <MultiBinding Converter="{StaticResource ScaleConverter}">
+                                            <Binding Path="Total"/>
+                                            <Binding Path="DataContext.Summary.DailySalesHistory" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                            <Binding Source="200"/> <!-- Max Height -->
+                                        </MultiBinding>
+                                    </Border.Height>
+                                </Border>
+
+                                <TextBlock Grid.Row="1" Text="{Binding Total, StringFormat='N0'}" FontSize="10" HorizontalAlignment="Center" Margin="0,5,0,0" Foreground="#666"/>
+                                <TextBlock Grid.Row="2" Text="{Binding DayName}" FontWeight="SemiBold" FontSize="11" HorizontalAlignment="Center" Margin="0,5,0,0" Foreground="#444"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+
+        <!-- Top Categorías -->
+        <Border Background="White" CornerRadius="12" Padding="25" BorderBrush="#eee" BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="15" ShadowDepth="1" Opacity="0.05"/>
+            </Border.Effect>
+            <StackPanel>
+                <TextBlock Text="Top 5 Categorías más Rentables" FontSize="18" FontWeight="Bold" Margin="0,0,0,20" Foreground="#333"/>
+                <ItemsControl ItemsSource="{Binding Summary.TopCategories}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,0,0,15">
+                                <Grid Margin="0,0,0,5">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#444"/>
+                                    <TextBlock Text="{Binding TotalSales, StringFormat='C$ \{0:N2\}'}" HorizontalAlignment="Right" Foreground="#0d6efd" FontWeight="Bold"/>
+                                </Grid>
+                                <Border Height="12" Background="#f1f3f5" CornerRadius="6">
+                                    <Border HorizontalAlignment="Left" Background="#0d6efd" CornerRadius="6">
+                                        <Border.Width>
+                                            <MultiBinding Converter="{StaticResource PercentageConverter}">
+                                                <Binding Path="TotalSales"/>
+                                                <Binding Path="DataContext.Summary.GrossSales" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                                <Binding Source="600"/> <!-- Max Container Width approx -->
+                                            </MultiBinding>
+                                        </Border.Width>
+                                    </Border>
+                                </Border>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>
