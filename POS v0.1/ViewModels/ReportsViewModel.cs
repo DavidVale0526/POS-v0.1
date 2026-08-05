@@ -37,6 +37,7 @@ namespace POS_v0_1.ViewModels
         public ICommand ConsultCommand { get; }
         public ICommand PrintReportCommand { get; }
         public ICommand ExportCommand { get; }
+        public ICommand ExportPdfCommand { get; }
 
         public ReportsViewModel(MainViewModel main)
         {
@@ -50,7 +51,79 @@ namespace POS_v0_1.ViewModels
             });
 
             ExportCommand = new RelayCommand(o => ExportToCsv());
+            ExportPdfCommand = new RelayCommand(o => ExportToPdf());
             CalculateSummary();
+        }
+
+        private void ExportToPdf()
+        {
+            if (Summary == null) return;
+
+            try
+            {
+                // Para implementar un reporte A4 formal sin librerías externas complejas,
+                // usamos el PrintDialog de WPF que permite guardar como PDF de forma nativa.
+                var printDialog = new System.Windows.Controls.PrintDialog();
+                if (printDialog.ShowDialog() == true)
+                {
+                    // Creamos un visual específico para A4
+                    var visual = new System.Windows.Controls.StackPanel
+                    {
+                        Width = 800, // Aprox A4 width
+                        Margin = new System.Windows.Thickness(50),
+                        Background = System.Windows.Media.Brushes.White
+                    };
+
+                    // Header
+                    visual.Children.Add(new System.Windows.Controls.TextBlock {
+                        Text = _main.BusinessConfig?.BusinessName ?? "REPORTE DE NEGOCIO",
+                        FontSize = 24, FontWeight = System.Windows.FontWeights.Bold,
+                        Margin = new System.Windows.Thickness(0, 0, 0, 10)
+                    });
+                    visual.Children.Add(new System.Windows.Controls.TextBlock {
+                        Text = $"Período: {SelectedPeriod} | Fecha: {ReferenceDate:dd/MM/yyyy}",
+                        FontSize = 14, Margin = new System.Windows.Thickness(0, 0, 0, 30)
+                    });
+
+                    // Grid de Resumen
+                    var grid = new System.Windows.Controls.Grid();
+                    grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
+                    grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
+
+                    AddSummaryRow(visual, "Ventas Totales", Summary.GrossSales.ToString("C$ N2"));
+                    AddSummaryRow(visual, "Utilidad Real Operativa", Summary.RealOperatingProfit.ToString("C$ N2"));
+                    AddSummaryRow(visual, "Costo de Ventas", Summary.CostOfGoodsSold.ToString("C$ N2"));
+                    AddSummaryRow(visual, "Gastos y Egresos", Summary.ExpensesAndOutflows.ToString("C$ N2"));
+                    AddSummaryRow(visual, "Utilidad Neta Final", Summary.TotalNetProfit.ToString("C$ N2"), true);
+
+                    visual.Children.Add(new System.Windows.Controls.Separator { Margin = new System.Windows.Thickness(0, 20, 0, 20) });
+
+                    // Top Productos
+                    visual.Children.Add(new System.Windows.Controls.TextBlock { Text = "TOP 10 PRODUCTOS MÁS VENDIDOS", FontWeight = System.Windows.FontWeights.Bold, Margin = new System.Windows.Thickness(0, 0, 0, 10) });
+                    foreach (var item in Summary.TopProducts)
+                    {
+                        AddSummaryRow(visual, item.Name, $"{item.Quantity} uds - {item.TotalSales:C$ N2}");
+                    }
+
+                    // Forzar el layout
+                    visual.Measure(new System.Windows.Size(printDialog.PrintableAreaWidth, double.PositiveInfinity));
+                    visual.Arrange(new System.Windows.Rect(new System.Windows.Point(0, 0), visual.DesiredSize));
+
+                    printDialog.PrintVisual(visual, "Reporte de Negocio A4");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show("Error al exportar PDF: " + ex.Message);
+            }
+        }
+
+        private void AddSummaryRow(System.Windows.Controls.StackPanel parent, string label, string value, bool isBold = false)
+        {
+            var p = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal, Margin = new System.Windows.Thickness(0, 5, 0, 5) };
+            p.Children.Add(new System.Windows.Controls.TextBlock { Text = label + ": ", Width = 250, FontWeight = isBold ? System.Windows.FontWeights.Bold : System.Windows.FontWeights.Normal });
+            p.Children.Add(new System.Windows.Controls.TextBlock { Text = value, FontWeight = isBold ? System.Windows.FontWeights.Bold : System.Windows.FontWeights.Normal });
+            parent.Children.Add(p);
         }
 
         private void ExportToCsv()
@@ -142,32 +215,36 @@ namespace POS_v0_1.ViewModels
 
             summary.RealOperatingProfit = (summary.GrossSales - summary.CostOfGoodsSold) + topups.Sum(t => t.Profit) + summary.RepairIncome;
 
-            // Determinar si hay caja abierta o si usamos saldo de cierre auditado
+            // Determinar efectivo en caja de forma más precisa
             var activeSession = _main.Session ?? _main.CashSessions.FirstOrDefault(s => s.IsOpen);
-            var closedSessions = sessions.Where(s => !s.IsOpen && s.ClosingTime != null).ToList();
 
-            if (activeSession != null && activeSession.IsOpen)
+            if (activeSession != null && activeSession.IsOpen && activeSession.OpeningTime.Date == ReferenceDate.Date)
             {
                 summary.IsSessionOpen = true;
                 summary.CashTitleText = "Efectivo en Caja (En Curso)";
                 summary.CashStatusText = "Caja Abierta (Calculado en tiempo real)";
-                decimal openingBalances = sessions.Sum(s => s.OpeningBalance);
-                summary.ActualCashInHand = openingBalances + (summary.TotalGrossIncome - summary.ExpensesAndOutflows);
-            }
-            else if (closedSessions.Any())
-            {
-                summary.IsSessionOpen = false;
-                summary.CashTitleText = "Saldo de Cierre (Auditado)";
-                var lastClosed = closedSessions.OrderByDescending(s => s.ClosingTime).First();
-                summary.CashStatusText = $"Caja Cerrada ({lastClosed.ClosingTime:dd/MM/yyyy HH:mm})";
-                summary.ActualCashInHand = closedSessions.Sum(s => s.ClosingBalance);
+                summary.ActualCashInHand = activeSession.TheoreticalBalance;
             }
             else
             {
-                summary.IsSessionOpen = false;
-                summary.CashTitleText = "Saldo de Caja";
-                summary.CashStatusText = "Caja Cerrada (Sin sesiones abiertas)";
-                summary.ActualCashInHand = 0m;
+                // Si el reporte es para hoy pero no hay caja abierta hoy, o es para otro día,
+                // buscamos la última caja cerrada en el periodo seleccionado.
+                var closedSessionsInPeriod = sessions.Where(s => !s.IsOpen && s.ClosingTime != null).ToList();
+                if (closedSessionsInPeriod.Any())
+                {
+                    summary.IsSessionOpen = false;
+                    summary.CashTitleText = "Saldo de Cierre (Auditado)";
+                    var lastClosed = closedSessionsInPeriod.OrderByDescending(s => s.ClosingTime).First();
+                    summary.CashStatusText = $"Caja Cerrada ({lastClosed.ClosingTime:dd/MM/yyyy HH:mm})";
+                    summary.ActualCashInHand = lastClosed.ClosingBalance;
+                }
+                else
+                {
+                    summary.IsSessionOpen = false;
+                    summary.CashTitleText = "Saldo de Caja";
+                    summary.CashStatusText = "Caja Cerrada (Sin sesiones en este periodo)";
+                    summary.ActualCashInHand = 0m;
+                }
             }
 
             // 2. Finanzas por Fuente
@@ -251,6 +328,35 @@ namespace POS_v0_1.ViewModels
                     TotalAmount = g.Sum(r => r.Total),
                     TotalProfit = g.Where(r => r.Status == "Entregado").Sum(r => r.Total)
                 }).ToList();
+
+            // 6. Inteligencia Visual (Fase 4)
+            // Historial de ventas últimos 7 días
+            var history = new List<DailySalesSummary>();
+            for (int i = 6; i >= 0; i--)
+            {
+                var day = DateTime.Today.AddDays(-i);
+                history.Add(new DailySalesSummary
+                {
+                    Date = day,
+                    Total = _main.Sales.Where(s => s.Date.Date == day.Date && !s.IsCancelled).Sum(s => s.Total)
+                });
+            }
+            summary.DailySalesHistory = history;
+
+            // Top Categorías más rentables
+            summary.TopCategories = sales.SelectMany(s => s.Items)
+                .GroupBy(i => {
+                    var prod = _main.Products.FirstOrDefault(p => p.Id == i.ProductId);
+                    return prod?.Category?.Name ?? "General";
+                })
+                .Select(g => new RankedItem
+                {
+                    Name = g.Key,
+                    Quantity = g.Sum(i => i.Quantity),
+                    TotalSales = g.Sum(i => i.Subtotal)
+                })
+                .OrderByDescending(x => x.TotalSales)
+                .Take(5).ToList();
 
             Summary = summary;
         }

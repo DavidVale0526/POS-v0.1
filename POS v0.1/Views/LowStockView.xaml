@@ -85,7 +85,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTextColumn Header="Categoría" Binding="{Binding Category}" Width="150"/>
+                <DataGridTextColumn Header="Categoría" Binding="{Binding CategoryName}" Width="150"/>
 
                 <DataGridTemplateColumn Header="Stock Actual" Width="150">
                     <DataGridTemplateColumn.CellTemplate>

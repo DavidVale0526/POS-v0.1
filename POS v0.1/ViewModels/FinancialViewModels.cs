@@ -162,10 +162,8 @@ namespace POS_v0_1.ViewModels
                 };
 
                 _main.Db.FinancialMovements.Add(move);
-                _main.Db.SaveChanges();
-                _main.FinancialMovements.Add(move);
 
-                // Actualizar sesión de caja si hay una abierta y la fuente es "Caja"
+                // Actualizar sesión ANTES de guardar para persistir
                 if (SelectedSource.Name == "Caja" && _main.Session != null && _main.Session.IsOpen)
                 {
                     if (Type == "Ingreso")
@@ -173,6 +171,9 @@ namespace POS_v0_1.ViewModels
                     else if (Type == "Gasto")
                         _main.Session.ExpensesTotal += Amount;
                 }
+
+                _main.Db.SaveChanges();
+                _main.FinancialMovements.Add(move);
 
                 _main.CurrentView = new FinancialMovementsViewModel(_main);
             });

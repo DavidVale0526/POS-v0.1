@@ -22,5 +22,9 @@ namespace POS_v0_1.Models
         public bool AllowUserTreasury { get; set; } = false;
         public bool AllowUserClients { get; set; } = false;
         public bool AllowUserReports { get; set; } = false;
+
+        // Fase 5: Estabilidad y Seguridad
+        public bool AutoBackupEnabled { get; set; } = true;
+        public System.DateTime? LastBackupDate { get; set; }
     }
 }

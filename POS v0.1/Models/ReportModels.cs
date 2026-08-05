@@ -39,6 +39,17 @@ namespace POS_v0_1.Models
         public List<ServiceReportItem> TopupReport { get; set; } = new List<ServiceReportItem>();
         public List<ServiceReportItem> RepairsByTechnician { get; set; } = new List<ServiceReportItem>();
         public List<ServiceReportItem> RepairsByReceiver { get; set; } = new List<ServiceReportItem>();
+
+        // Phase 4: Visual Intelligence
+        public List<DailySalesSummary> DailySalesHistory { get; set; } = new List<DailySalesSummary>();
+        public List<RankedItem> TopCategories { get; set; } = new List<RankedItem>();
+    }
+
+    public class DailySalesSummary
+    {
+        public DateTime Date { get; set; }
+        public decimal Total { get; set; }
+        public string DayName => Date.ToString("ddd", new System.Globalization.CultureInfo("es-NI"));
     }
 
     public class FinancialSourceSummary

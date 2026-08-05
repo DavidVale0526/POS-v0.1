@@ -97,10 +97,10 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Categoría:" Margin="0,0,0,10" Foreground="Gray"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Product.Category}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Product.CategoryName}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Proveedor:" Margin="0,0,0,10" Foreground="Gray"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Product.Provider, TargetNullValue='N/A'}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Product.ProviderName, TargetNullValue='N/A'}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
 
                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Cod. Barras:" Margin="0,0,0,10" Foreground="Gray"/>
                         <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Product.Barcode, TargetNullValue='N/A'}" HorizontalAlignment="Right" FontWeight="SemiBold"/>

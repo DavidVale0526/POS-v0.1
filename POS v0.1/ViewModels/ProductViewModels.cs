@@ -249,6 +249,9 @@ namespace POS_v0_1.ViewModels
                     {
                         dbProd.Stock = Product.Stock;
                         _main.Db.SaveChanges();
+
+                        // Registrar en Kardex (Fase 2)
+                        _main.RecordStockMovement(Product.Id, QuantityToAdd, "Entrada", "Reabastecimiento rápido (Stock Bajo)");
                     }
 
                     _main.CurrentView = new LowStockViewModel(_main);
@@ -426,9 +429,16 @@ namespace POS_v0_1.ViewModels
                         _main.Db.Products.Add(newProd);
                         _main.Db.SaveChanges();
                         _main.Products.Add(newProd);
+
+                        // Registro en Kardex de stock inicial
+                        if (newProd.Stock > 0)
+                        {
+                            _main.RecordStockMovement(newProd.Id, newProd.Stock, "Inventario Inicial", "Carga inicial de producto");
+                        }
                     }
                     else
                     {
+                        int oldStock = _editingProduct.Stock;
                         _editingProduct.Name = Name;
                         _editingProduct.Barcode = finalBarcode;
                         _editingProduct.SKU = finalSKU;
@@ -445,6 +455,14 @@ namespace POS_v0_1.ViewModels
                         _editingProduct.CategoryLegacy = SelectedCategory.Name;
 
                         _main.Db.SaveChanges();
+
+                        // Registrar en Kardex si hubo cambio manual de stock (Fase 2)
+                        if (oldStock != Stock)
+                        {
+                            int diff = Stock - oldStock;
+                            string type = diff > 0 ? "Ajuste (+)" : "Ajuste (-)";
+                            _main.RecordStockMovement(_editingProduct.Id, diff, type, "Ajuste manual desde edición de producto");
+                        }
                     }
                     _main.ShowToast("Producto guardado con éxito.");
                     _main.CurrentView = new ProductsViewModel(_main);

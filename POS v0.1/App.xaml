@@ -12,6 +12,8 @@
             <converters:DifferenceToBrushConverter x:Key="DifferenceToBrushConverter"/>
             <converters:RoleToVisibilityConverter x:Key="RoleToVisibilityConverter"/>
             <converters:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>
+            <converters:ChartScaleConverter x:Key="ScaleConverter"/>
+            <converters:CategoryPercentageConverter x:Key="PercentageConverter"/>
 
             <!-- Estilo Global para TextBox con Placeholder (usa el Tag) -->
             <Style TargetType="TextBox">

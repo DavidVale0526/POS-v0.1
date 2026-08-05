@@ -42,7 +42,25 @@
                         <TextBlock Text="Inteligencia de Negocio" FontSize="22" FontWeight="Bold" Foreground="#333" VerticalAlignment="Center"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="📊 Exportar CSV"
+                        <Button Content="📄 PDF Export"
+                                Background="#0d6efd" Foreground="White" Padding="15,8"
+                                BorderThickness="0" FontWeight="SemiBold" Margin="0,0,10,0"
+                                Command="{Binding ExportPdfCommand}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="5">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button Content="📊 CSV Export"
                                 Background="#198754" Foreground="White" Padding="15,8"
                                 BorderThickness="0" FontWeight="SemiBold" Margin="0,0,10,0"
                                 Command="{Binding ExportCommand}">
@@ -162,6 +180,10 @@
 
                     <TabItem Header="🔧 Servicios">
                         <local:ReportServicesView DataContext="{Binding}"/>
+                    </TabItem>
+
+                    <TabItem Header="📊 Gráficas">
+                        <local:ReportChartsView DataContext="{Binding}"/>
                     </TabItem>
                 </TabControl>
             </StackPanel>

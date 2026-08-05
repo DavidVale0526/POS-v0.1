@@ -1,5 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -167,6 +169,7 @@ namespace POS_v0_1.ViewModels
         public ICommand ShowUsersRolesCommand { get; }
         public ICommand ShowConfigurationCommand { get; }
         public ICommand ShowStockHistoryCommand { get; }
+        public ICommand OpenFolderCommand { get; }
         public ICommand LogoutCommand { get; }
         public ICommand SwitchUserCommand { get; }
 
@@ -206,6 +209,14 @@ namespace POS_v0_1.ViewModels
             ShowReportsCommand = new RelayCommand(o => CurrentView = new ReportsViewModel(this));
             ShowUsersRolesCommand = new RelayCommand(o => CurrentView = new UserManagementViewModel(this));
             ShowConfigurationCommand = new RelayCommand(o => CurrentView = new ConfigurationViewModel(this));
+            OpenFolderCommand = new RelayCommand(o => {
+                try {
+                    string folder = o?.ToString() == "Logs" ? "Logs" : "Backups";
+                    string path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, folder);
+                    if (!System.IO.Directory.Exists(path)) System.IO.Directory.CreateDirectory(path);
+                    System.Diagnostics.Process.Start("explorer.exe", path);
+                } catch (Exception ex) { MessageBox.Show("Error al abrir carpeta: " + ex.Message); }
+            });
             ShowStockHistoryCommand = new RelayCommand(o =>
             {
                 if (o is int prodId) CurrentView = new StockHistoryViewModel(this, prodId);
@@ -275,6 +286,8 @@ namespace POS_v0_1.ViewModels
             AddColumnSafe("BusinessConfigs", "AllowUserTreasury", "INTEGER DEFAULT 0");
             AddColumnSafe("BusinessConfigs", "AllowUserClients", "INTEGER DEFAULT 0");
             AddColumnSafe("BusinessConfigs", "AllowUserReports", "INTEGER DEFAULT 0");
+            AddColumnSafe("BusinessConfigs", "AutoBackupEnabled", "INTEGER DEFAULT 1");
+            AddColumnSafe("BusinessConfigs", "LastBackupDate", "TEXT");
 
             try
             {
@@ -524,9 +537,9 @@ namespace POS_v0_1.ViewModels
         public ObservableCollection<Product> FilteredProducts { get => _filteredProducts; set { _filteredProducts = value; OnPropertyChanged(); } }
         public decimal Subtotal => Cart.Sum(i => i.Subtotal);
         private decimal _discount;
-        public decimal Discount { get => _discount; set { decimal temp = IsPercentageDiscount ? (Subtotal * (value / 100m)) : value; if (Subtotal - temp < 0) return; _discount = value; OnPropertyChanged(); OnPropertyChanged(nameof(Iva)); OnPropertyChanged(nameof(Total)); } }
+        public decimal Discount { get => _discount; set { decimal temp = IsPercentageDiscount ? (Subtotal * (value / 100m)) : value; if (Subtotal - temp < 0) return; _discount = value; OnPropertyChanged(); OnPropertyChanged(nameof(Iva)); OnPropertyChanged(nameof(Total)); OnPropertyChanged(nameof(ChangeAmount)); } }
         private bool _isPercentageDiscount;
-        public bool IsPercentageDiscount { get => _isPercentageDiscount; set { _isPercentageDiscount = value; OnPropertyChanged(); OnPropertyChanged(nameof(Iva)); OnPropertyChanged(nameof(Total)); } }
+        public bool IsPercentageDiscount { get => _isPercentageDiscount; set { _isPercentageDiscount = value; OnPropertyChanged(); OnPropertyChanged(nameof(Iva)); OnPropertyChanged(nameof(Total)); OnPropertyChanged(nameof(ChangeAmount)); } }
         public decimal DiscountValue => IsPercentageDiscount ? (Subtotal * (Discount / 100m)) : Discount;
         public decimal Iva => Math.Round((Subtotal - DiscountValue) * (_taxRate / 100m), 2);
         public decimal Total => Subtotal - DiscountValue + Iva;
@@ -557,12 +570,19 @@ namespace POS_v0_1.ViewModels
             _main = main; _main.PropertyChanged += (s, e) => { if (e.PropertyName == nameof(_main.CurrentUser)) OnPropertyChanged(nameof(SellerNamePreview)); };
             var config = _main.Db.BusinessConfigs.FirstOrDefault(); _taxRate = config?.TaxRate ?? 0m;
             FilteredProducts = new ObservableCollection<Product>(_main.Products);
+
+            Cart.CollectionChanged += (s, e) => {
+                if (e.NewItems != null) foreach (CartItem item in e.NewItems) item.PropertyChanged += CartItem_PropertyChanged;
+                if (e.OldItems != null) foreach (CartItem item in e.OldItems) item.PropertyChanged -= CartItem_PropertyChanged;
+                OnPropertyChanged(nameof(Subtotal)); OnPropertyChanged(nameof(Iva)); OnPropertyChanged(nameof(Total)); OnPropertyChanged(nameof(ChangeAmount));
+            };
+
             AddToCartCommand = new RelayCommand(p => { if (p is Product prod) AddProductToCart(prod); });
-            RemoveItemCommand = new RelayCommand(o => { if (o is CartItem item) { Cart.Remove(item); OnPropertyChanged(nameof(Subtotal)); OnPropertyChanged(nameof(Total)); } });
+            RemoveItemCommand = new RelayCommand(o => { if (o is CartItem item) { Cart.Remove(item); } });
             IncreaseQuantityCommand = new RelayCommand(o => { if (o is CartItem item) { if (item.Product.Stock > item.Quantity) item.Quantity++; else MessageBox.Show("Sin stock."); } });
             HandleScannedBarcodeCommand = new RelayCommand(o => { if (o is string code) HandleBarcodeScan(code.Trim()); });
             DecreaseQuantityCommand = new RelayCommand(o => { if (o is CartItem item && item.Quantity > 1) item.Quantity--; });
-            ClearCartCommand = new RelayCommand(o => { Cart.Clear(); Discount = 0; CustomerNameText = "Consumidor Final"; SelectedClient = null; OnPropertyChanged(nameof(Subtotal)); OnPropertyChanged(nameof(Total)); });
+            ClearCartCommand = new RelayCommand(o => { Cart.Clear(); Discount = 0; CustomerNameText = "Consumidor Final"; SelectedClient = null; });
             QuickAddClientCommand = new RelayCommand(o => { var dialog = new Views.QuickClientDialog(); if (dialog.ShowDialog() == true) { var client = dialog.Client; _main.Db.Clients.Add(client); _main.Db.SaveChanges(); _main.Clients.Add(client); SelectedClient = client; } });
             SellCommand = new RelayCommand(o => {
                 if (!Cart.Any()) return;
@@ -582,10 +602,21 @@ namespace POS_v0_1.ViewModels
                     var dbProd = _main.Db.Products.Find(item.Product.Id);
                     if (dbProd != null) { dbProd.Stock -= item.Quantity; var memProd = _main.Products.FirstOrDefault(p => p.Id == item.Product.Id); if (memProd != null) memProd.Stock = dbProd.Stock; _main.RecordStockMovement(item.Product.Id, -item.Quantity, "Venta", $"Venta a {newSale.CustomerName}", nFinal); }
                 }
-                _main.Db.Sales.Add(newSale); _main.Db.SaveChanges();
+                _main.Db.Sales.Add(newSale);
+
+                // Actualizar sesión ANTES de guardar para que persista
+                if (_main.Session != null && _main.Session.IsOpen) {
+                    _main.Session.SalesTotal += Total;
+                    _main.Session.CashTotal += cash;
+                    _main.Session.CardTotal += card;
+                    _main.Session.TransferTotal += transfer;
+                }
+
+                _main.Db.SaveChanges();
+
                 try { var printer = new TicketPrinter(); printer.PrintSaleTicket(newSale); } catch { }
                 _main.Sales.Add(newSale);
-                if (_main.Session != null) { _main.Session.SalesTotal += Total; _main.Session.CashTotal += cash; _main.Session.CardTotal += card; _main.Session.TransferTotal += transfer; }
+
                 SellerPin = string.Empty; ReceivedAmount = 0; Discount = 0; IsPercentageDiscount = false; SelectedClient = null; CustomerNameText = "Consumidor Final";
                 _main.ShowToast("Venta realizada."); ClearCartCommand.Execute(null);
             });
@@ -596,9 +627,19 @@ namespace POS_v0_1.ViewModels
             var existing = Cart.FirstOrDefault(i => i.Product.Id == prod.Id);
             if (existing != null) { if (existing.Quantity + quantity > prod.Stock) return; existing.Quantity += quantity; }
             else Cart.Add(new CartItem(prod) { Quantity = quantity });
-            OnPropertyChanged(nameof(Subtotal)); OnPropertyChanged(nameof(Total));
         }
         public void HandleBarcodeScan(string code) { var prod = _main.Products.FirstOrDefault(p => p.Barcode != null && p.Barcode.Trim() == code); if (prod != null) AddProductToCart(prod, 1); }
+
+        private void CartItem_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(CartItem.Subtotal))
+            {
+                OnPropertyChanged(nameof(Subtotal));
+                OnPropertyChanged(nameof(Iva));
+                OnPropertyChanged(nameof(Total));
+                OnPropertyChanged(nameof(ChangeAmount));
+            }
+        }
     }
 
     public class PlaceholderViewModel : BaseViewModel { public string Title { get; set; } public PlaceholderViewModel(string title) { Title = title; } }

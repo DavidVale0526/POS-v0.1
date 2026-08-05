@@ -40,6 +40,7 @@ namespace POS_v0_1.ViewModels
         public ICommand ClearFiltersCommand { get; }
         public ICommand ShowCreateTopupCommand { get; }
         public ICommand ManageCompaniesCommand { get; }
+        public ICommand ShowDetailCommand { get; }
 
         public TopupHistoryViewModel(MainViewModel main)
         {
@@ -63,6 +64,23 @@ namespace POS_v0_1.ViewModels
             {
                 var dialog = new Views.ManageTopupCompaniesDialog(_main);
                 dialog.ShowDialog();
+            });
+
+            ShowDetailCommand = new RelayCommand(o =>
+            {
+                if (o is Topup topup)
+                {
+                    string details = $"Compañía: {topup.Company}\n" +
+                                     $"Número: {topup.PhoneNumber}\n" +
+                                     $"Monto: {topup.Amount:C2}\n" +
+                                     $"Costo: {topup.Cost:C2}\n" +
+                                     $"Ganancia: {topup.Profit:C2}\n" +
+                                     $"Fecha: {topup.DateTime:dd/MM/yyyy HH:mm}\n" +
+                                     $"Vendedor: {topup.Seller}\n" +
+                                     $"Notas: {topup.Notes ?? "Ninguna"}";
+
+                    System.Windows.MessageBox.Show(details, "Detalle de Recarga", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                }
             });
         }
 
@@ -171,14 +189,15 @@ namespace POS_v0_1.ViewModels
                 };
 
                 _main.Db.Topups.Add(topup);
-                _main.Db.SaveChanges();
-                _main.Topups.Add(topup);
 
-                // Actualizar sesión de caja si hay una abierta
+                // Actualizar sesión ANTES de guardar
                 if (_main.Session != null && _main.Session.IsOpen)
                 {
                     _main.Session.TopupsTotal += topup.Amount;
                 }
+
+                _main.Db.SaveChanges();
+                _main.Topups.Add(topup);
 
                 _main.CurrentView = new TopupHistoryViewModel(_main);
             });

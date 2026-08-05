@@ -193,6 +193,19 @@ namespace POS_v0_1.ViewModels
                                 }
                             }
 
+                            // Sincronizar con la sesión de caja si es del mismo día y está abierta
+                            if (_main.Session != null && _main.Session.IsOpen)
+                            {
+                                // Solo restamos si la venta fue hoy (para no afectar cajas viejas)
+                                if (sale.Date.Date == DateTime.Today)
+                                {
+                                    _main.Session.SalesTotal -= sale.Total;
+                                    _main.Session.CashTotal -= sale.AmountCash;
+                                    _main.Session.CardTotal -= sale.AmountCard;
+                                    _main.Session.TransferTotal -= sale.AmountTransfer;
+                                }
+                            }
+
                             _main.Db.SaveChanges();
                             ApplyFilter();
                             System.Windows.MessageBox.Show("Venta anulada correctamente.", "Éxito", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);

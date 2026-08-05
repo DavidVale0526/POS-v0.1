@@ -37,19 +37,20 @@ Esta lista contiene cada paso técnico necesario para completar las fases del Me
     - [x] Crear diálogo de búsqueda de productos para repuestos.
 
 ## 🔴 Fase 4: Reportes e Inteligencia Visual
-- [ ] **4.1 Visualización de Datos**
-    - [ ] Integrar componentes de gráficas (LiveCharts o similar) en `ReportsView`.
-    - [ ] Crear gráfica: Ventas de los últimos 7 días.
-    - [ ] Crear gráfica: Top 5 Categorías más rentables.
-- [ ] **4.2 Exportación Profesional**
-    - [ ] Implementar generador de PDF para reportes con diseño formal (A4).
+- [x] **4.1 Visualización de Datos**
+    - [x] Integrar componentes de gráficas (Custom WPF Bars) en `ReportsView`.
+    - [x] Crear gráfica: Ventas de los últimos 7 días.
+    - [x] Crear gráfica: Top 5 Categorías más rentables.
+- [x] **4.2 Exportación Profesional**
+    - [x] Implementar generador de PDF (A4) usando `PrintVisual` nativo de WPF.
 
 ## 🟣 Fase 5: Estabilidad y Seguridad (DevOps)
-- [ ] **5.1 Manejo de Errores**
-    - [ ] Crear clase `Logger` estática para escritura en disco.
-    - [ ] Envolver `App.xaml.cs` en un bloque global para capturar crasheos no controlados.
-- [ ] **5.2 Automatización**
-    - [ ] Implementar `AutoBackupOnClose` en la configuración global.
+- [x] **5.1 Manejo de Errores**
+    - [x] Crear clase `Logger` estática para escritura en disco.
+    - [x] Envolver `App.xaml.cs` en un bloque global para capturar crasheos no controlados.
+- [x] **5.2 Automatización**
+    - [x] Implementar `AutoBackupOnClose` en la configuración global.
+    - [x] Crear acceso directo desde la UI a carpetas de Logs y Backups.
 
 ---
 **Nota:** Utiliza este archivo para marcar el progreso diario. ¡Vamos por ese 100%!

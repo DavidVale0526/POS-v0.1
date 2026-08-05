@@ -82,6 +82,13 @@ namespace POS_v0_1.ViewModels
         private bool _allowUserReports;
         public bool AllowUserReports { get => _allowUserReports; set { _allowUserReports = value; OnPropertyChanged(); } }
 
+        // Fase 5
+        private bool _autoBackupEnabled;
+        public bool AutoBackupEnabled { get => _autoBackupEnabled; set { _autoBackupEnabled = value; OnPropertyChanged(); } }
+
+        private DateTime? _lastBackupDate;
+        public DateTime? LastBackupDate { get => _lastBackupDate; set { _lastBackupDate = value; OnPropertyChanged(); } }
+
         public ICommand SaveCommand { get; }
         public ICommand ChooseLogoCommand { get; }
         public ICommand ShowBackupCommand { get; }
@@ -118,6 +125,7 @@ namespace POS_v0_1.ViewModels
                     _config.AllowUserTreasury = AllowUserTreasury;
                     _config.AllowUserClients = AllowUserClients;
                     _config.AllowUserReports = AllowUserReports;
+                    _config.AutoBackupEnabled = AutoBackupEnabled;
 
                     if (_config.Id == 0)
                     {
@@ -183,6 +191,8 @@ namespace POS_v0_1.ViewModels
                 AllowUserTreasury = _config.AllowUserTreasury;
                 AllowUserClients = _config.AllowUserClients;
                 AllowUserReports = _config.AllowUserReports;
+                AutoBackupEnabled = _config.AutoBackupEnabled;
+                LastBackupDate = _config.LastBackupDate;
             }
             catch { }
         }
