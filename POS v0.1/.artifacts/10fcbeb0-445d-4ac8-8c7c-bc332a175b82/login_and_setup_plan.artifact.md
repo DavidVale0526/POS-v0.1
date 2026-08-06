@@ -5,34 +5,17 @@ Este plan detalla el flujo necesario para que el sistema sea capaz de auto-confi
 ---
 
 ## 🚀 Fase 1: Detección de Primer Inicio (Setup Wizard)
-Actualmente, el sistema crea un administrador por defecto si la tabla está vacía. Cambiaremos esto por una experiencia guiada.
-
-- [ ] **1.1 Nuevo Modelo de Vista `SetupWizardViewModel`**
-    - Capturar datos iniciales: Nombre del Negocio, Nombre del Administrador, Email, Password y PIN de 4 dígitos.
-- [ ] **1.2 Nueva Vista `SetupWizardView.xaml`**
-    - Diseño moderno y minimalista para la bienvenida.
-    - Validación de campos obligatorios.
-- [ ] **1.3 Lógica en `MainViewModel`**
-    - Al iniciar, verificar `if (!Db.Users.Any())`.
-    - Si está vacío, establecer `CurrentView = SetupWizardViewModel` y `IsAuthenticated = false`.
+- [x] **1.1 Nuevo Modelo de Vista `SetupWizardViewModel`**
+- [x] **1.2 Nueva Vista `SetupWizardView.xaml`**
+- [x] **1.3 Lógica en `MainViewModel`**
 
 ## 🔐 Fase 2: Login Profesional y Flujo de Autenticación
-Una vez que el usuario existe, el sistema debe solicitar credenciales siempre.
-
-- [ ] **2.1 Mejora de `LoginView.xaml`**
-    - Añadir opción de "Ver contraseña".
-    - Diseño alineado con la estética actual (Azul/Blanco/Gris).
-    - Teclado numérico en pantalla (opcional) para facilitar el ingreso del PIN si se desea entrar rápido.
-- [ ] **2.2 Persistencia de Sesión Segura**
-    - Eliminar el bypass automático en el constructor de `MainViewModel`.
-    - Implementar `LogoutCommand` que limpie `CurrentUser` y regrese a `LoginView`.
+- [x] **2.1 Mejora de `LoginView.xaml`**
+- [x] **2.2 Persistencia de Sesión Segura** (Implementado `LogoutCommand` y limpieza de bypass)
 
 ## 🛠️ Fase 3: Refactorización de Seguridad (Backend)
-- [ ] **3.1 Limpieza de `LoadDataFromDatabase`**
-    - Eliminar la creación automática de "admin@admin.com".
-    - Dejar que el Setup Wizard sea la única fuente de creación del primer administrador.
-- [ ] **3.2 Protección de Rutas**
-    - Asegurar que los comandos de navegación (F1-F7) no funcionen si `IsAuthenticated` es falso.
+- [x] **3.1 Limpieza de `LoadDataFromDatabase`**
+- [x] **3.2 Protección de Rutas** (Bloqueo de Hotkeys F1-F7 mediante `ExecuteIfAuthenticated`)
 
 ---
 

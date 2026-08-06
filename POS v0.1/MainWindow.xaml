@@ -144,6 +144,9 @@
         <DataTemplate DataType="{x:Type viewModels:LoginViewModel}">
             <views:LoginView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:SetupWizardViewModel}">
+            <views:SetupWizardView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type viewModels:PlaceholderViewModel}">
             <Grid>
                 <TextBlock Text="{Binding Title}" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Gray"/>

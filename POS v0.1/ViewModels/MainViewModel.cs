@@ -177,10 +177,10 @@ namespace POS_v0_1.ViewModels
         {
             ToggleSidebarCommand = new RelayCommand(o => IsSidebarCollapsed = !IsSidebarCollapsed);
             SwitchUserCommand = new RelayCommand(o => SwitchUser());
-            ShowDashboardCommand = new RelayCommand(o => CurrentView = new DashboardViewModel(this));
-            ShowProductManagementCommand = new RelayCommand(o => CurrentView = new ProductsViewModel(this));
-            ShowOpenCashCommand = new RelayCommand(o => CurrentView = new CashControlViewModel(this));
-            ShowPosCommand = new RelayCommand(o =>
+            ShowDashboardCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new DashboardViewModel(this)));
+            ShowProductManagementCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new ProductsViewModel(this)));
+            ShowOpenCashCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new CashControlViewModel(this)));
+            ShowPosCommand = new RelayCommand(o => ExecuteIfAuthenticated(() =>
             {
                 if (Session != null && Session.IsOpen)
                 {
@@ -190,38 +190,38 @@ namespace POS_v0_1.ViewModels
                 {
                     CurrentView = new CashControlViewModel(this);
                 }
-            });
+            }));
 
             // New Commands
-            ShowCategoriesCommand = new RelayCommand(o => CurrentView = new CategoriesViewModel(this));
-            ShowLowStockCommand = new RelayCommand(o => CurrentView = new LowStockViewModel(this));
-            ShowProvidersCommand = new RelayCommand(o => CurrentView = new ProvidersViewModel(this));
-            ShowPurchasesCommand = new RelayCommand(o => CurrentView = new PurchasesViewModel(this));
-            ShowSalesHistoryCommand = new RelayCommand(o => CurrentView = new SalesHistoryViewModel(this));
-            ShowTopupsCommand = new RelayCommand(o => CurrentView = new TopupHistoryViewModel(this));
-            ShowRepairsCommand = new RelayCommand(o => CurrentView = new RepairListViewModel(this));
-            ShowClientsCommand = new RelayCommand(o => CurrentView = new ClientListViewModel(this));
-            ShowRepairCategoriesCommand = new RelayCommand(o => CurrentView = new RepairCategoriesViewModel(this));
-            ShowRepairTypesCommand = new RelayCommand(o => CurrentView = new RepairTypesViewModel(this));
-            ShowCashCountCommand = new RelayCommand(o => CurrentView = new CashCountHistoryViewModel(this));
-            ShowExpensesIncomesCommand = new RelayCommand(o => CurrentView = new FinancialMovementsViewModel(this));
-            ShowBankCommand = new RelayCommand(o => CurrentView = new BankHistoryViewModel(this));
-            ShowReportsCommand = new RelayCommand(o => CurrentView = new ReportsViewModel(this));
-            ShowUsersRolesCommand = new RelayCommand(o => CurrentView = new UserManagementViewModel(this));
-            ShowConfigurationCommand = new RelayCommand(o => CurrentView = new ConfigurationViewModel(this));
-            OpenFolderCommand = new RelayCommand(o => {
+            ShowCategoriesCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new CategoriesViewModel(this)));
+            ShowLowStockCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new LowStockViewModel(this)));
+            ShowProvidersCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new ProvidersViewModel(this)));
+            ShowPurchasesCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new PurchasesViewModel(this)));
+            ShowSalesHistoryCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new SalesHistoryViewModel(this)));
+            ShowTopupsCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new TopupHistoryViewModel(this)));
+            ShowRepairsCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new RepairListViewModel(this)));
+            ShowClientsCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new ClientListViewModel(this)));
+            ShowRepairCategoriesCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new RepairCategoriesViewModel(this)));
+            ShowRepairTypesCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new RepairTypesViewModel(this)));
+            ShowCashCountCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new CashCountHistoryViewModel(this)));
+            ShowExpensesIncomesCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new FinancialMovementsViewModel(this)));
+            ShowBankCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new BankHistoryViewModel(this)));
+            ShowReportsCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new ReportsViewModel(this)));
+            ShowUsersRolesCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new UserManagementViewModel(this)));
+            ShowConfigurationCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => CurrentView = new ConfigurationViewModel(this)));
+            OpenFolderCommand = new RelayCommand(o => ExecuteIfAuthenticated(() => {
                 try {
                     string folder = o?.ToString() == "Logs" ? "Logs" : "Backups";
                     string path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, folder);
                     if (!System.IO.Directory.Exists(path)) System.IO.Directory.CreateDirectory(path);
                     System.Diagnostics.Process.Start("explorer.exe", path);
                 } catch (Exception ex) { MessageBox.Show("Error al abrir carpeta: " + ex.Message); }
-            });
-            ShowStockHistoryCommand = new RelayCommand(o =>
+            }));
+            ShowStockHistoryCommand = new RelayCommand(o => ExecuteIfAuthenticated(() =>
             {
                 if (o is int prodId) CurrentView = new StockHistoryViewModel(this, prodId);
                 else CurrentView = new StockHistoryViewModel(this);
-            });
+            }));
 
             // Initialize Database
             try
@@ -243,12 +243,26 @@ namespace POS_v0_1.ViewModels
             });
 
             // Initial view
-            IsAuthenticated = true;
-            CurrentUser = Users.FirstOrDefault();
-
-            // Forzar la vista inicial
-            _currentView = new DashboardViewModel(this);
-            OnPropertyChanged(nameof(CurrentView));
+            try
+            {
+                if (!Users.Any())
+                {
+                    IsAuthenticated = false;
+                    _currentView = new SetupWizardViewModel(this);
+                }
+                else
+                {
+                    IsAuthenticated = false;
+                    _currentView = new LoginViewModel(this);
+                }
+                OnPropertyChanged(nameof(CurrentView));
+            }
+            catch
+            {
+                IsAuthenticated = false;
+                _currentView = new LoginViewModel(this);
+                OnPropertyChanged(nameof(CurrentView));
+            }
         }
 
         private void ApplySchemaUpdates()
@@ -337,14 +351,12 @@ namespace POS_v0_1.ViewModels
 
         private void LoadDataFromDatabase()
         {
-            try {
+            try
+            {
                 var usersFromDb = Db.Users.ToList();
-                if (!usersFromDb.Any()) {
-                    var admin = new User { Name = "Administrador", Email = "admin@admin.com", Password = "admin", Role = "Administrador", Pin = "1234", RegistrationDate = DateTime.Now };
-                    Db.Users.Add(admin); Db.SaveChanges(); usersFromDb = Db.Users.ToList();
-                }
                 foreach (var u in usersFromDb) Users.Add(u);
-            } catch { }
+            }
+            catch { }
 
             try { foreach (var m in Db.StockMovements.Include(x => x.Product).OrderByDescending(x => x.Date).Take(500)) StockMovements.Add(m); } catch { }
             try { foreach (var c in Db.Categories.Include(x => x.Products)) Categories.Add(c); } catch { }
@@ -408,6 +420,14 @@ namespace POS_v0_1.ViewModels
                 else { MessageBox.Show("PIN incorrecto.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning); return false; }
             }
             return false;
+        }
+
+        private void ExecuteIfAuthenticated(Action action)
+        {
+            if (IsAuthenticated)
+            {
+                action();
+            }
         }
 
         private void SwitchUser()

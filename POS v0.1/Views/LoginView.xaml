@@ -4,47 +4,39 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignHeight="600" d:DesignWidth="1000">
+             d:DesignHeight="700" d:DesignWidth="1000">
     <Grid Background="#f0f2f5">
-        <Border Background="White" Width="400" VerticalAlignment="Center" HorizontalAlignment="Center"
-                Padding="40" CornerRadius="10" BorderBrush="#dee2e6" BorderThickness="1">
+        <Border Background="White" CornerRadius="15" Padding="40" MaxWidth="400" VerticalAlignment="Center" HorizontalAlignment="Center">
             <Border.Effect>
-                <DropShadowEffect BlurRadius="15" Direction="270" Opacity="0.1" ShadowDepth="2"/>
+                <DropShadowEffect BlurRadius="20" ShadowDepth="2" Color="#CCCCCC" Opacity="0.5"/>
             </Border.Effect>
             <StackPanel>
-                <TextBlock Text="📱 POS v0.1" FontSize="28" FontWeight="Bold" Foreground="#0d6efd" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                <TextBlock Text="Bienvenido de nuevo" FontSize="16" Foreground="#6c757d" HorizontalAlignment="Center" Margin="0,0,0,30"/>
+                <TextBlock Text="🔒" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                <TextBlock Text="Iniciar Sesión" FontSize="24" FontWeight="Bold" Foreground="#333" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                <TextBlock Text="Ingresa tus credenciales para continuar" Foreground="Gray" HorizontalAlignment="Center" Margin="0,0,0,30"/>
 
-                <TextBlock Text="Correo Electrónico" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Padding="12" Margin="0,0,0,20" FontSize="14"/>
+                <TextBlock Text="Correo Electrónico" Margin="0,0,0,5" FontWeight="SemiBold" Foreground="#555"/>
+                <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Padding="12" Margin="0,0,0,20" BorderBrush="#dee2e6">
+                    <TextBox.Resources>
+                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style>
+                    </TextBox.Resources>
+                </TextBox>
 
-                <TextBlock Text="Contraseña" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                <PasswordBox x:Name="LoginPassBox" Padding="12" Margin="0,0,0,30" FontSize="14" PasswordChanged="LoginPassBox_PasswordChanged"/>
+                <TextBlock Text="Contraseña" Margin="0,0,0,5" FontWeight="SemiBold" Foreground="#555"/>
+                <PasswordBox x:Name="PassBox" Padding="12" Margin="0,0,0,30" BorderBrush="#dee2e6">
+                    <PasswordBox.Resources>
+                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style>
+                    </PasswordBox.Resources>
+                </PasswordBox>
 
-                <Button Content="Iniciar Sesión" Background="#0d6efd" Foreground="White" Padding="0,12"
-                        FontSize="16" FontWeight="Bold" BorderThickness="0" Cursor="Hand"
-                        Command="{Binding LoginCommand}">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}" CornerRadius="5">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#0b5ed7"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
+                <Button Content="Ingresar al Sistema" Background="#0d6efd" Foreground="White" Padding="20,15" FontSize="16" FontWeight="Bold" Cursor="Hand"
+                        Command="{Binding LoginCommand}" Click="Button_Click">
+                    <Button.Resources>
+                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style>
+                    </Button.Resources>
                 </Button>
 
-                <TextBlock Text="Olvide mi contraseña" Foreground="#0d6efd" HorizontalAlignment="Center" Margin="0,20,0,0" Cursor="Hand"/>
+                <TextBlock Text="¿Olvidaste tu contraseña? Contacta al administrador." FontSize="11" Foreground="Gray" HorizontalAlignment="Center" Margin="0,20,0,0"/>
             </StackPanel>
         </Border>
     </Grid>

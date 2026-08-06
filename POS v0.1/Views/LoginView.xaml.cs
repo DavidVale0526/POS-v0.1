@@ -11,11 +11,11 @@ namespace POS_v0_1.Views
             InitializeComponent();
         }
 
-        private void LoginPassBox_PasswordChanged(object sender, RoutedEventArgs e)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
             if (DataContext is LoginViewModel vm)
             {
-                vm.Password = ((PasswordBox)sender).Password;
+                vm.Password = PassBox.Password;
             }
         }
     }
