@@ -1,0 +1,61 @@
+<UserControl x:Class="POS_v0_1.Views.SetupWizardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="700" d:DesignWidth="1000">
+    <Grid Background="#f0f2f5">
+        <Border Background="White" CornerRadius="15" Padding="40" MaxWidth="500" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="20" ShadowDepth="2" Color="#CCCCCC" Opacity="0.5"/>
+            </Border.Effect>
+            <StackPanel>
+                <TextBlock Text="¡Bienvenido a POS v0.1!" FontSize="28" FontWeight="Black" Foreground="#0d6efd" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                <TextBlock Text="Vamos a configurar tu nuevo sistema de punto de venta." Foreground="Gray" HorizontalAlignment="Center" Margin="0,0,0,30" TextAlignment="Center"/>
+
+                <!-- Sección Negocio -->
+                <TextBlock Text="INFORMACIÓN DEL NEGOCIO" FontWeight="Bold" Foreground="#666" FontSize="11" Margin="0,0,0,15"/>
+
+                <TextBlock Text="Nombre del Negocio *" Margin="0,0,0,5"/>
+                <TextBox Text="{Binding BusinessName, UpdateSourceTrigger=PropertyChanged}" Padding="12" Margin="0,0,0,20" BorderBrush="#dee2e6"/>
+
+                <Separator Margin="0,10,0,25" Background="#eee"/>
+
+                <!-- Sección Administrador -->
+                <TextBlock Text="CUENTA DE ADMINISTRADOR (DUEÑO)" FontWeight="Bold" Foreground="#666" FontSize="11" Margin="0,0,0,15"/>
+
+                <TextBlock Text="Tu Nombre Completo *" Margin="0,0,0,5"/>
+                <TextBox Text="{Binding AdminName, UpdateSourceTrigger=PropertyChanged}" Padding="12" Margin="0,0,0,15" BorderBrush="#dee2e6"/>
+
+                <TextBlock Text="Correo Electrónico (Login) *" Margin="0,0,0,5"/>
+                <TextBox Text="{Binding AdminEmail, UpdateSourceTrigger=PropertyChanged}" Padding="12" Margin="0,0,0,15" BorderBrush="#dee2e6"/>
+
+                <Grid Margin="0,0,0,30">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="Auto" MinWidth="120"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Contraseña *" Margin="0,0,0,5"/>
+                        <PasswordBox x:Name="PassBox" Padding="12" BorderBrush="#dee2e6"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="PIN (4 dígitos) *" Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding AdminPin, UpdateSourceTrigger=PropertyChanged}" MaxLength="4" Padding="12" BorderBrush="#dee2e6" TextAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                    </StackPanel>
+                </Grid>
+
+                <Button Content="🚀 Finalizar y Comenzar" Background="#0d6efd" Foreground="White" Padding="20,15" FontSize="16" FontWeight="Bold" Cursor="Hand"
+                        Command="{Binding FinishSetupCommand}" Click="Button_Click">
+                    <Button.Resources>
+                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style>
+                    </Button.Resources>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
