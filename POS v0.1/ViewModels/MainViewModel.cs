@@ -275,6 +275,8 @@ namespace POS_v0_1.ViewModels
             AddColumnSafe("Sales", "AmountTransfer", "DECIMAL DEFAULT 0");
             AddColumnSafe("Sales", "IsCancelled", "INTEGER DEFAULT 0");
             AddColumnSafe("Sales", "CancellationReason", "TEXT");
+            AddColumnSafe("Sales", "GrossAmount", "DECIMAL DEFAULT 0");
+            AddColumnSafe("Sales", "TotalDiscount", "DECIMAL DEFAULT 0");
 
             AddColumnSafe("SaleItems", "Discount", "DECIMAL DEFAULT 0");
             AddColumnSafe("SaleItems", "PurchasePrice", "DECIMAL DEFAULT 0");
@@ -302,6 +304,7 @@ namespace POS_v0_1.ViewModels
             AddColumnSafe("BusinessConfigs", "AllowUserReports", "INTEGER DEFAULT 0");
             AddColumnSafe("BusinessConfigs", "AutoBackupEnabled", "INTEGER DEFAULT 1");
             AddColumnSafe("BusinessConfigs", "LastBackupDate", "TEXT");
+            AddColumnSafe("BusinessConfigs", "MaxDiscountWithoutPin", "DECIMAL DEFAULT 15");
 
             try
             {
@@ -606,6 +609,17 @@ namespace POS_v0_1.ViewModels
             QuickAddClientCommand = new RelayCommand(o => { var dialog = new Views.QuickClientDialog(); if (dialog.ShowDialog() == true) { var client = dialog.Client; _main.Db.Clients.Add(client); _main.Db.SaveChanges(); _main.Clients.Add(client); SelectedClient = client; } });
             SellCommand = new RelayCommand(o => {
                 if (!Cart.Any()) return;
+
+                // Validación de Descuento Máximo
+                decimal maxDiscountPct = _main.BusinessConfig?.MaxDiscountWithoutPin ?? 15m;
+                bool needsAdmin = false;
+                if (Subtotal > 0 && (DiscountValue / Subtotal) * 100 > maxDiscountPct) needsAdmin = true;
+                foreach (var item in Cart) {
+                    decimal itemBase = item.Product.SellingPrice * item.Quantity;
+                    if (itemBase > 0 && (item.Discount / itemBase) * 100 > maxDiscountPct) { needsAdmin = true; break; }
+                }
+                if (needsAdmin && !_main.RequestAdminValidation()) return;
+
                 decimal cash = 0, card = 0, transfer = 0;
                 if (PaymentMethod == "Mixto") {
                     var mixed = new Views.MixedPaymentDialog(Total); mixed.Owner = Application.Current.MainWindow;
@@ -617,7 +631,30 @@ namespace POS_v0_1.ViewModels
                 }
                 var pinActual = SellerPin?.Trim(); var seller = _main.Users.FirstOrDefault(u => u.Pin == pinActual);
                 string nFinal = seller?.Name ?? _main.CurrentUser?.Name ?? "Usuario"; string pFinal = seller?.Pin ?? _main.CurrentUser?.Pin ?? "0000";
-                var newSale = new Sale { Date = DateTime.Now, SellerPin = pFinal, SellerName = nFinal, CustomerName = string.IsNullOrWhiteSpace(CustomerNameText) ? "Consumidor Final" : CustomerNameText, Subtotal = Subtotal, Discount = DiscountValue, Iva = Iva, Total = Total, PaymentMethod = PaymentMethod, ReceivedAmount = ReceivedAmount, ChangeAmount = ChangeAmount, AmountCash = cash, AmountCard = card, AmountTransfer = transfer, Items = new ObservableCollection<SaleItem>(Cart.Select(i => new SaleItem { ProductId = i.Product.Id, ProductName = i.Product.Name, Quantity = i.Quantity, UnitPrice = i.Product.SellingPrice, PurchasePrice = i.Product.PurchasePrice, Discount = i.Discount })) };
+
+                decimal grossAmount = Cart.Sum(i => i.Product.SellingPrice * i.Quantity);
+                decimal itemDiscounts = Cart.Sum(i => i.Discount);
+                decimal totalDiscount = itemDiscounts + DiscountValue;
+
+                var newSale = new Sale {
+                    Date = DateTime.Now,
+                    SellerPin = pFinal,
+                    SellerName = nFinal,
+                    CustomerName = string.IsNullOrWhiteSpace(CustomerNameText) ? "Consumidor Final" : CustomerNameText,
+                    GrossAmount = grossAmount,
+                    Subtotal = Subtotal,
+                    Discount = DiscountValue,
+                    TotalDiscount = totalDiscount,
+                    Iva = Iva,
+                    Total = Total,
+                    PaymentMethod = PaymentMethod,
+                    ReceivedAmount = ReceivedAmount,
+                    ChangeAmount = ChangeAmount,
+                    AmountCash = cash,
+                    AmountCard = card,
+                    AmountTransfer = transfer,
+                    Items = new ObservableCollection<SaleItem>(Cart.Select(i => new SaleItem { ProductId = i.Product.Id, ProductName = i.Product.Name, Quantity = i.Quantity, UnitPrice = i.Product.SellingPrice, PurchasePrice = i.Product.PurchasePrice, Discount = i.Discount }))
+                };
                 foreach (var item in Cart) {
                     var dbProd = _main.Db.Products.Find(item.Product.Id);
                     if (dbProd != null) { dbProd.Stock -= item.Quantity; var memProd = _main.Products.FirstOrDefault(p => p.Id == item.Product.Id); if (memProd != null) memProd.Stock = dbProd.Stock; _main.RecordStockMovement(item.Product.Id, -item.Quantity, "Venta", $"Venta a {newSale.CustomerName}", nFinal); }

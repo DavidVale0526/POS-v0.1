@@ -89,6 +89,9 @@ namespace POS_v0_1.ViewModels
         private DateTime? _lastBackupDate;
         public DateTime? LastBackupDate { get => _lastBackupDate; set { _lastBackupDate = value; OnPropertyChanged(); } }
 
+        private decimal _maxDiscountWithoutPin;
+        public decimal MaxDiscountWithoutPin { get => _maxDiscountWithoutPin; set { _maxDiscountWithoutPin = value; OnPropertyChanged(); } }
+
         public ICommand SaveCommand { get; }
         public ICommand ChooseLogoCommand { get; }
         public ICommand ShowBackupCommand { get; }
@@ -126,6 +129,7 @@ namespace POS_v0_1.ViewModels
                     _config.AllowUserClients = AllowUserClients;
                     _config.AllowUserReports = AllowUserReports;
                     _config.AutoBackupEnabled = AutoBackupEnabled;
+                    _config.MaxDiscountWithoutPin = MaxDiscountWithoutPin;
 
                     if (_config.Id == 0)
                     {
@@ -138,8 +142,10 @@ namespace POS_v0_1.ViewModels
 
                     _main.Db.SaveChanges();
 
-                    // Actualizar en el MainViewModel para que se refleje en la vista principal
-                    _main.BusinessConfig = _config;
+                    // Forzar actualización visual del objeto BusinessConfig en el MainViewModel
+                    var updatedConfig = _main.Db.BusinessConfigs.FirstOrDefault();
+                    _main.BusinessConfig = null; // Reset temporal para disparar el cambio
+                    _main.BusinessConfig = updatedConfig;
 
                     _main.ShowToast("Configuración guardada correctamente.", "Success");
                     System.Windows.MessageBox.Show("Configuración guardada con éxito.", "Información", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
@@ -193,6 +199,7 @@ namespace POS_v0_1.ViewModels
                 AllowUserReports = _config.AllowUserReports;
                 AutoBackupEnabled = _config.AutoBackupEnabled;
                 LastBackupDate = _config.LastBackupDate;
+                MaxDiscountWithoutPin = _config.MaxDiscountWithoutPin;
             }
             catch { }
         }

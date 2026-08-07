@@ -36,8 +36,25 @@
             <StackPanel Margin="20">
                 <!-- Title and Buttons -->
                 <Grid Margin="0,0,0,20">
-                    <TextBlock Text="Registro de Gastos e Ingresos" FontSize="22" FontWeight="Bold" Foreground="#333"/>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <StackPanel>
+                        <TextBlock Text="Registro de Gastos e Ingresos" FontSize="22" FontWeight="Bold" Foreground="#333"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                            <Border Background="#e9ecef" CornerRadius="12" Padding="10,2" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Registros: " FontSize="11" Foreground="#666"/>
+                                    <TextBlock Text="{Binding TotalCount}" FontSize="11" FontWeight="Bold" Foreground="#333"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Background="#e7f1ff" CornerRadius="12" Padding="10,2">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Balance Filtrado: " FontSize="11" Foreground="#0d6efd"/>
+                                    <TextBlock Text="{Binding TotalAmount, StringFormat='C$ \{0:N2\}'}" FontSize="11" FontWeight="Bold" Foreground="#0d6efd"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
                         <Button Content="⚙ Fuentes de Gasto" Margin="0,0,10,0" Padding="15,8"
                                 Background="White" BorderBrush="#ced4da" Command="{Binding ShowSourcesCommand}"/>
                         <Button Content="+ Nuevo Registro" Background="#0d6efd" Foreground="White" Padding="15,8"
@@ -180,7 +197,9 @@
                                                 </TextBlock.Style>
                                             </TextBlock>
                                             <TextBlock Grid.Column="5" Text="{Binding RegisteredBy}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                            <Button Grid.Column="6" Content="🗑" Background="Transparent" BorderThickness="0" Foreground="#dc3545"/>
+                                            <Button Grid.Column="6" Content="🗑" Background="Transparent" BorderThickness="0" Foreground="#dc3545"
+                                                    Command="{Binding DataContext.DeleteMovementCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

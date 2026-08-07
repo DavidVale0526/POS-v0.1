@@ -7,24 +7,56 @@
              d:DesignHeight="600" d:DesignWidth="1000">
     <StackPanel Margin="0,20,0,0">
         <!-- Top Cards -->
-        <UniformGrid Columns="4" Margin="0,0,0,30">
+        <UniformGrid Columns="5" Margin="0,0,0,30">
             <!-- Ventas Brutas -->
-            <Border Background="#0d6efd" Margin="0,0,10,0" CornerRadius="8" Padding="20">
-                <StackPanel>
-                    <TextBlock Text="🛒" Foreground="White" FontSize="24" HorizontalAlignment="Center"/>
-                    <TextBlock Text="VENTAS BRUTAS" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,5"/>
-                    <TextBlock Text="{Binding Summary.GrossSales, StringFormat='C$ \{0:N2\}'}" Foreground="White" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
-                </StackPanel>
+            <Border Background="#0d6efd" Margin="0,0,10,0" CornerRadius="8" Padding="15">
+                <Grid>
+                    <TextBlock Text="ⓘ" Foreground="#a2caff" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Top" Cursor="Help">
+                        <TextBlock.ToolTip>
+                            <ToolTip Content="Suma de todos los productos vendidos a su precio de lista (sin restar descuentos)."/>
+                        </TextBlock.ToolTip>
+                    </TextBlock>
+                    <StackPanel>
+                        <TextBlock Text="🛒" Foreground="White" FontSize="20" HorizontalAlignment="Center"/>
+                        <TextBlock Text="VENTAS BRUTAS" Foreground="White" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,2"/>
+                        <TextBlock Text="{Binding Summary.GrossSales, StringFormat='C$ \{0:N2\}'}" Foreground="White" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding Summary.TotalDiscounts, StringFormat='Descuentos: -C$ \{0:N2\}'}" Foreground="#e0e0e0" FontSize="9" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Ventas Netas -->
+            <Border Background="#6610f2" Margin="5,0" CornerRadius="8" Padding="15">
+                <Grid>
+                    <TextBlock Text="ⓘ" Foreground="#cbb2ff" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Top" Cursor="Help">
+                        <TextBlock.ToolTip>
+                            <ToolTip Content="Dinero real ingresado: Ventas Brutas - Descuentos Aplicados."/>
+                        </TextBlock.ToolTip>
+                    </TextBlock>
+                    <StackPanel>
+                        <TextBlock Text="💰" Foreground="White" FontSize="20" HorizontalAlignment="Center"/>
+                        <TextBlock Text="VENTAS NETAS" Foreground="White" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,2"/>
+                        <TextBlock Text="{Binding Summary.NetSales, StringFormat='C$ \{0:N2\}'}" Foreground="White" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Ingreso real por ventas POS" Foreground="#e0e0e0" FontSize="9" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Grid>
             </Border>
 
             <!-- Utilidad Operativa -->
             <Border Background="#198754" Margin="5,0" CornerRadius="8" Padding="20">
-                <StackPanel>
-                    <TextBlock Text="💼" Foreground="White" FontSize="24" HorizontalAlignment="Center"/>
-                    <TextBlock Text="UTILIDAD OPERATIVA REAL" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,5"/>
-                    <TextBlock Text="{Binding Summary.RealOperatingProfit, StringFormat='C$ \{0:N2\}'}" Foreground="White" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Sin contar ingresos extraordinarios" Foreground="#e0e0e0" FontSize="9" HorizontalAlignment="Center"/>
-                </StackPanel>
+                <Grid>
+                    <TextBlock Text="ⓘ" Foreground="#a3cfbb" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Top" Cursor="Help">
+                        <TextBlock.ToolTip>
+                            <ToolTip Content="Cálculo: (Ventas Netas - Costo de Productos) + Ganancias de Recargas + Reparaciones Cobradas."/>
+                        </TextBlock.ToolTip>
+                    </TextBlock>
+                    <StackPanel>
+                        <TextBlock Text="💼" Foreground="White" FontSize="24" HorizontalAlignment="Center"/>
+                        <TextBlock Text="UTILIDAD OPERATIVA REAL" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,5"/>
+                        <TextBlock Text="{Binding Summary.RealOperatingProfit, StringFormat='C$ \{0:N2\}'}" Foreground="White" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Sin contar ingresos extraordinarios" Foreground="#e0e0e0" FontSize="9" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
             </Border>
 
             <!-- Flujo Recargas -->
@@ -178,11 +210,18 @@
                     </Border>
 
                     <Border Grid.Column="1" Background="White" BorderBrush="#0d6efd" BorderThickness="1" CornerRadius="5" Padding="15" Margin="5,0,0,0">
-                        <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="{Binding Summary.CashTitleText}" FontSize="11" FontWeight="SemiBold" Foreground="#0d6efd" HorizontalAlignment="Center"/>
-                            <TextBlock Text="{Binding Summary.ActualCashInHand, StringFormat='C$ \{0:N2\}'}" FontSize="22" FontWeight="Bold" Foreground="#0d6efd" HorizontalAlignment="Center" Margin="0,5"/>
-                            <TextBlock Text="{Binding Summary.CashStatusText}" FontSize="9" Foreground="#666" HorizontalAlignment="Center"/>
-                        </StackPanel>
+                        <Grid>
+                            <TextBlock Text="ⓘ" Foreground="#0d6efd" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Top" Cursor="Help" Margin="0,-10,-10,0">
+                                <TextBlock.ToolTip>
+                                    <ToolTip Content="Cálculo del Efectivo: Saldo Inicial + Ventas (Efectivo) + Recargas + Reparaciones + Ingresos Extras - Gastos."/>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding Summary.CashTitleText}" FontSize="11" FontWeight="SemiBold" Foreground="#0d6efd" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding Summary.ActualCashInHand, StringFormat='C$ \{0:N2\}'}" FontSize="22" FontWeight="Bold" Foreground="#0d6efd" HorizontalAlignment="Center" Margin="0,5"/>
+                                <TextBlock Text="{Binding Summary.CashStatusText}" FontSize="9" Foreground="#666" HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
                     </Border>
                 </Grid>
             </StackPanel>

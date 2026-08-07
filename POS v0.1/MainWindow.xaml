@@ -235,19 +235,36 @@
                         <TextBlock Text="&#xE700;" FontFamily="Segoe MDL2 Assets" Foreground="White" FontSize="18"/>
                     </Button>
 
-                    <TextBlock x:Name="LargeLogo" Text="M" FontSize="32" FontWeight="Black"
-                               Foreground="{StaticResource SidebarAccent}" HorizontalAlignment="Center">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
-                                        <Setter Property="FontSize" Value="24"/>
-                                        <Setter Property="Margin" Value="0,10,0,0"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
+                    <Grid Height="80">
+                        <!-- Texto por defecto (M) si no hay logo -->
+                        <TextBlock x:Name="LargeLogo" Text="M" FontSize="42" FontWeight="Black"
+                                   Foreground="{StaticResource SidebarAccent}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Visibility="{Binding BusinessConfig.LogoPath, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                            <Setter Property="FontSize" Value="24"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <!-- Logo Real si existe ruta -->
+                        <Image Source="{Binding BusinessConfig.LogoPath}" Margin="10" Stretch="Uniform"
+                               Visibility="{Binding BusinessConfig.LogoPath, Converter={StaticResource VisConverter}}">
+                            <Image.Style>
+                                <Style TargetType="Image">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsSidebarCollapsed}" Value="True">
+                                            <Setter Property="Margin" Value="5"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Image.Style>
+                        </Image>
+                    </Grid>
                     <TextBlock Text="{Binding BusinessConfig.BusinessName}" FontSize="12" FontWeight="Bold"
                                Foreground="White" HorizontalAlignment="Center" Margin="10,5" TextAlignment="Center" TextWrapping="Wrap">
                         <TextBlock.Style>

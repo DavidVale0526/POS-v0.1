@@ -90,11 +90,13 @@ namespace POS_v0_1.ViewModels
                     grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
                     grid.ColumnDefinitions.Add(new System.Windows.Controls.ColumnDefinition { Width = new System.Windows.GridLength(1, System.Windows.GridUnitType.Star) });
 
-                    AddSummaryRow(visual, "Ventas Totales", Summary.GrossSales.ToString("C$ N2"));
-                    AddSummaryRow(visual, "Utilidad Real Operativa", Summary.RealOperatingProfit.ToString("C$ N2"));
-                    AddSummaryRow(visual, "Costo de Ventas", Summary.CostOfGoodsSold.ToString("C$ N2"));
-                    AddSummaryRow(visual, "Gastos y Egresos", Summary.ExpensesAndOutflows.ToString("C$ N2"));
-                    AddSummaryRow(visual, "Utilidad Neta Final", Summary.TotalNetProfit.ToString("C$ N2"), true);
+                    AddSummaryRow(visual, "Ventas Totales (Brutas)", $"C$ {Summary.GrossSales:N2}");
+                    AddSummaryRow(visual, "Descuentos Aplicados", $"- C$ {Summary.TotalDiscounts:N2}");
+                    AddSummaryRow(visual, "Ventas Netas (Ingreso POS)", $"C$ {Summary.NetSales:N2}", true);
+                    AddSummaryRow(visual, "Utilidad Real Operativa", $"C$ {Summary.RealOperatingProfit:N2}");
+                    AddSummaryRow(visual, "Costo de Ventas", $"C$ {Summary.CostOfGoodsSold:N2}");
+                    AddSummaryRow(visual, "Gastos y Egresos", $"C$ {Summary.ExpensesAndOutflows:N2}");
+                    AddSummaryRow(visual, "Utilidad Neta Final", $"C$ {Summary.TotalNetProfit:N2}", true);
 
                     visual.Children.Add(new System.Windows.Controls.Separator { Margin = new System.Windows.Thickness(0, 20, 0, 20) });
 
@@ -102,7 +104,7 @@ namespace POS_v0_1.ViewModels
                     visual.Children.Add(new System.Windows.Controls.TextBlock { Text = "TOP 10 PRODUCTOS MÁS VENDIDOS", FontWeight = System.Windows.FontWeights.Bold, Margin = new System.Windows.Thickness(0, 0, 0, 10) });
                     foreach (var item in Summary.TopProducts)
                     {
-                        AddSummaryRow(visual, item.Name, $"{item.Quantity} uds - {item.TotalSales:C$ N2}");
+                        AddSummaryRow(visual, item.Name, $"{item.Quantity} uds - C$ {item.TotalSales:N2}");
                     }
 
                     // Forzar el layout
@@ -194,8 +196,11 @@ namespace POS_v0_1.ViewModels
             var summary = new BusinessSummary();
 
             // 1. Resumen General
-            summary.GrossSales = sales.Sum(s => s.Total);
-            summary.PosSalesIncome = summary.GrossSales;
+            summary.GrossSales = sales.Sum(s => s.GrossAmount > 0 ? s.GrossAmount : (s.Total + s.TotalDiscount));
+            summary.TotalDiscounts = sales.Sum(s => s.TotalDiscount);
+            summary.NetSales = sales.Sum(s => s.Total);
+
+            summary.PosSalesIncome = summary.NetSales;
             summary.PosCashIncome = sales.Sum(s => s.AmountCash);
             summary.PosCardIncome = sales.Sum(s => s.AmountCard);
             summary.PosTransferIncome = sales.Sum(s => s.AmountTransfer);
@@ -213,7 +218,8 @@ namespace POS_v0_1.ViewModels
             summary.OtherExtraIncome = movements.Where(m => m.Type == "Ingreso").Sum(m => m.Amount);
             summary.ExpensesAndOutflows = movements.Where(m => m.Type == "Gasto").Sum(m => m.Amount);
 
-            summary.RealOperatingProfit = (summary.GrossSales - summary.CostOfGoodsSold) + topups.Sum(t => t.Profit) + summary.RepairIncome;
+            // CORRECCIÓN: La utilidad operativa real debe basarse en el ingreso NETO (lo cobrado) menos el costo.
+            summary.RealOperatingProfit = (summary.NetSales - summary.CostOfGoodsSold) + topups.Sum(t => t.Profit) + summary.RepairIncome;
 
             // Determinar efectivo en caja de forma más precisa
             var activeSession = _main.Session ?? _main.CashSessions.FirstOrDefault(s => s.IsOpen);
@@ -248,14 +254,38 @@ namespace POS_v0_1.ViewModels
             }
 
             // 2. Finanzas por Fuente
-            summary.FinancialSummaries = movements
-                .GroupBy(m => new { SourceName = m.FinancialSource?.Name ?? "Desconocido", m.Type })
+            var allFinancial = new List<FinancialSourceSummary>();
+
+            // Sumar ventas por método
+            decimal salesCash = sales.Sum(s => s.AmountCash);
+            decimal salesCard = sales.Sum(s => s.AmountCard);
+            decimal salesTrans = sales.Sum(s => s.AmountTransfer);
+
+            if (salesCash > 0) allFinancial.Add(new FinancialSourceSummary { Source = "Caja", Type = "Ventas POS", Total = salesCash });
+            if (salesCard > 0) allFinancial.Add(new FinancialSourceSummary { Source = "Banco (Tarjeta)", Type = "Ventas POS", Total = salesCard });
+            if (salesTrans > 0) allFinancial.Add(new FinancialSourceSummary { Source = "Banco (Transf.)", Type = "Ventas POS", Total = salesTrans });
+
+            if (summary.TopupIncome > 0) allFinancial.Add(new FinancialSourceSummary { Source = "Caja", Type = "Recargas", Total = summary.TopupIncome });
+            if (summary.RepairIncome > 0) allFinancial.Add(new FinancialSourceSummary { Source = "Caja", Type = "Reparaciones", Total = summary.RepairIncome });
+
+            // Movimientos manuales
+            allFinancial.AddRange(movements.GroupBy(m => new { SourceName = m.FinancialSource?.Name ?? "Desconocido", m.Type })
                 .Select(g => new FinancialSourceSummary
                 {
                     Source = g.Key.SourceName,
                     Type = g.Key.Type,
                     Total = g.Sum(m => m.Amount)
-                }).ToList();
+                }));
+
+            summary.FinancialSummaries = allFinancial;
+
+            // Datos para Gráfica de Utilidad
+            summary.UtilityComparison = new List<RankedItem>
+            {
+                new RankedItem { Name = "Ventas Netas", TotalSales = summary.NetSales },
+                new RankedItem { Name = "Costo Ventas", TotalSales = summary.CostOfGoodsSold },
+                new RankedItem { Name = "Utilidad Op.", TotalSales = summary.RealOperatingProfit }
+            };
 
             // 3. Valorización de Inventario (Estado Actual)
             summary.Inventory = new InventoryValuation

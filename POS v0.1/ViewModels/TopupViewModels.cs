@@ -59,7 +59,16 @@ namespace POS_v0_1.ViewModels
                 SelectedDate = null;
                 ApplyFilter();
             });
-            ShowCreateTopupCommand = new RelayCommand(o => _main.CurrentView = new CreateTopupViewModel(_main));
+            ShowCreateTopupCommand = new RelayCommand(o =>
+            {
+                if (!_main.TopupCompanies.Any())
+                {
+                    System.Windows.MessageBox.Show("No hay compañías telefónicas registradas.\n\nPor favor, ve primero a 'Gestionar Compañías' para agregar una (ej: CLARO, TIGO) antes de registrar ventas de saldo.",
+                        "Configuración Requerida", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
+                _main.CurrentView = new CreateTopupViewModel(_main);
+            });
             ManageCompaniesCommand = new RelayCommand(o =>
             {
                 var dialog = new Views.ManageTopupCompaniesDialog(_main);
@@ -72,9 +81,9 @@ namespace POS_v0_1.ViewModels
                 {
                     string details = $"Compañía: {topup.Company}\n" +
                                      $"Número: {topup.PhoneNumber}\n" +
-                                     $"Monto: {topup.Amount:C2}\n" +
-                                     $"Costo: {topup.Cost:C2}\n" +
-                                     $"Ganancia: {topup.Profit:C2}\n" +
+                                     $"Monto: C$ {topup.Amount:N2}\n" +
+                                     $"Costo: C$ {topup.Cost:N2}\n" +
+                                     $"Ganancia: C$ {topup.Profit:N2}\n" +
                                      $"Fecha: {topup.DateTime:dd/MM/yyyy HH:mm}\n" +
                                      $"Vendedor: {topup.Seller}\n" +
                                      $"Notas: {topup.Notes ?? "Ninguna"}";

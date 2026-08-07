@@ -26,5 +26,6 @@ namespace POS_v0_1.Models
         // Fase 5: Estabilidad y Seguridad
         public bool AutoBackupEnabled { get; set; } = true;
         public System.DateTime? LastBackupDate { get; set; }
+        public decimal MaxDiscountWithoutPin { get; set; } = 15;
     }
 }

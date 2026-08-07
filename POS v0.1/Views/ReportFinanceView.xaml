@@ -40,29 +40,56 @@
             </StackPanel>
         </Border>
 
-        <!-- Márgenes de Utilidad (Simulado) -->
+        <!-- Márgenes de Utilidad -->
         <Border Grid.Column="2" Background="White" CornerRadius="8" BorderBrush="#dee2e6" BorderThickness="1">
             <StackPanel>
                 <Border Background="#f8f9fa" Padding="15" CornerRadius="8,8,0,0">
                     <TextBlock Text="MÁRGENES DE UTILIDAD (VENTAS VS COSTO)" FontWeight="SemiBold" FontSize="12" Foreground="#666"/>
                 </Border>
-                <Grid Height="200" Margin="20">
-                    <!-- Placeholder para gráfico -->
-                    <Canvas>
-                        <Line X1="30" Y1="10" X2="30" Y2="160" Stroke="#ccc" StrokeThickness="1"/>
-                        <Line X1="30" Y1="160" X2="250" Y2="160" Stroke="#ccc" StrokeThickness="1"/>
-                        <TextBlock Text="1.0" Canvas.Left="0" Canvas.Top="10" FontSize="10"/>
-                        <TextBlock Text="0.5" Canvas.Left="0" Canvas.Top="80" FontSize="10"/>
-                        <TextBlock Text="0" Canvas.Left="10" Canvas.Top="150" FontSize="10"/>
-
-                        <Rectangle Canvas.Left="50" Canvas.Top="50" Width="30" Height="110" Fill="#0d6efd"/>
-                        <TextBlock Text="Ventas Brutas" Canvas.Left="40" Canvas.Top="170" FontSize="10">
-                            <TextBlock.LayoutTransform>
-                                <RotateTransform Angle="-20"/>
-                            </TextBlock.LayoutTransform>
-                        </TextBlock>
-                    </Canvas>
+                <Grid Height="220" Margin="20">
+                    <ItemsControl ItemsSource="{Binding Summary.UtilityComparison}" VerticalAlignment="Bottom">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="3"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid VerticalAlignment="Bottom">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Text="{Binding TotalSales, StringFormat='\{0:N0\}'}" HorizontalAlignment="Center" FontSize="9" Margin="0,0,0,5"/>
+                                    <Border Grid.Row="1" Width="40" VerticalAlignment="Bottom" CornerRadius="4,4,0,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#0d6efd"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Name}" Value="Costo Ventas">
+                                                        <Setter Property="Background" Value="#dc3545"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Name}" Value="Utilidad Op.">
+                                                        <Setter Property="Background" Value="#198754"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Border.Height>
+                                            <MultiBinding Converter="{StaticResource PercentageConverter}" ConverterParameter="150">
+                                                <Binding Path="TotalSales"/>
+                                                <Binding Path="DataContext.Summary.GrossSales" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                            </MultiBinding>
+                                        </Border.Height>
+                                    </Border>
+                                    <TextBlock Grid.Row="2" Text="{Binding Name}" HorizontalAlignment="Center" FontSize="10" Margin="0,5,0,0" TextWrapping="Wrap" TextAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </Grid>
+                <TextBlock Text="* Proporción basada en Ventas Brutas Totales" FontSize="9" Foreground="Gray" HorizontalAlignment="Center" Margin="0,0,0,10" FontStyle="Italic"/>
             </StackPanel>
         </Border>
     </Grid>

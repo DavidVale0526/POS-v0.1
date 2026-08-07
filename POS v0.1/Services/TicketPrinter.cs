@@ -285,8 +285,14 @@ namespace POS_v0_1.Services
 
             g.DrawString("INGRESOS", fontBold, System.Drawing.Brushes.Black, margin, y);
             y += 14f;
-            g.DrawString("Ventas POS:", fontRegular, System.Drawing.Brushes.Black, margin, y);
-            g.DrawString(_report.PosSalesIncome.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            g.DrawString("Ventas Brutas:", fontRegular, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.GrossSales.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 14f;
+            g.DrawString("Descuentos:", fontRegular, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString("-" + _report.TotalDiscounts.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
+            y += 14f;
+            g.DrawString("Ventas POS (Netas):", fontBold, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString(_report.PosSalesIncome.ToString("N2"), fontBold, System.Drawing.Brushes.Black, paperWidth - margin, y, right);
             y += 14f;
 
             // Desglose de Ventas
@@ -429,17 +435,24 @@ namespace POS_v0_1.Services
             // Detalle de Productos
             if (_sale.Items != null)
             {
-                int maxDescChars = is80mm ? 24 : 14;
-
                 foreach (var item in _sale.Items)
                 {
                     string name = item.ProductName ?? "Producto";
-                    string desc = name.Length > maxDescChars ? name.Substring(0, maxDescChars) : name;
 
-                    g.DrawString($"{item.Quantity}x", fontRegular, System.Drawing.Brushes.Black, margin, y);
-                    g.DrawString(desc, fontRegular, System.Drawing.Brushes.Black, colDescX, y);
+                    // Línea 1: Cantidad y Nombre
+                    g.DrawString($"{item.Quantity}x {name}", fontBold, System.Drawing.Brushes.Black, margin, y);
+                    y += 13f;
+
+                    // Línea 2: Precio unitario, Descuento y Subtotal de línea
+                    string detail = $"   {item.UnitPrice:N2}";
+                    if (item.Discount > 0)
+                    {
+                        detail += $" (-{item.Discount:N2})";
+                    }
+
+                    g.DrawString(detail, fontRegular, System.Drawing.Brushes.Black, margin, y);
                     g.DrawString(item.Subtotal.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, colTotalX, y, right);
-                    y += 14f;
+                    y += 15f;
                 }
             }
 
@@ -447,14 +460,15 @@ namespace POS_v0_1.Services
             y += 14f;
 
             // 5. Totales
-            g.DrawString("SUBTOTAL:", fontRegular, System.Drawing.Brushes.Black, margin, y);
-            g.DrawString($"C$ {_sale.Subtotal:N2}", fontRegular, System.Drawing.Brushes.Black, colTotalX, y, right);
+            g.DrawString("SUBTOTAL BRUTO:", fontRegular, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString($"C$ {_sale.GrossAmount:N2}", fontRegular, System.Drawing.Brushes.Black, colTotalX, y, right);
             y += 14f;
 
-            if (_sale.Discount > 0)
+            decimal totalSavings = _sale.TotalDiscount;
+            if (totalSavings > 0)
             {
-                g.DrawString("DESCUENTO:", fontRegular, System.Drawing.Brushes.Black, margin, y);
-                g.DrawString($"-C$ {_sale.Discount:N2}", fontRegular, System.Drawing.Brushes.Black, colTotalX, y, right);
+                g.DrawString("DESCUENTOS TOT.:", fontRegular, System.Drawing.Brushes.Black, margin, y);
+                g.DrawString($"-C$ {totalSavings:N2}", fontRegular, System.Drawing.Brushes.Black, colTotalX, y, right);
                 y += 14f;
             }
 
@@ -465,7 +479,7 @@ namespace POS_v0_1.Services
                 y += 14f;
             }
 
-            g.DrawString("TOTAL:", fontHeader, System.Drawing.Brushes.Black, margin, y);
+            g.DrawString("TOTAL A PAGAR:", fontHeader, System.Drawing.Brushes.Black, margin, y);
             g.DrawString($"C$ {_sale.Total:N2}", fontHeader, System.Drawing.Brushes.Black, colTotalX, y, right);
             y += 24f;
 

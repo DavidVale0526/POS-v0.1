@@ -16,8 +16,16 @@ namespace POS_v0_1.ViewModels
         public ObservableCollection<FinancialMovement> FilteredMovements
         {
             get => _filteredMovements;
-            set { _filteredMovements = value; OnPropertyChanged(); }
+            set {
+                _filteredMovements = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(TotalCount));
+                OnPropertyChanged(nameof(TotalAmount));
+            }
         }
+
+        public int TotalCount => FilteredMovements?.Count ?? 0;
+        public decimal TotalAmount => FilteredMovements?.Sum(m => m.Type == "Ingreso" ? m.Amount : -m.Amount) ?? 0m;
 
         private string _searchText;
         public string SearchText { get => _searchText; set { _searchText = value; OnPropertyChanged(); ApplyFilter(); } }
@@ -38,6 +46,7 @@ namespace POS_v0_1.ViewModels
         public ICommand ShowSourcesCommand { get; }
         public ICommand FilterCommand { get; }
         public ICommand ClearFiltersCommand { get; }
+        public ICommand DeleteMovementCommand { get; }
 
         public FinancialMovementsViewModel(MainViewModel main)
         {
@@ -55,6 +64,43 @@ namespace POS_v0_1.ViewModels
                 SelectedSource = null;
                 SelectedDate = null;
                 ApplyFilter();
+            });
+
+            DeleteMovementCommand = new RelayCommand(o =>
+            {
+                if (o is FinancialMovement move)
+                {
+                    var result = System.Windows.MessageBox.Show($"¿Está seguro de eliminar el registro '{move.Concept}' por {move.Amount:C2}?\n\nEsta acción no se puede deshacer.",
+                        "Confirmar Eliminación", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+
+                    if (result == System.Windows.MessageBoxResult.Yes)
+                    {
+                        try
+                        {
+                            // Si el movimiento es de CAJA y hay una sesión abierta, revertir el impacto
+                            if (move.Source == "Caja" && _main.Session != null && _main.Session.IsOpen)
+                            {
+                                // IMPORTANTE: Solo revertimos si el movimiento es de la fecha de la sesión actual
+                                // para evitar descuadrar sesiones pasadas ya cerradas.
+                                if (move.Date >= _main.Session.OpeningTime)
+                                {
+                                    if (move.Type == "Ingreso") _main.Session.IncomesTotal -= move.Amount;
+                                    else if (move.Type == "Gasto") _main.Session.ExpensesTotal -= move.Amount;
+                                }
+                            }
+
+                            _main.Db.FinancialMovements.Remove(move);
+                            _main.Db.SaveChanges();
+                            _main.FinancialMovements.Remove(move);
+                            ApplyFilter();
+                            _main.ShowToast("Registro eliminado.");
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Windows.MessageBox.Show("Error al eliminar: " + ex.Message);
+                        }
+                    }
+                }
             });
         }
 
@@ -146,6 +192,14 @@ namespace POS_v0_1.ViewModels
             SaveCommand = new RelayCommand(o =>
             {
                 if (string.IsNullOrWhiteSpace(Concept) || SelectedSource == null || Amount <= 0) return;
+
+                // Validación de CAJA
+                if (SelectedSource.Name == "Caja" && (_main.Session == null || !_main.Session.IsOpen))
+                {
+                    System.Windows.MessageBox.Show("No puedes registrar un movimiento en 'Caja' porque actualmente no hay una sesión abierta.\n\nPor favor, abre caja primero o selecciona otra fuente (ej: Banco).",
+                        "Caja Cerrada", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
 
                 var move = new FinancialMovement
                 {

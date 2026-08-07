@@ -5,7 +5,9 @@ namespace POS_v0_1.Models
 {
     public class BusinessSummary
     {
-        public decimal GrossSales { get; set; }
+        public decimal GrossSales { get; set; } // Bruto (Precio x Cantidad)
+        public decimal TotalDiscounts { get; set; } // Total de descuentos aplicados
+        public decimal NetSales { get; set; } // Neto (Bruto - Descuento)
         public decimal RealOperatingProfit { get; set; }
         public decimal TopupFlow { get; set; }
         public decimal DeliveredRepairsTotal { get; set; }
@@ -43,6 +45,7 @@ namespace POS_v0_1.Models
         // Phase 4: Visual Intelligence
         public List<DailySalesSummary> DailySalesHistory { get; set; } = new List<DailySalesSummary>();
         public List<RankedItem> TopCategories { get; set; } = new List<RankedItem>();
+        public List<RankedItem> UtilityComparison { get; set; } = new List<RankedItem>();
     }
 
     public class DailySalesSummary
