@@ -1,0 +1,25 @@
+<Window x:Class="POS_v0_1.Views.QuickProviderDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nuevo Proveedor" Height="350" Width="400"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize" WindowStyle="ToolWindow" Background="#F8FAFC">
+    <Grid Margin="25">
+        <StackPanel>
+            <TextBlock Text="Agregar Proveedor" FontSize="18" FontWeight="Bold" Margin="0,0,0,20" Foreground="#0F172A"/>
+
+            <TextBlock Text="Nombre del Proveedor *" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,5"/>
+            <TextBox x:Name="NameBox" Padding="10,8" Margin="0,0,0,15" BorderBrush="#E2E8F0"/>
+
+            <TextBlock Text="Teléfono (Opcional)" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,5"/>
+            <TextBox x:Name="PhoneBox" Padding="10,8" Margin="0,0,0,15" BorderBrush="#E2E8F0"/>
+
+            <TextBlock Text="Contacto / Persona (Opcional)" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,5"/>
+            <TextBox x:Name="ContactBox" Padding="10,8" Margin="0,0,0,20" BorderBrush="#E2E8F0"/>
+
+            <UniformGrid Columns="2" Margin="0,5,0,0">
+                <Button Content="Cancelar" Click="Cancel_Click" Margin="0,0,5,0" Padding="10" Background="Transparent" BorderBrush="#E2E8F0"/>
+                <Button Content="💾 Guardar" Click="Save_Click" Margin="5,0,0,0" Padding="10" Background="#2563EB" Foreground="White" FontWeight="Bold"/>
+            </UniformGrid>
+        </StackPanel>
+    </Grid>
+</Window>
