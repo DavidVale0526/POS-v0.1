@@ -90,6 +90,7 @@ namespace POS_v0_1.ViewModels
         public ObservableCollection<RepairCategory> RepairCategories { get; } = new ObservableCollection<RepairCategory>();
         public ObservableCollection<RepairType> RepairTypes { get; } = new ObservableCollection<RepairType>();
         public ObservableCollection<TopupPreset> TopupPresets { get; } = new ObservableCollection<TopupPreset>();
+        public ObservableCollection<ProductImei> ProductImeis { get; } = new ObservableCollection<ProductImei>();
 
         private BusinessConfiguration _businessConfig;
         public BusinessConfiguration BusinessConfig
@@ -280,6 +281,7 @@ namespace POS_v0_1.ViewModels
 
             AddColumnSafe("SaleItems", "Discount", "DECIMAL DEFAULT 0");
             AddColumnSafe("SaleItems", "PurchasePrice", "DECIMAL DEFAULT 0");
+            AddColumnSafe("SaleItems", "Imei", "TEXT");
 
             AddColumnSafe("Purchases", "Status", "TEXT DEFAULT 'Recibida'");
             AddColumnSafe("Purchases", "ProviderId", "INTEGER");
@@ -306,6 +308,10 @@ namespace POS_v0_1.ViewModels
             AddColumnSafe("BusinessConfigs", "LastBackupDate", "TEXT");
             AddColumnSafe("BusinessConfigs", "MaxDiscountWithoutPin", "DECIMAL DEFAULT 15");
 
+            AddColumnSafe("Repairs", "DeliveredById", "INTEGER");
+            AddColumnSafe("Repairs", "DeliveredByName", "TEXT");
+            AddColumnSafe("Repairs", "DeliveryDate", "TEXT");
+
             AddColumnSafe("Users", "SecurityQuestion1", "TEXT");
             AddColumnSafe("Users", "SecurityAnswer1", "TEXT");
             AddColumnSafe("Users", "SecurityQuestion2", "TEXT");
@@ -318,6 +324,7 @@ namespace POS_v0_1.ViewModels
                 Db.Database.ExecuteSqlRaw("CREATE TABLE IF NOT EXISTS CreditNotes (Id INTEGER PRIMARY KEY AUTOINCREMENT, SaleId INTEGER NOT NULL, Date TEXT NOT NULL, Amount DECIMAL NOT NULL, Reason TEXT, CustomerName TEXT);");
                 Db.Database.ExecuteSqlRaw("CREATE TABLE IF NOT EXISTS TopupCompanies (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL, Color TEXT);");
                 Db.Database.ExecuteSqlRaw("CREATE TABLE IF NOT EXISTS TopupPresets (Id INTEGER PRIMARY KEY AUTOINCREMENT, CompanyName TEXT NOT NULL, Amount DECIMAL NOT NULL, Cost DECIMAL NOT NULL);");
+                Db.Database.ExecuteSqlRaw("CREATE TABLE IF NOT EXISTS ProductImeis (Id INTEGER PRIMARY KEY AUTOINCREMENT, ProductId INTEGER NOT NULL, ImeiNumber TEXT NOT NULL, Status TEXT NOT NULL, SaleId INTEGER, SaleDate TEXT);");
             }
             catch { }
         }
@@ -392,6 +399,7 @@ namespace POS_v0_1.ViewModels
             try { foreach (var rt in Db.RepairTypes) RepairTypes.Add(rt); } catch { }
             try { foreach (var tp in Db.TopupPresets) TopupPresets.Add(tp); } catch { }
             try { foreach (var co in Db.TopupCompanies) TopupCompanies.Add(co); } catch { }
+            try { foreach (var im in Db.ProductImeis) ProductImeis.Add(im); } catch { }
 
             try {
                 BusinessConfig = Db.BusinessConfigs.FirstOrDefault();
@@ -658,11 +666,45 @@ namespace POS_v0_1.ViewModels
                     AmountCash = cash,
                     AmountCard = card,
                     AmountTransfer = transfer,
-                    Items = new ObservableCollection<SaleItem>(Cart.Select(i => new SaleItem { ProductId = i.Product.Id, ProductName = i.Product.Name, Quantity = i.Quantity, UnitPrice = i.Product.SellingPrice, PurchasePrice = i.Product.PurchasePrice, Discount = i.Discount }))
+                    Items = new ObservableCollection<SaleItem>(Cart.Select(i => new SaleItem {
+                        ProductId = i.Product.Id,
+                        ProductName = i.Product.Name,
+                        Imei = i.SelectedImei,
+                        Quantity = i.Quantity,
+                        UnitPrice = i.Product.SellingPrice,
+                        PurchasePrice = i.Product.PurchasePrice,
+                        Discount = i.Discount
+                    }))
                 };
                 foreach (var item in Cart) {
                     var dbProd = _main.Db.Products.Find(item.Product.Id);
-                    if (dbProd != null) { dbProd.Stock -= item.Quantity; var memProd = _main.Products.FirstOrDefault(p => p.Id == item.Product.Id); if (memProd != null) memProd.Stock = dbProd.Stock; _main.RecordStockMovement(item.Product.Id, -item.Quantity, "Venta", $"Venta a {newSale.CustomerName}", nFinal); }
+                    if (dbProd != null) {
+                        dbProd.Stock -= item.Quantity;
+                        var memProd = _main.Products.FirstOrDefault(p => p.Id == item.Product.Id);
+                        if (memProd != null) memProd.Stock = dbProd.Stock;
+                        _main.RecordStockMovement(item.Product.Id, -item.Quantity, "Venta", $"Venta a {newSale.CustomerName} ({(item.SelectedImei ?? "Sin IMEI")})", nFinal);
+                    }
+
+                    // Marcar IMEI como vendido si se seleccionó uno
+                    if (!string.IsNullOrEmpty(item.SelectedImei))
+                    {
+                        var dbImei = _main.Db.ProductImeis.FirstOrDefault(i => i.ImeiNumber == item.SelectedImei && i.Status == "Disponible");
+                        if (dbImei != null)
+                        {
+                            dbImei.Status = "Vendido";
+                            dbImei.SaleId = newSale.Id;
+                            dbImei.SaleDate = newSale.Date;
+
+                            // Actualizar en memoria
+                            var memImei = _main.ProductImeis.FirstOrDefault(i => i.Id == dbImei.Id);
+                            if (memImei != null)
+                            {
+                                memImei.Status = "Vendido";
+                                memImei.SaleId = newSale.Id;
+                                memImei.SaleDate = newSale.Date;
+                            }
+                        }
+                    }
                 }
                 _main.Db.Sales.Add(newSale);
 
@@ -687,10 +729,37 @@ namespace POS_v0_1.ViewModels
         public void AddProductToCart(Product prod, int quantity = 1) {
             if (prod == null || prod.Status != "Activo" || prod.Stock <= 0) return;
             var existing = Cart.FirstOrDefault(i => i.Product.Id == prod.Id);
-            if (existing != null) { if (existing.Quantity + quantity > prod.Stock) return; existing.Quantity += quantity; }
-            else Cart.Add(new CartItem(prod) { Quantity = quantity });
+            if (existing != null) {
+                if (existing.Quantity + quantity > prod.Stock) return;
+                existing.Quantity += quantity;
+            }
+            else {
+                var item = new CartItem(prod) { Quantity = quantity };
+                // Cargar IMEIs disponibles para este producto
+                var productImeis = _main.ProductImeis.Where(i => i.ProductId == prod.Id && i.Status == "Disponible").Select(i => i.ImeiNumber).ToList();
+                foreach (var imei in productImeis) item.AvailableImeis.Add(imei);
+                Cart.Add(item);
+            }
         }
-        public void HandleBarcodeScan(string code) { var prod = _main.Products.FirstOrDefault(p => p.Barcode != null && p.Barcode.Trim() == code); if (prod != null) AddProductToCart(prod, 1); }
+        public void HandleBarcodeScan(string code) {
+            // 1. Buscar por Código de Barras normal
+            var prod = _main.Products.FirstOrDefault(p => p.Barcode != null && p.Barcode.Trim() == code);
+            if (prod != null) { AddProductToCart(prod, 1); return; }
+
+            // 2. Buscar por IMEI
+            var imei = _main.ProductImeis.FirstOrDefault(i => i.ImeiNumber.Trim() == code && i.Status == "Disponible");
+            if (imei != null)
+            {
+                var pImei = _main.Products.FirstOrDefault(p => p.Id == imei.ProductId);
+                if (pImei != null)
+                {
+                    AddProductToCart(pImei, 1);
+                    // Pre-seleccionar el IMEI escaneado
+                    var item = Cart.LastOrDefault(i => i.Product.Id == pImei.Id);
+                    if (item != null) item.SelectedImei = imei.ImeiNumber;
+                }
+            }
+        }
 
         private void CartItem_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {

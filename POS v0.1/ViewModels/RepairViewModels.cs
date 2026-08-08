@@ -136,16 +136,12 @@ namespace POS_v0_1.ViewModels
                             return;
                         }
 
-                        string oldStatus = repair.Status;
-                        decimal oldTotal = repair.Total;
-
+                        // Guardar datos de entrega y trazabilidad
                         repair.Status = "Entregado";
                         repair.Total = finalAmount;
-
-                        if (isSessionOpen && repair.Total != oldTotal)
-                        {
-                            _main.Session.RepairsTotal += (repair.Total - oldTotal);
-                        }
+                        repair.DeliveredById = user.Id;
+                        repair.DeliveredByName = user.Name;
+                        repair.DeliveryDate = DateTime.Now;
 
                         var history = new RepairStatusHistory
                         {
@@ -154,13 +150,21 @@ namespace POS_v0_1.ViewModels
                             ChangeDate = DateTime.Now,
                             UserId = user.Id,
                             UserName = user.Name,
-                            Notes = $"Equipo entregado por {user.Name}. Cobro: {repair.Total:C$ 0.00}"
+                            Notes = $"Entregado y cobrado por {user.Name}."
                         };
 
                         _main.Db.RepairStatusHistories.Add(history);
+
+                        // Actualizar sesión de caja
+                        if (isSessionOpen)
+                        {
+                            _main.Session.RepairsTotal += finalAmount;
+                            _main.Session.CashTotal += finalAmount;
+                        }
+
                         _main.Db.SaveChanges();
                         ApplyFilter();
-                        MessageBox.Show($"Equipo entregado correctamente. Total: {repair.Total:C$ 0.00}", "Éxito");
+                        _main.ShowToast("Reparación entregada con éxito.");
                     }
                 }
             });

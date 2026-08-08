@@ -186,24 +186,72 @@
 
                 <Border Background="White" CornerRadius="8" Padding="20">
                     <StackPanel>
-                        <TextBlock Text="⚙ GESTIÓN DE IMEIS" FontWeight="Bold" Foreground="Gray" Margin="0,0,0,15"/>
+                        <TextBlock Text="⚙ GESTIÓN DE IMEIS (UNIDADES ÚNICAS)" FontWeight="Bold" Foreground="Gray" Margin="0,0,0,15"/>
+
+                        <TextBlock Text="Registra los IMEIs para tener trazabilidad exacta de qué unidad se vende." FontSize="10" Foreground="#666" Margin="0,-10,0,15"/>
+
+                        <!-- Add Imei -->
                         <Grid Margin="0,0,0,15">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox Tag="Escanear o escribir nuevo IMEI..." Padding="10"/>
-                            <Button Grid.Column="1" Content="+ Agregar" Background="#007bff" Foreground="White" Padding="20,0" Margin="10,0,0,0" BorderThickness="0">
+                            <TextBox Tag="Escanear o escribir nuevo IMEI..." Padding="10" Text="{Binding NewImei, UpdateSourceTrigger=PropertyChanged}">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding AddImeiCommand}"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+                            <Button Grid.Column="1" Content="+ Agregar" Background="#007bff" Foreground="White" Padding="20,0" Margin="10,0,0,0" BorderThickness="0"
+                                    Command="{Binding AddImeiCommand}">
                                 <Button.Resources>
                                     <Style TargetType="Border"><Setter Property="CornerRadius" Value="3"/></Style>
                                 </Button.Resources>
                             </Button>
                         </Grid>
-                        <Border BorderBrush="#dee2e6" BorderThickness="0,1,0,0">
-                            <StackPanel Margin="0,20">
-                                <TextBlock Text="No hay IMEIs registrados." HorizontalAlignment="Center" Foreground="Gray"/>
-                            </StackPanel>
-                        </Border>
+
+                        <TabControl Background="Transparent" BorderThickness="0">
+                            <TabItem Header="Disponibles" Padding="15,5">
+                                <ScrollViewer MaxHeight="250" Margin="0,10,0,0">
+                                    <ItemsControl ItemsSource="{Binding AvailableImeis}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border BorderBrush="#f1f3f5" BorderThickness="0,0,0,1" Padding="5">
+                                                    <Grid>
+                                                        <TextBlock Text="{Binding ImeiNumber}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                        <Button Content="✕" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Foreground="#dc3545"
+                                                                Command="{Binding DataContext.DeleteImeiCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </TabItem>
+                            <TabItem Header="Vendidos" Padding="15,5">
+                                <ScrollViewer MaxHeight="250" Margin="0,10,0,0">
+                                    <ItemsControl ItemsSource="{Binding SoldImeis}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border BorderBrush="#f1f3f5" BorderThickness="0,0,0,1" Padding="5">
+                                                    <Grid>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding ImeiNumber}" Foreground="#6c757d" TextDecorations="Strikethrough" Margin="0,0,10,0"/>
+                                                            <TextBlock Text="{Binding SaleDate, StringFormat='(Vendido: \{0:dd/MM/yy\})'}" FontSize="10" Foreground="#198754" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding SaleId, StringFormat='Ticket #\{0:D5\}'}" HorizontalAlignment="Right" FontSize="10" Foreground="#0d6efd" VerticalAlignment="Center"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </TabItem>
+                        </TabControl>
+
+                        <Grid Margin="0,20" Visibility="{Binding AvailableImeis.Count, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}">
+                            <TextBlock Text="No hay IMEIs disponibles." HorizontalAlignment="Center" Foreground="#adb5bd"/>
+                        </Grid>
                     </StackPanel>
                 </Border>
                 <Border Background="White" CornerRadius="8" Padding="20" Margin="0,20,0,0">

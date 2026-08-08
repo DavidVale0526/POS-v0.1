@@ -452,7 +452,16 @@ namespace POS_v0_1.Services
 
                     g.DrawString(detail, fontRegular, System.Drawing.Brushes.Black, margin, y);
                     g.DrawString(item.Subtotal.ToString("N2"), fontRegular, System.Drawing.Brushes.Black, colTotalX, y, right);
-                    y += 15f;
+                    y += 13f;
+
+                    // Línea 3: IMEI (si existe)
+                    if (!string.IsNullOrEmpty(item.Imei))
+                    {
+                        g.DrawString($"   IMEI: {item.Imei}", new System.Drawing.Font("Consolas", 6.5f, System.Drawing.FontStyle.Italic), System.Drawing.Brushes.DimGray, margin, y);
+                        y += 12f;
+                    }
+
+                    y += 2f; // Espaciado entre items
                 }
             }
 

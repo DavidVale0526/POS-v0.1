@@ -35,6 +35,7 @@ namespace POS_v0_1.Models
         public int Id { get; set; }
         public int ProductId { get; set; }
         public string? ProductName { get; set; }
+        public string? Imei { get; set; } // Nuevo: Asociar IMEI si aplica
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal PurchasePrice { get; set; } // Costo al momento de la venta

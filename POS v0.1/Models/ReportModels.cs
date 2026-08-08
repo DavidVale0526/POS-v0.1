@@ -41,6 +41,7 @@ namespace POS_v0_1.Models
         public List<ServiceReportItem> TopupReport { get; set; } = new List<ServiceReportItem>();
         public List<ServiceReportItem> RepairsByTechnician { get; set; } = new List<ServiceReportItem>();
         public List<ServiceReportItem> RepairsByReceiver { get; set; } = new List<ServiceReportItem>();
+        public List<ServiceReportItem> RepairsByDeliverer { get; set; } = new List<ServiceReportItem>();
 
         // Phase 4: Visual Intelligence
         public List<DailySalesSummary> DailySalesHistory { get; set; } = new List<DailySalesSummary>();

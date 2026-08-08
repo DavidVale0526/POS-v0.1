@@ -24,6 +24,11 @@ namespace POS_v0_1.Models
         public int? TechnicianId { get; set; }
         public string? TechnicianName { get; set; }
 
+        // Nuevos campos para trazabilidad financiera exacta
+        public int? DeliveredById { get; set; }
+        public string? DeliveredByName { get; set; }
+        public DateTime? DeliveryDate { get; set; }
+
         public virtual ICollection<RepairStatusHistory> StatusHistory { get; set; } = new ObservableCollection<RepairStatusHistory>();
         public virtual ICollection<RepairPart> Parts { get; set; } = new ObservableCollection<RepairPart>();
     }

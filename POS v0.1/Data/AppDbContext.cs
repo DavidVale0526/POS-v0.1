@@ -16,6 +16,7 @@ namespace POS_v0_1.Data
         public DbSet<Topup> Topups { get; set; }
         public DbSet<TopupCompany> TopupCompanies { get; set; }
         public DbSet<TopupPreset> TopupPresets { get; set; }
+        public DbSet<ProductImei> ProductImeis { get; set; }
         public DbSet<RepairOrder> Repairs { get; set; }
         public DbSet<RepairStatusHistory> RepairStatusHistories { get; set; }
         public DbSet<RepairPart> RepairParts { get; set; }

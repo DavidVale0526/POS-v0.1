@@ -203,6 +203,15 @@ namespace POS_v0_1.ViewModels
         public Product Product { get; }
 
         public ObservableCollection<PurchaseHistoryItem> PurchaseHistory { get; } = new ObservableCollection<PurchaseHistoryItem>();
+        public ObservableCollection<ProductImei> AvailableImeis { get; } = new ObservableCollection<ProductImei>();
+        public ObservableCollection<ProductImei> SoldImeis { get; } = new ObservableCollection<ProductImei>();
+
+        private string _newImei;
+        public string NewImei
+        {
+            get => _newImei;
+            set { _newImei = value; OnPropertyChanged(); }
+        }
 
         public decimal MarginAmount => Product.SellingPrice - Product.PurchasePrice;
         public decimal MarginPercentage => Product.PurchasePrice > 0 ? (MarginAmount / Product.PurchasePrice) * 100 : 0;
@@ -210,6 +219,8 @@ namespace POS_v0_1.ViewModels
 
         public ICommand BackCommand { get; }
         public ICommand EditCommand { get; }
+        public ICommand AddImeiCommand { get; }
+        public ICommand DeleteImeiCommand { get; }
 
         public ProductDetailViewModel(MainViewModel main, Product product)
         {
@@ -217,9 +228,66 @@ namespace POS_v0_1.ViewModels
             Product = product;
 
             LoadPurchaseHistory();
+            LoadImeis();
 
             BackCommand = new RelayCommand(o => _main.CurrentView = new ProductsViewModel(_main));
             EditCommand = new RelayCommand(o => _main.CurrentView = new CreateProductViewModel(_main, Product));
+
+            AddImeiCommand = new RelayCommand(o =>
+            {
+                if (string.IsNullOrWhiteSpace(NewImei)) return;
+
+                if (_main.ProductImeis.Any(i => i.ImeiNumber == NewImei))
+                {
+                    MessageBox.Show("Este IMEI ya está registrado en el sistema.", "Duplicado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var imei = new ProductImei
+                {
+                    ProductId = Product.Id,
+                    ImeiNumber = NewImei,
+                    Status = "Disponible"
+                };
+
+                _main.Db.ProductImeis.Add(imei);
+                _main.Db.SaveChanges();
+                _main.ProductImeis.Add(imei);
+
+                NewImei = string.Empty;
+                LoadImeis();
+            });
+
+            DeleteImeiCommand = new RelayCommand(o =>
+            {
+                if (o is ProductImei imei)
+                {
+                    if (imei.Status == "Vendido")
+                    {
+                        MessageBox.Show("No se puede eliminar un IMEI que ya fue vendido.", "Acción no permitida", MessageBoxButton.OK, MessageBoxImage.Stop);
+                        return;
+                    }
+
+                    var res = MessageBox.Show($"¿Desea eliminar el IMEI {imei.ImeiNumber}?", "Confirmar", MessageBoxButton.YesNo);
+                    if (res == MessageBoxResult.Yes)
+                    {
+                        _main.Db.ProductImeis.Remove(imei);
+                        _main.Db.SaveChanges();
+                        _main.ProductImeis.Remove(imei);
+                        LoadImeis();
+                    }
+                }
+            });
+        }
+
+        private void LoadImeis()
+        {
+            AvailableImeis.Clear();
+            SoldImeis.Clear();
+
+            var list = _main.ProductImeis.Where(i => i.ProductId == Product.Id).ToList();
+            foreach (var i in list.Where(x => x.Status == "Disponible")) AvailableImeis.Add(i);
+            foreach (var i in list.Where(x => x.Status == "Vendido")) SoldImeis.Add(i);
         }
 
         private void LoadPurchaseHistory()

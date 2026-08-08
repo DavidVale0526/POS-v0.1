@@ -358,7 +358,18 @@ namespace POS_v0_1.ViewModels
                     Operator = g.Key,
                     TicketCount = g.Count(),
                     TotalAmount = g.Sum(r => r.Total),
-                    TotalProfit = g.Where(r => r.Status == "Entregado").Sum(r => r.Total)
+                    TotalProfit = g.Sum(r => r.Total)
+                }).ToList();
+
+            summary.RepairsByDeliverer = repairs
+                .Where(r => r.Status == "Entregado")
+                .GroupBy(r => r.DeliveredByName ?? "Sin Asignar")
+                .Select(g => new ServiceReportItem
+                {
+                    Operator = g.Key,
+                    TicketCount = g.Count(),
+                    TotalAmount = g.Sum(r => r.Total),
+                    TotalProfit = g.Sum(r => r.Total)
                 }).ToList();
 
             // 6. Inteligencia Visual (Fase 4)
