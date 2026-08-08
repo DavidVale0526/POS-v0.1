@@ -155,11 +155,10 @@ namespace POS_v0_1.ViewModels
 
                         _main.Db.RepairStatusHistories.Add(history);
 
-                        // Actualizar sesión de caja
+                        // Actualizar sesión de caja (Solo en el campo de reparaciones)
                         if (isSessionOpen)
                         {
                             _main.Session.RepairsTotal += finalAmount;
-                            _main.Session.CashTotal += finalAmount;
                         }
 
                         _main.Db.SaveChanges();
@@ -393,7 +392,7 @@ namespace POS_v0_1.ViewModels
                 Repair.TechnicianId = SelectedTechnician?.Id;
                 Repair.TechnicianName = SelectedTechnician?.Name;
 
-                if (isSessionOpen && Repair.Total != oldTotal)
+                if (isSessionOpen && Repair.Status == "Entregado" && Repair.Total != oldTotal)
                 {
                     _main.Session.RepairsTotal += (Repair.Total - oldTotal);
                 }
@@ -489,7 +488,6 @@ namespace POS_v0_1.ViewModels
                 repair.StatusHistory.Add(history);
                 _main.Db.SaveChanges();
                 _main.Repairs.Add(repair);
-                if (_main.Session != null && _main.Session.IsOpen) _main.Session.RepairsTotal += repair.Total;
                 _main.CurrentView = new RepairDetailViewModel(_main, repair);
             });
 

@@ -40,6 +40,7 @@ namespace POS_v0_1.ViewModels
         public string FormattedDate => DateTime.Now.ToString("dd MMM, yyyy");
 
         public ObservableCollection<Sale> RecentSales { get; } = new ObservableCollection<Sale>();
+        public ObservableCollection<Product> LowStockList { get; } = new ObservableCollection<Product>();
 
         public CashSession? ActiveSession => _main.Session;
 
@@ -88,8 +89,11 @@ namespace POS_v0_1.ViewModels
                 .Count(r => r.Status != "Entregado" && r.Status != "Cancelado");
 
             // Stock Bajo
-            LowStockProducts = _main.Products
-                .Count(p => p.Stock <= p.MinStock);
+            var lowStock = _main.Products.Where(p => p.Stock <= p.MinStock).ToList();
+            LowStockProducts = lowStock.Count;
+
+            LowStockList.Clear();
+            foreach (var p in lowStock.Take(5)) LowStockList.Add(p);
 
             // Últimas Ventas
             RecentSales.Clear();

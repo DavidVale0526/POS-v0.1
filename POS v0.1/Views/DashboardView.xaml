@@ -232,6 +232,43 @@
                                 <TextBlock Text="Abrir/Cerrar Caja" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
+
+                        <!-- Alertas de Stock (Nueva Sección) -->
+                        <Border Background="White" CornerRadius="12" Margin="0,20,0,0" Padding="15" BorderBrush="#f8d7da" BorderThickness="1"
+                                Visibility="{Binding LowStockList.Count, Converter={StaticResource VisConverter}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <TextBlock Text="⚠️ ALERTAS DE STOCK" FontWeight="Bold" Foreground="#dc3545" FontSize="11"/>
+                                    <Border Background="#dc3545" CornerRadius="10" Padding="6,1" Margin="10,0,0,0">
+                                        <TextBlock Text="{Binding LowStockProducts}" Foreground="White" FontSize="9" FontWeight="Bold"/>
+                                    </Border>
+                                </StackPanel>
+
+                                <ItemsControl ItemsSource="{Binding LowStockList}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="#f1f3f5" BorderThickness="0,0,0,1" Padding="0,8">
+                                                <Grid>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="12"/>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="Quedan: " FontSize="10" Foreground="Gray"/>
+                                                            <TextBlock Text="{Binding Stock}" FontSize="10" FontWeight="Bold" Foreground="#dc3545"/>
+                                                            <TextBlock Text="{Binding MinStock, StringFormat=' (Mín: \{0\})'}" FontSize="10" Foreground="#adb5bd"/>
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                    <Button Content="⚙" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Foreground="#0d6efd" VerticalAlignment="Center"
+                                                            Command="{Binding DataContext.RegisterProductCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <Button Content="Ver todo el inventario" Background="Transparent" BorderThickness="0" Foreground="#6c757d" FontSize="11" Margin="0,10,0,0"
+                                        Command="{Binding RegisterProductCommand}"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Grid>
             </StackPanel>
