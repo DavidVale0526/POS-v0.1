@@ -47,9 +47,18 @@
                                    FontSize="14" Foreground="#666" Margin="0,5,0,0"/>
                     </StackPanel>
 
-                    <!-- Alerta de sesión larga -->
-                    <Border Background="#fff3cd" BorderBrush="#ffeeba" BorderThickness="1" CornerRadius="8" Padding="15,8" HorizontalAlignment="Center"
-                            Visibility="{Binding ActiveSession.IsTooOld, Converter={StaticResource VisConverter}}">
+                    <!-- Alerta de sesión larga (Solo si está abierta y es vieja) -->
+                    <Border Background="#fff3cd" BorderBrush="#ffeeba" BorderThickness="1" CornerRadius="8" Padding="15,8" HorizontalAlignment="Center">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveSession.IsTooOld}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="⚠️" Margin="0,0,10,0" VerticalAlignment="Center"/>
                             <TextBlock Text="La caja lleva abierta más de 24h. Realiza un cierre para evitar descuadros."

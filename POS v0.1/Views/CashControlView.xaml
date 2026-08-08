@@ -61,8 +61,17 @@
                         </Border>
 
                         <!-- Alerta de sesión larga -->
-                        <Border Background="#fff3cd" BorderBrush="#ffeeba" BorderThickness="0,0,0,1" Padding="15,8"
-                                Visibility="{Binding Session.IsTooOld, Converter={StaticResource VisConverter}}">
+                        <Border Background="#fff3cd" BorderBrush="#ffeeba" BorderThickness="0,0,0,1" Padding="15,8">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Session.IsTooOld}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="⚠️" Margin="0,0,10,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Esta caja lleva abierta más de 24h. Se recomienda cerrarla para auditar correctamente."

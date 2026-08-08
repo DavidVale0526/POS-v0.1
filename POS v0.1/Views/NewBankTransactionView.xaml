@@ -121,7 +121,7 @@
                     </Grid>
 
                     <!-- Reference -->
-                    <TextBlock Text="Referencia / Comprobante" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
+                    <TextBlock Text="Referencia / Comprobante *" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,5"/>
                     <TextBox Padding="10" Margin="0,0,0,20" Tag="No. de recibo, transferencia..."
                              Text="{Binding Reference, UpdateSourceTrigger=PropertyChanged}"/>
 

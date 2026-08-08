@@ -202,6 +202,12 @@ namespace POS_v0_1.ViewModels
         private readonly MainViewModel _main;
         public Product Product { get; }
 
+        public ObservableCollection<PurchaseHistoryItem> PurchaseHistory { get; } = new ObservableCollection<PurchaseHistoryItem>();
+
+        public decimal MarginAmount => Product.SellingPrice - Product.PurchasePrice;
+        public decimal MarginPercentage => Product.PurchasePrice > 0 ? (MarginAmount / Product.PurchasePrice) * 100 : 0;
+        public bool IsMarginNegative => Product.SellingPrice < Product.PurchasePrice;
+
         public ICommand BackCommand { get; }
         public ICommand EditCommand { get; }
 
@@ -210,9 +216,44 @@ namespace POS_v0_1.ViewModels
             _main = main;
             Product = product;
 
+            LoadPurchaseHistory();
+
             BackCommand = new RelayCommand(o => _main.CurrentView = new ProductsViewModel(_main));
             EditCommand = new RelayCommand(o => _main.CurrentView = new CreateProductViewModel(_main, Product));
         }
+
+        private void LoadPurchaseHistory()
+        {
+            PurchaseHistory.Clear();
+
+            // Buscar en todas las compras los items que coincidan con este producto
+            var history = _main.Purchases
+                .SelectMany(p => p.Items.Where(i => i.ProductId == Product.Id)
+                    .Select(i => new PurchaseHistoryItem
+                    {
+                        Date = p.Date,
+                        Invoice = p.InvoiceNumber ?? "S/N",
+                        Provider = p.Provider?.Name ?? "N/A",
+                        Quantity = i.Quantity,
+                        Cost = i.UnitPrice
+                    }))
+                .OrderByDescending(x => x.Date)
+                .Take(8); // Mostrar las últimas 8 compras
+
+            foreach (var item in history)
+            {
+                PurchaseHistory.Add(item);
+            }
+        }
+    }
+
+    public class PurchaseHistoryItem
+    {
+        public DateTime Date { get; set; }
+        public string Invoice { get; set; }
+        public string Provider { get; set; }
+        public int Quantity { get; set; }
+        public decimal Cost { get; set; }
     }
 
     public class RestockViewModel : BaseViewModel

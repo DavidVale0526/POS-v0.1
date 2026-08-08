@@ -61,6 +61,13 @@ namespace POS_v0_1.ViewModels
             });
             ShowCreateTopupCommand = new RelayCommand(o =>
             {
+                if (_main.Session == null || !_main.Session.IsOpen)
+                {
+                    System.Windows.MessageBox.Show("Debes abrir una sesión de caja antes de vender recargas.\n\nEl dinero de las recargas debe quedar registrado en tu turno actual.",
+                        "Caja Cerrada", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
+
                 if (!_main.TopupCompanies.Any())
                 {
                     System.Windows.MessageBox.Show("No hay compañías telefónicas registradas.\n\nPor favor, ve primero a 'Gestionar Compañías' para agregar una (ej: CLARO, TIGO) antes de registrar ventas de saldo.",
@@ -184,6 +191,12 @@ namespace POS_v0_1.ViewModels
 
             SaveCommand = new RelayCommand(o =>
             {
+                if (_main.Session == null || !_main.Session.IsOpen)
+                {
+                    System.Windows.MessageBox.Show("No puedes guardar la recarga porque la caja se encuentra cerrada.", "Caja Cerrada", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                    return;
+                }
+
                 if (SelectedCompany == null || string.IsNullOrWhiteSpace(PhoneNumber) || Amount <= 0) return;
 
                 var topup = new Topup

@@ -124,15 +124,54 @@
 
                     <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="20" Margin="0,0,10,20">
                         <StackPanel>
-                            <TextBlock Text="PRECIOS" FontWeight="Bold" Foreground="Gray" Margin="0,0,0,15"/>
+                            <TextBlock Text="PRECIOS Y RENTABILIDAD" FontWeight="Bold" Foreground="Gray" Margin="0,0,0,15"/>
                             <Grid>
-                                <TextBlock Text="Compra:" Foreground="Gray"/>
+                                <TextBlock Text="Costo de Compra:" Foreground="Gray"/>
                                 <TextBlock Text="{Binding Product.PurchasePrice, StringFormat='C$ {0:N2}'}" HorizontalAlignment="Right" FontWeight="Bold"/>
                             </Grid>
                             <Grid Margin="0,10,0,0">
-                                <TextBlock Text="Venta:" Foreground="Gray" VerticalAlignment="Center"/>
+                                <TextBlock Text="Precio de Venta:" Foreground="Gray" VerticalAlignment="Center"/>
                                 <TextBlock Text="{Binding Product.SellingPrice, StringFormat='C$ {0:N2}'}" HorizontalAlignment="Right" FontSize="20" FontWeight="Bold" Foreground="#198754"/>
                             </Grid>
+
+                            <Separator Margin="0,15" Background="#f1f3f5"/>
+
+                            <!-- Margen de Ganancia -->
+                            <Grid>
+                                <TextBlock Text="Margen de Ganancia:" Foreground="Gray"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding MarginPercentage, StringFormat='\{0:N1\}%'}" FontWeight="Bold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#198754"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsMarginNegative}" Value="True">
+                                                        <Setter Property="Foreground" Value="#dc3545"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text="{Binding MarginAmount, StringFormat=' (C$ \{0:N2\})'}" FontSize="11" VerticalAlignment="Bottom" Margin="5,0,0,2">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#6c757d"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsMarginNegative}" Value="True">
+                                                        <Setter Property="Foreground" Value="#dc3545"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Alerta de Pérdida -->
+                            <Border Background="#f8d7da" CornerRadius="4" Padding="10,5" Margin="0,10,0,0"
+                                    Visibility="{Binding IsMarginNegative, Converter={StaticResource VisConverter}}">
+                                <TextBlock Text="⚠️ EL COSTO SUPERA AL PRECIO DE VENTA" FontSize="10" FontWeight="Bold" Foreground="#721c24" HorizontalAlignment="Center"/>
+                            </Border>
                         </StackPanel>
                     </Border>
 
@@ -165,6 +204,55 @@
                                 <TextBlock Text="No hay IMEIs registrados." HorizontalAlignment="Center" Foreground="Gray"/>
                             </StackPanel>
                         </Border>
+                    </StackPanel>
+                </Border>
+                <Border Background="White" CornerRadius="8" Padding="20" Margin="0,20,0,0">
+                    <StackPanel>
+                        <TextBlock Text="📋 HISTORIAL DE COSTOS (ÚLTIMAS COMPRAS)" FontWeight="Bold" Foreground="Gray" Margin="0,0,0,15"/>
+
+                        <Border Background="#f8f9fa" Padding="10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="100"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="100"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Fecha" FontWeight="SemiBold" Foreground="#666"/>
+                                <TextBlock Grid.Column="1" Text="Factura" FontWeight="SemiBold" Foreground="#666"/>
+                                <TextBlock Grid.Column="2" Text="Proveedor" FontWeight="SemiBold" Foreground="#666"/>
+                                <TextBlock Grid.Column="3" Text="Cant." FontWeight="SemiBold" Foreground="#666" HorizontalAlignment="Center"/>
+                                <TextBlock Grid.Column="4" Text="Costo" FontWeight="SemiBold" Foreground="#666" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </Border>
+
+                        <ItemsControl ItemsSource="{Binding PurchaseHistory}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#f1f3f5" BorderThickness="0,0,0,1" Padding="10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="100"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Date, StringFormat='\{0:dd/MM/yy\}'}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Invoice}" Foreground="#666" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding Provider}" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding Quantity}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="4" Text="{Binding Cost, StringFormat='C$ \{0:N2\}'}" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Grid Margin="0,20" Visibility="{Binding PurchaseHistory.Count, Converter={StaticResource VisConverter}, ConverterParameter=Inverse}">
+                            <TextBlock Text="No hay compras registradas para este producto." HorizontalAlignment="Center" Foreground="#adb5bd" FontSize="12"/>
+                        </Grid>
                     </StackPanel>
                 </Border>
             </StackPanel>

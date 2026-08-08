@@ -8,7 +8,17 @@ namespace POS_v0_1.Models
     {
         public int Id { get; set; }
         private bool _isOpen;
-        public bool IsOpen { get => _isOpen; set { _isOpen = value; OnPropertyChanged(); } }
+        public bool IsOpen
+        {
+            get => _isOpen;
+            set
+            {
+                _isOpen = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(Status));
+                OnPropertyChanged(nameof(IsTooOld)); // Notificar el cambio a la alerta
+            }
+        }
 
         public string OpenedBy { get; set; }
         public string? ClosedBy { get; set; }

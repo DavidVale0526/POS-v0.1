@@ -55,14 +55,14 @@ namespace POS_v0_1.ViewModels
             set { _date = value; OnPropertyChanged(); }
         }
 
-        private string _reference;
+        private string _reference = string.Empty;
         public string Reference
         {
             get => _reference;
             set { _reference = value; OnPropertyChanged(); }
         }
 
-        private string _notes;
+        private string _notes = string.Empty;
         public string Notes
         {
             get => _notes;
@@ -83,6 +83,18 @@ namespace POS_v0_1.ViewModels
 
             SaveCommand = new RelayCommand(o =>
             {
+                if (Amount <= 0)
+                {
+                    System.Windows.MessageBox.Show("El monto debe ser mayor a cero.", "Validación", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(Reference))
+                {
+                    System.Windows.MessageBox.Show("Debes ingresar un número de referencia o comprobante.", "Validación", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
+
                 decimal lastBalance = _main.BankTransactions.Any() ? _main.BankTransactions.Last().BalanceAfter : 0;
                 decimal newBalance = Type == "Depósito" ? lastBalance + Amount : lastBalance - Amount;
 
@@ -90,18 +102,25 @@ namespace POS_v0_1.ViewModels
                 {
                     Date = this.Date,
                     Type = this.Type,
-                    Bank = this.Bank,
-                    Reference = this.Reference,
+                    Bank = this.Bank ?? "Sin Banco",
+                    Reference = this.Reference ?? "N/A",
                     Amount = this.Amount,
                     BalanceAfter = newBalance,
                     RegisteredBy = _main.CurrentUser?.Name ?? "Sistema",
-                    Notes = this.Notes
+                    Notes = this.Notes ?? ""
                 };
 
-                _main.Db.BankTransactions.Add(transaction);
-                _main.Db.SaveChanges();
-                _main.BankTransactions.Add(transaction);
-                _main.CurrentView = new BankHistoryViewModel(_main);
+                try
+                {
+                    _main.Db.BankTransactions.Add(transaction);
+                    _main.Db.SaveChanges();
+                    _main.BankTransactions.Add(transaction);
+                    _main.CurrentView = new BankHistoryViewModel(_main);
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show($"Error al guardar en base de datos: {ex.Message}\n\nDetalle: {ex.InnerException?.Message}", "Error Fatal", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                }
             });
 
             BackCommand = new RelayCommand(o => _main.CurrentView = new BankHistoryViewModel(_main));
