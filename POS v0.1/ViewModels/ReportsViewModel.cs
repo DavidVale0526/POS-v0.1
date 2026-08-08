@@ -224,17 +224,19 @@ namespace POS_v0_1.ViewModels
             // Determinar efectivo en caja de forma más precisa
             var activeSession = _main.Session ?? _main.CashSessions.FirstOrDefault(s => s.IsOpen);
 
-            if (activeSession != null && activeSession.IsOpen && activeSession.OpeningTime.Date == ReferenceDate.Date)
+            // CAMBIO: Si pedimos el reporte de HOY, siempre priorizamos la sesión abierta (sin importar cuándo se abrió)
+            bool isViewingToday = ReferenceDate.Date == DateTime.Today;
+
+            if (activeSession != null && activeSession.IsOpen && (isViewingToday || activeSession.OpeningTime.Date == ReferenceDate.Date))
             {
                 summary.IsSessionOpen = true;
-                summary.CashTitleText = "Efectivo en Caja (En Curso)";
-                summary.CashStatusText = "Caja Abierta (Calculado en tiempo real)";
+                summary.CashTitleText = "Efectivo en Caja (Sesión Activa)";
+                summary.CashStatusText = $"Abierta desde {activeSession.OpeningTime:dd/MM HH:mm}";
                 summary.ActualCashInHand = activeSession.TheoreticalBalance;
             }
             else
             {
-                // Si el reporte es para hoy pero no hay caja abierta hoy, o es para otro día,
-                // buscamos la última caja cerrada en el periodo seleccionado.
+                // Si el reporte es para otro día, buscamos la caja que cerró en esa fecha
                 var closedSessionsInPeriod = sessions.Where(s => !s.IsOpen && s.ClosingTime != null).ToList();
                 if (closedSessionsInPeriod.Any())
                 {

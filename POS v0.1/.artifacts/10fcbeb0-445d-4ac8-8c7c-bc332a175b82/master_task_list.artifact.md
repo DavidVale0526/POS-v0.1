@@ -1,4 +1,4 @@
-# Mega Task List: Ruta al 100% de POS v0.1
+# Mega Task List: Ruta al 100% de POS
 
 Esta lista contiene cada paso técnico necesario para completar las fases del Mega Plan.
 

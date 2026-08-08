@@ -41,6 +41,8 @@ namespace POS_v0_1.ViewModels
 
         public ObservableCollection<Sale> RecentSales { get; } = new ObservableCollection<Sale>();
 
+        public CashSession? ActiveSession => _main.Session;
+
         public ICommand NewQuickSaleCommand { get; }
         public ICommand RegisterProductCommand { get; }
         public ICommand NewTopupCommand { get; }

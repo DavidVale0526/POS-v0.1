@@ -15,11 +15,13 @@ namespace POS_v0_1.ViewModels
         public string Password { get => _password; set { _password = value; OnPropertyChanged(); } }
 
         public ICommand LoginCommand { get; }
+        public ICommand ShowRecoveryCommand { get; }
 
         public LoginViewModel(MainViewModel main)
         {
             _main = main;
             LoginCommand = new RelayCommand(o => Login());
+            ShowRecoveryCommand = new RelayCommand(o => _main.CurrentView = new PasswordRecoveryViewModel(_main));
         }
 
         private void Login()

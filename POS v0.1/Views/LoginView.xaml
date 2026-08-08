@@ -36,7 +36,8 @@
                     </Button.Resources>
                 </Button>
 
-                <TextBlock Text="¿Olvidaste tu contraseña? Contacta al administrador." FontSize="11" Foreground="Gray" HorizontalAlignment="Center" Margin="0,20,0,0"/>
+                <Button Content="¿Olvidaste tu contraseña?" Background="Transparent" BorderThickness="0" Foreground="#0d6efd"
+                        Margin="0,20,0,0" Cursor="Hand" Command="{Binding ShowRecoveryCommand}"/>
             </StackPanel>
         </Border>
     </Grid>

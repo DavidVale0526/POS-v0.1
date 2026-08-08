@@ -27,6 +27,12 @@ namespace POS_v0_1.Models
         private string? _password;
         public string? Password { get => _password; set { _password = value; OnPropertyChanged(); } }
 
+        // Recuperación de Contraseña
+        public string? SecurityQuestion1 { get; set; }
+        public string? SecurityAnswer1 { get; set; }
+        public string? SecurityQuestion2 { get; set; }
+        public string? SecurityAnswer2 { get; set; }
+
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string? name = null)
         {

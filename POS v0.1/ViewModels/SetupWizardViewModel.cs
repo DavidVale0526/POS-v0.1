@@ -27,11 +27,35 @@ namespace POS_v0_1.ViewModels
         private string _adminPin;
         public string AdminPin { get => _adminPin; set { _adminPin = value; OnPropertyChanged(); } }
 
+        // Security Questions
+        public System.Collections.ObjectModel.ObservableCollection<string> SecurityQuestions { get; } = new System.Collections.ObjectModel.ObservableCollection<string>
+        {
+            "¿Nombre de tu primera mascota?",
+            "¿Ciudad donde naciste?",
+            "¿Nombre de tu escuela primaria?",
+            "¿Marca de tu primer auto?",
+            "¿Nombre de tu abuelo materno?"
+        };
+
+        private string _selectedQuestion1;
+        public string SelectedQuestion1 { get => _selectedQuestion1; set { _selectedQuestion1 = value; OnPropertyChanged(); } }
+
+        private string _answer1;
+        public string Answer1 { get => _answer1; set { _answer1 = value; OnPropertyChanged(); } }
+
+        private string _selectedQuestion2;
+        public string SelectedQuestion2 { get => _selectedQuestion2; set { _selectedQuestion2 = value; OnPropertyChanged(); } }
+
+        private string _answer2;
+        public string Answer2 { get => _answer2; set { _answer2 = value; OnPropertyChanged(); } }
+
         public ICommand FinishSetupCommand { get; }
 
         public SetupWizardViewModel(MainViewModel main)
         {
             _main = main;
+            SelectedQuestion1 = SecurityQuestions[0];
+            SelectedQuestion2 = SecurityQuestions[1];
             FinishSetupCommand = new RelayCommand(o => FinishSetup());
         }
 
@@ -39,9 +63,9 @@ namespace POS_v0_1.ViewModels
         {
             if (string.IsNullOrWhiteSpace(BusinessName) || string.IsNullOrWhiteSpace(AdminName) ||
                 string.IsNullOrWhiteSpace(AdminEmail) || string.IsNullOrWhiteSpace(AdminPassword) ||
-                string.IsNullOrWhiteSpace(AdminPin))
+                string.IsNullOrWhiteSpace(AdminPin) || string.IsNullOrWhiteSpace(Answer1) || string.IsNullOrWhiteSpace(Answer2))
             {
-                MessageBox.Show("Por favor complete todos los campos obligatorios.", "Asistente de Configuración", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Por favor complete todos los campos obligatorios, incluyendo las preguntas de seguridad.", "Asistente de Configuración", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -61,7 +85,11 @@ namespace POS_v0_1.ViewModels
                     Password = AdminPassword,
                     Pin = AdminPin,
                     Role = "Administrador",
-                    RegistrationDate = DateTime.Now
+                    RegistrationDate = DateTime.Now,
+                    SecurityQuestion1 = SelectedQuestion1,
+                    SecurityAnswer1 = Answer1.Trim().ToLower(),
+                    SecurityQuestion2 = SelectedQuestion2,
+                    SecurityAnswer2 = Answer2.Trim().ToLower()
                 };
 
                 _main.Db.Users.Add(admin);

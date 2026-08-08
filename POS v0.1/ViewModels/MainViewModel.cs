@@ -306,6 +306,11 @@ namespace POS_v0_1.ViewModels
             AddColumnSafe("BusinessConfigs", "LastBackupDate", "TEXT");
             AddColumnSafe("BusinessConfigs", "MaxDiscountWithoutPin", "DECIMAL DEFAULT 15");
 
+            AddColumnSafe("Users", "SecurityQuestion1", "TEXT");
+            AddColumnSafe("Users", "SecurityAnswer1", "TEXT");
+            AddColumnSafe("Users", "SecurityQuestion2", "TEXT");
+            AddColumnSafe("Users", "SecurityAnswer2", "TEXT");
+
             try
             {
                 Db.Database.ExecuteSqlRaw("CREATE TABLE IF NOT EXISTS RepairParts (Id INTEGER PRIMARY KEY AUTOINCREMENT, RepairOrderId INTEGER NOT NULL, ProductId INTEGER NOT NULL, ProductName TEXT, Quantity INTEGER NOT NULL, UnitPrice DECIMAL NOT NULL);");

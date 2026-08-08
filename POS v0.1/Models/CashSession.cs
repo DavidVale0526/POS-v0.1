@@ -53,6 +53,8 @@ namespace POS_v0_1.Models
 
         public string Status => IsOpen ? "ABIERTA" : "CERRADA";
 
+        public bool IsTooOld => IsOpen && (DateTime.Now - OpeningTime).TotalHours > 24;
+
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)
         {

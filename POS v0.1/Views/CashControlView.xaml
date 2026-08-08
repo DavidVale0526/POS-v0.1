@@ -60,6 +60,16 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- Alerta de sesión larga -->
+                        <Border Background="#fff3cd" BorderBrush="#ffeeba" BorderThickness="0,0,0,1" Padding="15,8"
+                                Visibility="{Binding Session.IsTooOld, Converter={StaticResource VisConverter}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="⚠️" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Esta caja lleva abierta más de 24h. Se recomienda cerrarla para auditar correctamente."
+                                           FontSize="10" Foreground="#856404" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+
                         <StackPanel Margin="20">
                             <Grid Margin="0,0,0,15">
                                 <Grid.ColumnDefinitions>

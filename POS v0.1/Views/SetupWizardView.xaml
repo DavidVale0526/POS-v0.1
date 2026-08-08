@@ -6,56 +6,72 @@
              mc:Ignorable="d"
              d:DesignHeight="700" d:DesignWidth="1000">
     <Grid Background="#f0f2f5">
-        <Border Background="White" CornerRadius="15" Padding="40" MaxWidth="500" VerticalAlignment="Center" HorizontalAlignment="Center">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="20" ShadowDepth="2" Color="#CCCCCC" Opacity="0.5"/>
-            </Border.Effect>
-            <StackPanel>
-                <TextBlock Text="¡Bienvenido a POS v0.1!" FontSize="28" FontWeight="Black" Foreground="#0d6efd" HorizontalAlignment="Center" Margin="0,0,0,10"/>
-                <TextBlock Text="Vamos a configurar tu nuevo sistema de punto de venta." Foreground="Gray" HorizontalAlignment="Center" Margin="0,0,0,30" TextAlignment="Center"/>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <Border Background="White" CornerRadius="15" Padding="40" MaxWidth="550" Margin="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="20" ShadowDepth="2" Color="#CCCCCC" Opacity="0.5"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="¡Bienvenido a POS!" FontSize="28" FontWeight="Black" Foreground="#0d6efd" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    <TextBlock Text="Vamos a configurar tu nuevo sistema de punto de venta." Foreground="Gray" HorizontalAlignment="Center" Margin="0,0,0,30" TextAlignment="Center"/>
 
-                <!-- Sección Negocio -->
-                <TextBlock Text="INFORMACIÓN DEL NEGOCIO" FontWeight="Bold" Foreground="#666" FontSize="11" Margin="0,0,0,15"/>
+                    <!-- Sección Negocio -->
+                    <TextBlock Text="INFORMACIÓN DEL NEGOCIO" FontWeight="Bold" Foreground="#666" FontSize="11" Margin="0,0,0,15"/>
 
-                <TextBlock Text="Nombre del Negocio *" Margin="0,0,0,5"/>
-                <TextBox Text="{Binding BusinessName, UpdateSourceTrigger=PropertyChanged}" Padding="12" Margin="0,0,0,20" BorderBrush="#dee2e6"/>
+                    <TextBlock Text="Nombre del Negocio *" Margin="0,0,0,5"/>
+                    <TextBox Text="{Binding BusinessName, UpdateSourceTrigger=PropertyChanged}" Padding="12" Margin="0,0,0,20" BorderBrush="#dee2e6"/>
 
-                <Separator Margin="0,10,0,25" Background="#eee"/>
+                    <Separator Margin="0,10,0,25" Background="#eee"/>
 
-                <!-- Sección Administrador -->
-                <TextBlock Text="CUENTA DE ADMINISTRADOR (DUEÑO)" FontWeight="Bold" Foreground="#666" FontSize="11" Margin="0,0,0,15"/>
+                    <!-- Sección Administrador -->
+                    <TextBlock Text="CUENTA DE ADMINISTRADOR (DUEÑO)" FontWeight="Bold" Foreground="#666" FontSize="11" Margin="0,0,0,15"/>
 
-                <TextBlock Text="Tu Nombre Completo *" Margin="0,0,0,5"/>
-                <TextBox Text="{Binding AdminName, UpdateSourceTrigger=PropertyChanged}" Padding="12" Margin="0,0,0,15" BorderBrush="#dee2e6"/>
+                    <TextBlock Text="Tu Nombre Completo *" Margin="0,0,0,5"/>
+                    <TextBox Text="{Binding AdminName, UpdateSourceTrigger=PropertyChanged}" Padding="12" Margin="0,0,0,15" BorderBrush="#dee2e6"/>
 
-                <TextBlock Text="Correo Electrónico (Login) *" Margin="0,0,0,5"/>
-                <TextBox Text="{Binding AdminEmail, UpdateSourceTrigger=PropertyChanged}" Padding="12" Margin="0,0,0,15" BorderBrush="#dee2e6"/>
+                    <TextBlock Text="Correo Electrónico (Login) *" Margin="0,0,0,5"/>
+                    <TextBox Text="{Binding AdminEmail, UpdateSourceTrigger=PropertyChanged}" Padding="12" Margin="0,0,0,15" BorderBrush="#dee2e6"/>
 
-                <Grid Margin="0,0,0,30">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="Auto" MinWidth="120"/>
-                    </Grid.ColumnDefinitions>
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="Auto" MinWidth="120"/>
+                        </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Contraseña *" Margin="0,0,0,5"/>
-                        <PasswordBox x:Name="PassBox" Padding="12" BorderBrush="#dee2e6"/>
-                    </StackPanel>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Contraseña *" Margin="0,0,0,5"/>
+                            <PasswordBox x:Name="PassBox" Padding="12" BorderBrush="#dee2e6"/>
+                        </StackPanel>
 
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="PIN (4 dígitos) *" Margin="0,0,0,5"/>
-                        <TextBox Text="{Binding AdminPin, UpdateSourceTrigger=PropertyChanged}" MaxLength="4" Padding="12" BorderBrush="#dee2e6" TextAlignment="Center" FontSize="16" FontWeight="Bold"/>
-                    </StackPanel>
-                </Grid>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="PIN (4 dígitos) *" Margin="0,0,0,5"/>
+                            <TextBox Text="{Binding AdminPin, UpdateSourceTrigger=PropertyChanged}" MaxLength="4" Padding="12" BorderBrush="#dee2e6" TextAlignment="Center" FontSize="16" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Grid>
 
-                <Button Content="🚀 Finalizar y Comenzar" Background="#0d6efd" Foreground="White" Padding="20,15" FontSize="16" FontWeight="Bold" Cursor="Hand"
-                        Command="{Binding FinishSetupCommand}" Click="Button_Click">
-                    <Button.Resources>
-                        <Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style>
-                    </Button.Resources>
-                </Button>
-            </StackPanel>
-        </Border>
+                    <Separator Margin="0,10,0,25" Background="#eee"/>
+
+                    <!-- Sección Recuperación -->
+                    <TextBlock Text="RECUPERACIÓN DE CONTRASEÑA (SOPORTE)" FontWeight="Bold" Foreground="#666" FontSize="11" Margin="0,0,0,15"/>
+                    <TextBlock Text="Configura estas preguntas para recuperar tu acceso si olvidas la clave." FontSize="10" Foreground="Gray" Margin="0,-10,0,15"/>
+
+                    <TextBlock Text="Pregunta de Seguridad 1" Margin="0,0,0,5"/>
+                    <ComboBox ItemsSource="{Binding SecurityQuestions}" SelectedItem="{Binding SelectedQuestion1}" Padding="10" Margin="0,0,0,10"/>
+                    <TextBox Text="{Binding Answer1, UpdateSourceTrigger=PropertyChanged}" Tag="Tu respuesta..." Padding="12" Margin="0,0,0,20" BorderBrush="#dee2e6"/>
+
+                    <TextBlock Text="Pregunta de Seguridad 2" Margin="0,0,0,5"/>
+                    <ComboBox ItemsSource="{Binding SecurityQuestions}" SelectedItem="{Binding SelectedQuestion2}" Padding="10" Margin="0,0,0,10"/>
+                    <TextBox Text="{Binding Answer2, UpdateSourceTrigger=PropertyChanged}" Tag="Tu respuesta..." Padding="12" Margin="0,0,0,30" BorderBrush="#dee2e6"/>
+
+                    <Button Content="🚀 Finalizar y Comenzar" Background="#0d6efd" Foreground="White" Padding="20,15" FontSize="16" FontWeight="Bold" Cursor="Hand"
+                            Command="{Binding FinishSetupCommand}" Click="Button_Click">
+                        <Button.Resources>
+                            <Style TargetType="Border"><Setter Property="CornerRadius" Value="8"/></Style>
+                        </Button.Resources>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </ScrollViewer>
     </Grid>
 </UserControl>
