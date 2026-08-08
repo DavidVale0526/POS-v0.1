@@ -25,8 +25,8 @@ namespace POS_v0_1.Views
             {
                 Name = NameBox.Text,
                 Phone = PhoneBox.Text,
-                ContactPerson = ContactBox.Text,
-                CreatedAt = System.DateTime.Now
+                ContactName = ContactBox.Text,
+                Status = "Activo"
             };
 
             DialogResult = true;

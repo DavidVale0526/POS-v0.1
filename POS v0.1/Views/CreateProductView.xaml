@@ -72,12 +72,18 @@
                         </StackPanel>
 
                         <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,15,15">
-                            <TextBlock Margin="0,0,0,5"><Run Text="Categoría"/><Run Text="*" Foreground="Red"/></TextBlock>
+                            <Grid>
+                                <TextBlock Margin="0,0,0,5"><Run Text="Categoría"/><Run Text="*" Foreground="Red"/></TextBlock>
+                                <Button Content="+" Command="{Binding QuickAddCategoryCommand}" HorizontalAlignment="Right" Width="20" Height="20" Background="Transparent" BorderThickness="0" Foreground="#0d6efd" FontWeight="Bold" VerticalAlignment="Top" Margin="0,0,0,5" Cursor="Hand" ToolTip="Nueva Categoría"/>
+                            </Grid>
                             <ComboBox ItemsSource="{Binding Categories}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedCategory}" Padding="8"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,0,15">
-                            <TextBlock Text="Proveedor" Margin="0,0,0,5"/>
+                            <Grid>
+                                <TextBlock Text="Proveedor" Margin="0,0,0,5"/>
+                                <Button Content="+" Command="{Binding QuickAddProviderCommand}" HorizontalAlignment="Right" Width="20" Height="20" Background="Transparent" BorderThickness="0" Foreground="#0d6efd" FontWeight="Bold" VerticalAlignment="Top" Margin="0,0,0,5" Cursor="Hand" ToolTip="Nuevo Proveedor"/>
+                            </Grid>
                             <ComboBox ItemsSource="{Binding Providers}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedProvider}" Padding="8"/>
                         </StackPanel>
 

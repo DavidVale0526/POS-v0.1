@@ -421,11 +421,35 @@ namespace POS_v0_1.ViewModels
         public ICommand SaveCommand { get; }
         public ICommand BackCommand { get; }
         public ICommand ChooseImageCommand { get; }
+        public ICommand QuickAddCategoryCommand { get; }
+        public ICommand QuickAddProviderCommand { get; }
 
         public CreateProductViewModel(MainViewModel main, Product product = null)
         {
             _main = main;
             _editingProduct = product;
+
+            QuickAddCategoryCommand = new RelayCommand(o => {
+                var dialog = new Views.QuickCategoryDialog();
+                if (dialog.ShowDialog() == true) {
+                    var category = dialog.Category;
+                    _main.Db.Categories.Add(category);
+                    _main.Db.SaveChanges();
+                    _main.Categories.Add(category);
+                    SelectedCategory = category;
+                }
+            });
+
+            QuickAddProviderCommand = new RelayCommand(o => {
+                var dialog = new Views.QuickProviderDialog();
+                if (dialog.ShowDialog() == true) {
+                    var provider = dialog.Provider;
+                    _main.Db.Providers.Add(provider);
+                    _main.Db.SaveChanges();
+                    _main.Providers.Add(provider);
+                    SelectedProvider = provider;
+                }
+            });
 
             if (_editingProduct != null)
             {
